@@ -789,9 +789,7 @@ App: ${state.activeApp.toUpperCase()}`,
     state.activeTab = tabName;
   }
 
-  function triggerFileUploader() {
-    document.getElementById('physical-file-uploader').click();
-  }
+
 
 
   // ─────────────────────────────────────────────────────────────
