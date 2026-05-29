@@ -511,7 +511,7 @@ App: ${state.activeApp.toUpperCase()}`,
     for (let r = 1; r <= maxRows; r++) {
       tableHtml += '<tr><th id="shr-' + r + '" class="sheet-row-hdr" style="width:44px;text-align:center;" data-row="' + r + '">' + r + '</th>';
       colLabels.forEach(col => {
-        tableHtml += '<td class="sheet-cell" id="cell-' + col + r + '" data-cell="' + col + r + '" data-col="' + col + '" data-row="' + r + '"></td>';
+        tableHtml += '<td class="sheet-cell" contenteditable="true" id="cell-' + col + r + '" data-cell="' + col + r + '" data-col="' + col + '" data-row="' + r + '"></td>';
       });
       tableHtml += '</tr>';
     }
