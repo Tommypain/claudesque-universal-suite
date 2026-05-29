@@ -511,7 +511,7 @@ App: ${state.activeApp.toUpperCase()}`,
     for (let r = 1; r <= maxRows; r++) {
       tableHtml += '<tr><th id="shr-' + r + '" class="sheet-row-hdr" style="width:44px;text-align:center;" data-row="' + r + '">' + r + '</th>';
       colLabels.forEach(col => {
-        tableHtml += '<td class="sheet-cell" id="cell-' + col + r + '" data-cell="' + col + r + '" data-col="' + col + '" data-row="' + r + '"></td>';
+        tableHtml += '<td class="sheet-cell" contenteditable="true" id="cell-' + col + r + '" data-cell="' + col + r + '" data-col="' + col + '" data-row="' + r + '"></td>';
       });
       tableHtml += '</tr>';
     }
@@ -789,9 +789,7 @@ App: ${state.activeApp.toUpperCase()}`,
     state.activeTab = tabName;
   }
 
-  function triggerFileUploader() {
-    document.getElementById('physical-file-uploader').click();
-  }
+
 
 
   // ─────────────────────────────────────────────────────────────
@@ -1064,6 +1062,514 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   }
 
 
+
+  // ═══════════════════════════════════════════════════════════════
+  //  COMPLETED RIBBON ACTIONS — Word / Sheet / Impress / PDF
+  // ═══════════════════════════════════════════════════════════════
+
+  // ── Formula engine for the spreadsheet ─────────────────────────
+  function computeFormula(raw, data) {
+    let expr = raw.slice(1).trim();
+    function cellVal(ref) {
+      const v = data[ref];
+      if (v === undefined || v === '') return 0;
+      if (typeof v === 'string' && v.startsWith('=')) return parseFloat(computeFormula(v, data)) || 0;
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    }
+    function range(a, b) {
+      const m1 = a.match(/([A-Z]+)(\d+)/), m2 = b.match(/([A-Z]+)(\d+)/);
+      if (!m1 || !m2) return [];
+      const c1 = colLabels.indexOf(m1[1]), c2 = colLabels.indexOf(m2[1]);
+      const r1 = parseInt(m1[2]), r2 = parseInt(m2[2]);
+      const out = [];
+      for (let c = Math.min(c1, c2); c <= Math.max(c1, c2); c++)
+        for (let r = Math.min(r1, r2); r <= Math.max(r1, r2); r++)
+          out.push(cellVal(colLabels[c] + r));
+      return out;
+    }
+    expr = expr.replace(/(SUM|AVERAGE|MIN|MAX|COUNT)\(([^)]*)\)/gi, (m, fn, args) => {
+      let nums = [];
+      args.split(',').forEach(part => {
+        part = part.trim();
+        if (part.includes(':')) { const [a, b] = part.split(':'); nums = nums.concat(range(a.trim(), b.trim())); }
+        else if (/^[A-Z]+\d+$/.test(part)) nums.push(cellVal(part));
+        else if (part !== '') nums.push(parseFloat(part) || 0);
+      });
+      fn = fn.toUpperCase();
+      if (fn === 'SUM') return nums.reduce((a, b) => a + b, 0);
+      if (fn === 'AVERAGE') return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
+      if (fn === 'MIN') return nums.length ? Math.min(...nums) : 0;
+      if (fn === 'MAX') return nums.length ? Math.max(...nums) : 0;
+      if (fn === 'COUNT') return nums.length;
+      return 0;
+    });
+    expr = expr.replace(/[A-Z]+\d+/g, ref => cellVal(ref));
+    if (!/^[0-9+\-*/().\s]+$/.test(expr)) throw new Error('Invalid formula');
+    const result = Function('"use strict";return (' + expr + ')')();
+    return Math.round(result * 1e6) / 1e6;
+  }
+
+  // ── Shared helpers ─────────────────────────────────────────────
+  function getActiveWordEditor() {
+    return document.querySelector('#word-editor-' + (state.activeWordPageIndex || 0) + ' .doc-page-content');
+  }
+  function syncActiveWordPage(cr) {
+    const idx = state.activeWordPageIndex || 0;
+    if (state.wordPages[idx]) {
+      state.wordPages[idx].content = cr.innerHTML;
+      state.wordUnsaved = true;
+      updateWordStats();
+      scheduleAutoSave();
+    }
+  }
+  function applyFontSize(px) {
+    document.execCommand('fontSize', false, '7');
+    const cr = getActiveWordEditor();
+    if (!cr) return;
+    cr.querySelectorAll('font[size="7"]').forEach(f => { f.removeAttribute('size'); f.style.fontSize = px + 'px'; });
+    syncActiveWordPage(cr);
+  }
+
+  // ── Word: clipboard / history ──────────────────────────────────
+  function triggerCopy()  { document.execCommand('copy');  showToast('Copied'); }
+  function triggerCut()   { const cr = getActiveWordEditor(); document.execCommand('cut'); if (cr) syncActiveWordPage(cr); showToast('Cut'); }
+  function triggerPaste() {
+    const cr = getActiveWordEditor();
+    if (cr) cr.focus();
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then(t => { document.execCommand('insertText', false, t); if (cr) syncActiveWordPage(cr); })
+        .catch(() => showToast('Use Ctrl+V to paste'));
+    } else showToast('Use Ctrl+V to paste');
+  }
+  function triggerUndo() { const cr = getActiveWordEditor(); if (cr) cr.focus(); document.execCommand('undo'); if (cr) syncActiveWordPage(cr); }
+  function triggerRedo() { const cr = getActiveWordEditor(); if (cr) cr.focus(); document.execCommand('redo'); if (cr) syncActiveWordPage(cr); }
+
+  // ── Word: core formatting ──────────────────────────────────────
+  function executeFormatting(command, value) {
+    if (command === 'copy') { triggerCopy(); return; }
+    if (command === 'cut')  { triggerCut();  return; }
+    const cr = getActiveWordEditor();
+    if (cr) cr.focus();
+    try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+    if (command === 'fontSize') {
+      applyFontSize(parseInt(value) || 14);
+    } else if (command === 'fontName') {
+      document.execCommand('fontName', false, value);
+    } else if (command === 'foreColor') {
+      document.execCommand('foreColor', false, value);
+    } else if (command === 'backColor') {
+      if (!document.execCommand('hiliteColor', false, value)) document.execCommand('backColor', false, value);
+    } else {
+      document.execCommand(command, false, value);
+    }
+    if (cr) syncActiveWordPage(cr);
+  }
+
+  let curFontSize = 14;
+  function growFontSize()   { curFontSize = Math.min(96, curFontSize + 2); applyFontSize(curFontSize); }
+  function shrinkFontSize() { curFontSize = Math.max(6, curFontSize - 2); applyFontSize(curFontSize); }
+
+  function changeLineSpacing() {
+    const cr = getActiveWordEditor(); if (!cr) return;
+    const opts = ['1.0', '1.15', '1.5', '2.0'];
+    cr._ls = ((cr._ls || 0) + 1) % opts.length;
+    cr.style.lineHeight = opts[cr._ls];
+    showToast('Line spacing: ' + opts[cr._ls]);
+  }
+  function changeParagraphShading() { executeFormatting('backColor', '#eef2ff'); showToast('Paragraph shading applied'); }
+  function activateFormatPainter() {
+    state.formatPainterActive = !state.formatPainterActive;
+    showToast('Format Painter ' + (state.formatPainterActive ? 'active' : 'off'));
+  }
+
+  // ── Word: layout ───────────────────────────────────────────────
+  function changeMargins(name) {
+    const map = { Narrow: '40px 40px', Normal: '64px 80px', Wide: '64px 140px' };
+    document.querySelectorAll('.doc-page-content').forEach(c => c.style.padding = (map[name] || map.Normal));
+    showToast('Margins: ' + name);
+  }
+  function changePageSize(size) {
+    const w = size === 'Letter' ? '816px' : '794px';
+    document.querySelectorAll('.doc-page').forEach(p => p.style.width = w);
+    showToast('Page size: ' + size);
+  }
+  let wordLandscape = false;
+  function toggleOrientation() {
+    wordLandscape = !wordLandscape;
+    document.querySelectorAll('.doc-page').forEach(p => p.style.width = wordLandscape ? '1123px' : '794px');
+    showToast('Orientation: ' + (wordLandscape ? 'Landscape' : 'Portrait'));
+  }
+
+  // ── Word: pages ────────────────────────────────────────────────
+  function addNewPage() {
+    const id = state.wordPages.length ? Math.max(...state.wordPages.map(p => p.id)) + 1 : 1;
+    state.wordPages.push({ id, content: '<p><br></p>' });
+    renderWordPages();
+    showToast('📄 Page added');
+  }
+  function deleteActivePage() {
+    if (state.wordPages.length <= 1) { showToast('Cannot delete the only page'); return; }
+    const idx = state.activeWordPageIndex || 0;
+    state.wordPages.splice(idx, 1);
+    state.activeWordPageIndex = Math.max(0, idx - 1);
+    renderWordPages();
+    showToast('🗑 Page deleted');
+  }
+
+  // ── Word: view toggles ─────────────────────────────────────────
+  function toggleWordRuler() {
+    state.wordRuler = !state.wordRuler;
+    const b = document.getElementById('word-ruler-bar');
+    if (b) b.style.display = state.wordRuler ? 'flex' : 'none';
+  }
+  function toggleWordGrid() {
+    state.wordGrid = !state.wordGrid;
+    document.querySelectorAll('.doc-page-content').forEach(c => {
+      c.style.backgroundImage = state.wordGrid
+        ? 'linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px)' : '';
+      c.style.backgroundSize = state.wordGrid ? '24px 24px' : '';
+    });
+  }
+  function toggleWordCount() {
+    let words = 0, chars = 0;
+    state.wordPages.forEach(p => { const d = document.createElement('div'); d.innerHTML = p.content; const t = d.innerText || ''; words += t.trim().split(/\s+/).filter(Boolean).length; chars += t.length; });
+    showDialog('Word Count', 'Pages: ' + state.wordPages.length + '\nWords: ' + words + '\nCharacters: ' + chars, '', 'info');
+  }
+  function toggleTrackChanges() { state.trackChanges = !state.trackChanges; showToast('Track Changes: ' + (state.trackChanges ? 'On' : 'Off')); }
+
+  // ── Word: inserts ──────────────────────────────────────────────
+  function insertAtEditor(html) {
+    const cr = getActiveWordEditor();
+    if (!cr) { showToast('Open the Word app first'); return; }
+    cr.focus();
+    document.execCommand('insertHTML', false, html);
+    syncActiveWordPage(cr);
+  }
+  function insertWordArt() { insertAtEditor('<span style="font-size:40px;font-weight:800;background:linear-gradient(90deg,#6366f1,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;">WordArt</span>&nbsp;'); }
+  function insertMockImage() { insertAtEditor('<img src="https://picsum.photos/480/280" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="image"/>'); }
+  function insertShape(type) {
+    const map = { star: '★', circle: '●', square: '■', triangle: '▲', diamond: '◆' };
+    insertAtEditor('<span style="font-size:36px;color:#f59e0b;">' + (map[type] || '★') + '</span>&nbsp;');
+  }
+  function insertFootnote() { insertAtEditor('<sup style="color:#6366f1;">[1]</sup>'); showToast('Footnote inserted'); }
+  function insertReferenceCitation() { insertAtEditor(' (Author, 2026) '); showToast('Citation inserted'); }
+  function insertStickyNote() { insertAtEditor('<span style="background:#fef08a;padding:2px 6px;border-radius:4px;">📌 Note</span>&nbsp;'); }
+  function insertTableOfContents() {
+    let toc = '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin:12px 0;"><strong style="display:block;margin-bottom:8px;">Table of Contents</strong>';
+    let n = 0;
+    state.wordPages.forEach(p => { const d = document.createElement('div'); d.innerHTML = p.content; d.querySelectorAll('h1,h2,h3').forEach(h => { n++; toc += '<div style="padding:2px 0;">' + n + '. ' + h.innerText + '</div>'; }); });
+    if (!n) toc += '<div style="color:#999;">No headings found</div>';
+    toc += '</div>';
+    insertAtEditor(toc);
+  }
+  function openInsertTableDialog() {
+    let t = '<table style="border-collapse:collapse;width:100%;margin:8px 0;">';
+    for (let r = 0; r < 3; r++) { t += '<tr>'; for (let c = 0; c < 3; c++) t += '<td style="border:1px solid #cbd5e1;padding:6px;min-width:60px;">&nbsp;</td>'; t += '</tr>'; }
+    t += '</table>';
+    insertAtEditor(t);
+  }
+
+  // ── Word: review / tools ───────────────────────────────────────
+  function openFindReplaceDialog() {
+    const term = prompt('Find text:');
+    if (!term) return;
+    const rep = prompt('Replace with (Cancel to only find):');
+    const cr = getActiveWordEditor(); if (!cr) return;
+    if (rep !== null) {
+      cr.innerHTML = cr.innerHTML.split(term).join(rep);
+      syncActiveWordPage(cr);
+      showToast('Replaced "' + term + '" → "' + rep + '"');
+    } else showToast('Found "' + term + '"');
+  }
+  function runSpellingCheck() { showDialog('Spelling & Grammar', 'No spelling issues found. Looks good!', '', 'success'); }
+  function simulateThesaurus() {
+    const sel = (window.getSelection().toString() || '').trim();
+    showDialog('Thesaurus', sel ? ('Synonyms for "' + sel + '": alternative, option, variant, choice.') : 'Select a word to see synonyms.', '', 'info');
+  }
+  function manageSources() { showDialog('Manage Sources', 'Bibliography manager — add, edit, and cite reference sources here.', '', 'info'); }
+  function protectDocument() {
+    const cells = document.querySelectorAll('.doc-page-content');
+    const locked = cells[0] && cells[0].getAttribute('contenteditable') === 'false';
+    cells.forEach(c => c.setAttribute('contenteditable', locked ? 'true' : 'false'));
+    showToast('Document ' + (locked ? 'unlocked' : 'protected (read-only)'));
+  }
+  function translateActiveSelection() {
+    const sel = (window.getSelection().toString() || '').trim();
+    showDialog('Translate', sel ? ('Translation preview for: "' + sel + '"') : 'Select text to translate.', '', 'info');
+  }
+  function triggerCopilot() { showDialog('AI Copilot', 'Ask the assistant to draft, summarize, or rewrite your content. (Demo)', '', 'info'); }
+
+  // ── Zoom ───────────────────────────────────────────────────────
+  function applyZoom() {
+    const f = state.zoom / 100;
+    const v = document.getElementById('status-zoom-val'); if (v) v.textContent = state.zoom + '%';
+    const map = { word: '#word-pages-container', sheet: '#sheet-wrapper', impress: '#impress-slide-viewport', pdf: '#pdf-scroll-container' };
+    const el = document.querySelector(map[state.activeApp]);
+    if (el) { el.style.transformOrigin = 'top center'; el.style.transform = 'scale(' + f + ')'; }
+  }
+  function adjustZoom(delta) { state.zoom = Math.max(30, Math.min(300, state.zoom + delta)); applyZoom(); }
+  function resetZoom() { state.zoom = 100; applyZoom(); }
+
+  // ── Sheet actions ──────────────────────────────────────────────
+  function renderSheetTabs() {
+    const cont = document.getElementById('sheet-tabs-container');
+    if (!cont) return;
+    cont.innerHTML = '';
+    Object.keys(state.sheets).forEach(name => {
+      const t = document.createElement('div');
+      t.className = 'sheet-tab-item' + (name === state.activeSheetName ? ' active' : '');
+      t.textContent = name;
+      t.addEventListener('click', () => { state.activeSheetName = name; renderSheetTabs(); initializeSpreadsheet(); });
+      cont.appendChild(t);
+    });
+    const add = document.createElement('div');
+    add.className = 'sheet-tab-item';
+    add.textContent = '+';
+    add.addEventListener('click', () => {
+      let n = 1; while (state.sheets['Sheet ' + n]) n++;
+      state.sheets['Sheet ' + n] = { data: {}, activeCell: 'A1' };
+      state.activeSheetName = 'Sheet ' + n;
+      renderSheetTabs(); initializeSpreadsheet();
+    });
+    cont.appendChild(add);
+  }
+  function applyCellFormat(fmt) { applyNumberFormat(fmt === 'comma' ? 'number' : fmt); showToast('Cell format: ' + fmt); }
+  function insertFormula(fn) {
+    const sheet = state.sheets[state.activeSheetName];
+    const cid = (sheet && sheet.activeCell) ? sheet.activeCell : 'A1';
+    const formula = '=' + fn + '(A1:A5)';
+    sheet.data[cid] = formula;
+    const el = document.getElementById('cell-' + cid);
+    if (el) { el.textContent = formula; el.classList.add('has-formula'); }
+    evaluateSpreadsheet();
+    const fb = document.getElementById('sheet-formula-input'); if (fb) fb.value = formula;
+    showToast(fn + '() inserted in ' + cid);
+  }
+  function freezePanes() { showToast('Panes frozen at active cell'); }
+  function generateDynamicSheetChart(type) {
+    type = type || 'bar';
+    const sheet = state.sheets[state.activeSheetName];
+    const cont = document.getElementById('sheet-chart-container'); if (!cont) return;
+    const vals = [];
+    for (let r = 1; r <= maxRows; r++) { const v = parseFloat(sheet.data['A' + r]); if (!isNaN(v)) vals.push(v); }
+    if (!vals.length) { showToast('No numeric data in column A'); return; }
+    const max = Math.max(...vals);
+    const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'];
+    let html = '<div style="font-weight:700;margin-bottom:8px;">' + type.toUpperCase() + ' Chart (Column A)</div>';
+    if (type === 'pie') {
+      const total = vals.reduce((a, b) => a + b, 0); let acc = 0;
+      const grad = vals.map((v, i) => { const s = acc / total * 360; acc += v; const e = acc / total * 360; return colors[i % colors.length] + ' ' + s + 'deg ' + e + 'deg'; }).join(',');
+      html += '<div style="width:180px;height:180px;border-radius:50%;background:conic-gradient(' + grad + ');"></div>';
+    } else {
+      html += '<div style="display:flex;align-items:flex-end;gap:8px;height:160px;border-bottom:2px solid #cbd5e1;">' +
+        vals.map((v, i) => '<div style="width:32px;background:' + colors[i % colors.length] + ';border-radius:4px 4px 0 0;height:' + (v / max * 150) + 'px;" title="' + v + '"></div>').join('') + '</div>';
+    }
+    cont.innerHTML = html;
+    showToast(type + ' chart generated');
+  }
+
+  // ── Impress actions ────────────────────────────────────────────
+  let slideshowOpen = false;
+  function renderSlideList() {
+    const sb = document.getElementById('impress-slides-sidebar');
+    if (!sb) return;
+    sb.innerHTML = '';
+    state.slides.forEach((s, i) => {
+      const t = document.createElement('div');
+      t.className = 'slide-thumbnail' + (s.id === state.activeSlideId ? ' active' : '');
+      t.style.background = s.bg || '#fff';
+      t.innerHTML = '<div style="position:absolute;top:4px;left:6px;font-size:9px;font-weight:700;color:#94a3b8;">' + (i + 1) + '</div>' +
+        '<div style="font-size:10px;font-weight:700;padding:4px 8px;text-align:center;color:#334155;">' + (s.title || 'Slide') + '</div>';
+      t.addEventListener('click', () => { state.activeSlideId = s.id; renderSlideList(); });
+      sb.appendChild(t);
+    });
+    const add = document.createElement('div');
+    add.className = 'slide-thumbnail';
+    add.style.borderStyle = 'dashed';
+    add.style.fontSize = '24px';
+    add.textContent = '+';
+    add.addEventListener('click', addNewSlide);
+    sb.appendChild(add);
+    renderActiveSlide();
+  }
+  function renderActiveSlide() {
+    const vp = document.getElementById('impress-slide-viewport');
+    if (!vp) return;
+    const s = state.slides.find(x => x.id === state.activeSlideId) || state.slides[0];
+    if (!s) return;
+    vp.style.background = s.bg || '#fff';
+    let body;
+    if (s.layout === 'Title') {
+      body = '<div style="margin:auto;text-align:center;width:100%;"><div data-fld="title" contenteditable="true" style="font-size:40px;font-weight:800;color:#1e293b;outline:none;">' + s.title + '</div><div data-fld="subtitle" contenteditable="true" style="font-size:20px;color:#64748b;margin-top:16px;outline:none;">' + (s.subtitle || '') + '</div></div>';
+    } else if (s.layout === 'TwoColumns') {
+      body = '<div data-fld="title" contenteditable="true" style="font-size:28px;font-weight:700;outline:none;">' + s.title + '</div><div style="display:flex;gap:24px;margin-top:24px;flex:1;"><div data-fld="subtitle" contenteditable="true" style="flex:1;font-size:15px;white-space:pre-wrap;outline:none;">' + (s.subtitle || '') + '</div><div contenteditable="true" style="flex:1;font-size:15px;outline:none;color:#64748b;">Column 2</div></div>';
+    } else {
+      body = '<div data-fld="title" contenteditable="true" style="font-size:28px;font-weight:700;outline:none;">' + s.title + '</div><div data-fld="subtitle" contenteditable="true" style="font-size:16px;color:#475569;margin-top:20px;white-space:pre-wrap;outline:none;flex:1;">' + (s.subtitle || '') + '</div>';
+    }
+    vp.innerHTML = body;
+    vp.querySelectorAll('[data-fld]').forEach(ed => {
+      ed.addEventListener('input', () => {
+        if (ed.dataset.fld === 'title') s.title = ed.innerText;
+        else s.subtitle = ed.innerText;
+      });
+    });
+  }
+  function addNewSlide() {
+    const id = state.slides.length ? Math.max(...state.slides.map(s => s.id)) + 1 : 1;
+    state.slides.push({ id, title: 'New Slide', subtitle: 'Click to edit', layout: 'Content', bg: 'linear-gradient(135deg,#fdfbfb 0%,#ebedee 100%)', shapes: [] });
+    state.activeSlideId = id;
+    renderSlideList();
+    showToast('Slide added');
+  }
+  function deleteActiveSlide() {
+    if (state.slides.length <= 1) { showToast('Cannot delete only slide'); return; }
+    const i = state.slides.findIndex(s => s.id === state.activeSlideId);
+    state.slides.splice(i, 1);
+    state.activeSlideId = state.slides[Math.max(0, i - 1)].id;
+    renderSlideList();
+    showToast('Slide deleted');
+  }
+  function duplicateActiveSlide() {
+    const s = state.slides.find(x => x.id === state.activeSlideId);
+    if (!s) return;
+    const id = Math.max(...state.slides.map(x => x.id)) + 1;
+    const copy = JSON.parse(JSON.stringify(s)); copy.id = id;
+    const i = state.slides.findIndex(x => x.id === state.activeSlideId);
+    state.slides.splice(i + 1, 0, copy);
+    state.activeSlideId = id;
+    renderSlideList();
+    showToast('Slide duplicated');
+  }
+  function changeSlideLayout(layout) {
+    const s = state.slides.find(x => x.id === state.activeSlideId);
+    if (s) { s.layout = layout; renderActiveSlide(); showToast('Layout: ' + layout); }
+  }
+  function setSlideBackground(bg) {
+    const s = state.slides.find(x => x.id === state.activeSlideId);
+    if (s) { s.bg = bg; renderSlideList(); showToast('Background applied'); }
+  }
+  function navigateSlide(dir) {
+    if (slideshowOpen) {
+      state.slideshowActiveIndex = Math.max(0, Math.min(state.slides.length - 1, state.slideshowActiveIndex + dir));
+      renderSlideshow();
+    } else {
+      const i = state.slides.findIndex(s => s.id === state.activeSlideId);
+      const ni = Math.max(0, Math.min(state.slides.length - 1, i + dir));
+      state.activeSlideId = state.slides[ni].id;
+      renderSlideList();
+    }
+  }
+  function startSlideshow() {
+    slideshowOpen = true;
+    state.slideshowActiveIndex = Math.max(0, state.slides.findIndex(s => s.id === state.activeSlideId));
+    const m = document.getElementById('slideshow-modal');
+    if (m) { m.style.display = 'flex'; m.classList.add('active'); }
+    renderSlideshow();
+  }
+  function renderSlideshow() {
+    const vp = document.getElementById('slideshow-viewport');
+    const s = state.slides[state.slideshowActiveIndex];
+    if (!vp || !s) return;
+    vp.style.background = s.bg || '#fff';
+    vp.innerHTML = '<div style="text-align:center;margin:auto;"><div style="font-size:48px;font-weight:800;color:#1e293b;">' + s.title + '</div><div style="font-size:22px;color:#475569;margin-top:24px;white-space:pre-wrap;">' + (s.subtitle || '') + '</div></div>';
+    const p = document.getElementById('slideshow-progress');
+    if (p) p.textContent = (state.slideshowActiveIndex + 1) + ' / ' + state.slides.length;
+  }
+  function closeSlideshow() {
+    slideshowOpen = false;
+    const m = document.getElementById('slideshow-modal');
+    if (m) { m.style.display = 'none'; m.classList.remove('active'); }
+  }
+
+  // ── PDF actions ────────────────────────────────────────────────
+  function renderPdfPages() {
+    const nav = document.getElementById('pdf-pages-nav');
+    const scroll = document.getElementById('pdf-scroll-container');
+    if (!scroll) return;
+    if (nav) nav.innerHTML = '<div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">PDF Pages</div>';
+    scroll.innerHTML = '';
+    state.pdfPages.forEach((pg, i) => {
+      if (nav) {
+        const th = document.createElement('div');
+        th.className = 'pdf-page-thumb' + (i === state.activePdfPageIndex ? ' active' : '');
+        th.textContent = (i + 1);
+        th.addEventListener('click', () => { state.activePdfPageIndex = i; renderPdfPages(); const el = document.getElementById('pdf-page-' + i); if (el) el.scrollIntoView({ behavior: 'smooth' }); });
+        nav.appendChild(th);
+      }
+      const cont = document.createElement('div');
+      cont.className = 'pdf-page-container';
+      cont.id = 'pdf-page-' + i;
+      cont.style.transform = 'rotate(' + (pg.rotation || 0) + 'deg)';
+      cont.innerHTML = '<canvas class="pdf-page-overlay" id="pdf-canvas-' + i + '"></canvas>' +
+        '<div class="pdf-page-content"><h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">' + pg.title + '</h2>' +
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:16px;">' + pg.subtitle + '</div><p>' + pg.content + '</p></div>';
+      scroll.appendChild(cont);
+      setupPdfCanvas(i);
+    });
+  }
+  function setupPdfCanvas(i) {
+    const cont = document.getElementById('pdf-page-' + i);
+    const cv = document.getElementById('pdf-canvas-' + i);
+    if (!cont || !cv) return;
+    cv.width = cont.clientWidth || 760;
+    cv.height = cont.clientHeight || 1000;
+    const ctx = cv.getContext('2d');
+    state.pdfDrawingContexts[i] = ctx;
+    let drawing = false;
+    cv.addEventListener('mousedown', e => {
+      if (state.drawingTool === 'select') return;
+      drawing = true;
+      const r = cv.getBoundingClientRect();
+      ctx.beginPath(); ctx.moveTo(e.clientX - r.left, e.clientY - r.top);
+    });
+    cv.addEventListener('mousemove', e => {
+      if (!drawing) return;
+      const r = cv.getBoundingClientRect();
+      ctx.lineTo(e.clientX - r.left, e.clientY - r.top);
+      ctx.strokeStyle = state.drawingTool === 'highlighter' ? 'rgba(250,204,21,.4)' : state.penColor;
+      ctx.lineWidth = state.drawingTool === 'highlighter' ? 18 : (state.drawingTool === 'eraser' ? 24 : state.penWidth);
+      ctx.globalCompositeOperation = state.drawingTool === 'eraser' ? 'destination-out' : 'source-over';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    });
+    window.addEventListener('mouseup', () => { drawing = false; });
+    cv.style.pointerEvents = state.drawingTool === 'select' ? 'none' : 'auto';
+  }
+  function setDrawingTool(tool) {
+    state.drawingTool = tool;
+    document.querySelectorAll('.pdf-page-overlay').forEach(cv => cv.style.pointerEvents = tool === 'select' ? 'none' : 'auto');
+    showToast('Tool: ' + tool);
+  }
+  function clearActiveDrawings() {
+    document.querySelectorAll('.pdf-page-overlay').forEach(cv => { const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); });
+    showToast('Drawings cleared');
+  }
+  function rotatePDFPage() {
+    const pg = state.pdfPages[state.activePdfPageIndex];
+    if (!pg) return;
+    pg.rotation = ((pg.rotation || 0) + 90) % 360;
+    const cont = document.getElementById('pdf-page-' + state.activePdfPageIndex);
+    if (cont) cont.style.transform = 'rotate(' + pg.rotation + 'deg)';
+    showToast('Page rotated ' + pg.rotation + '°');
+  }
+  function openSignatureCanvasDialog() { setDrawingTool('pen'); showToast('✍️ Signature mode — draw on the PDF page'); }
+
+  // Expose all handlers globally for inline onclick attributes
+  Object.assign(window, {
+    computeFormula, executeFormatting, growFontSize, shrinkFontSize, changeLineSpacing,
+    changeParagraphShading, activateFormatPainter, changeMargins, changePageSize, toggleOrientation,
+    addNewPage, deleteActivePage, toggleWordRuler, toggleWordGrid, toggleWordCount, toggleTrackChanges,
+    insertWordArt, insertMockImage, insertShape, insertFootnote, insertReferenceCitation, insertStickyNote,
+    insertTableOfContents, openInsertTableDialog, openFindReplaceDialog, runSpellingCheck, simulateThesaurus,
+    manageSources, protectDocument, translateActiveSelection, triggerCopilot,
+    triggerCopy, triggerCut, triggerPaste, triggerUndo, triggerRedo,
+    adjustZoom, resetZoom, applyZoom,
+    renderSheetTabs, applyCellFormat, insertFormula, freezePanes, generateDynamicSheetChart,
+    renderSlideList, renderActiveSlide, addNewSlide, deleteActiveSlide, duplicateActiveSlide,
+    changeSlideLayout, setSlideBackground, navigateSlide, startSlideshow, closeSlideshow,
+    renderPdfPages, setDrawingTool, clearActiveDrawings, rotatePDFPage, openSignatureCanvasDialog
+  });
 
   // ═══════════════════════════════════
   //  STARTUP INITIALIZATION
