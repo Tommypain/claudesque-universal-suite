@@ -1,29 +1,51 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly } from "@tanstack/react-router";
+import OfficeSuite from "../office/OfficeSuite";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Omega Office Suite — Word, Sheet, Impress & PDF" },
+      {
+        name: "description",
+        content:
+          "A beautiful, Claude-inspired office suite: word processor, spreadsheets, presentations and PDF editing — works on any device.",
+      },
+      { property: "og:title", content: "Omega Office Suite" },
+      {
+        property: "og:description",
+        content:
+          "A beautiful, Claude-inspired office suite that runs on any platform.",
+      },
+    ],
+    links: [
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
+    <ClientOnly
+      fallback={
+        <div
+          style={{
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "Inter, system-ui, sans-serif",
+            color: "#7a7a7a",
+            background: "#f3f3ee",
+          }}
+        >
+          Loading Omega Office Suite…
+        </div>
+      }
     >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+      <OfficeSuite />
+    </ClientOnly>
   );
 }
