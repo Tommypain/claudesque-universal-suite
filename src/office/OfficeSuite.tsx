@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import markup from "./markup.html?raw";
 import "./office.css";
+import "./host.css";
 
 /**
  * Omega Office Suite — hosted faithfully inside React/TanStack.
