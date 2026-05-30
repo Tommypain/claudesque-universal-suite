@@ -1249,7 +1249,13 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   function insertWordArt() { insertAtEditor('<span style="font-size:40px;font-weight:800;background:linear-gradient(90deg,#6366f1,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;">WordArt</span>&nbsp;'); }
   function insertMockImage() { insertAtEditor('<img src="https://picsum.photos/480/280" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="image"/>'); }
   function insertShape(type) {
-    const map = { star: '★', circle: '●', square: '■', triangle: '▲', diamond: '◆' };
+    // In Impress, shapes are real, movable objects on the slide.
+    if (state.activeApp === 'impress') {
+      addSlideShape(type);
+      return;
+    }
+    // In Word/PDF, drop a quick glyph at the cursor.
+    const map = { star: '★', circle: '●', square: '■', triangle: '▲', diamond: '◆', arrow: '➤', heart: '❤', pentagon: '⬠', hexagon: '⬡' };
     insertAtEditor('<span style="font-size:36px;color:#f59e0b;">' + (map[type] || '★') + '</span>&nbsp;');
   }
   function insertFootnote() { insertAtEditor('<sup style="color:#6366f1;">[1]</sup>'); showToast('Footnote inserted'); }
