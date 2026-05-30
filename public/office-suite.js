@@ -1249,9 +1249,131 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   function insertWordArt() { insertAtEditor('<span style="font-size:40px;font-weight:800;background:linear-gradient(90deg,#6366f1,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;">WordArt</span>&nbsp;'); }
   function insertMockImage() { insertAtEditor('<img src="https://picsum.photos/480/280" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="image"/>'); }
   function insertShape(type) {
-    const map = { star: '★', circle: '●', square: '■', triangle: '▲', diamond: '◆' };
+    // In Impress, shapes are real, movable objects on the slide.
+    if (state.activeApp === 'impress') {
+      addSlideShape(type);
+      return;
+    }
+    // In Word/PDF, drop a quick glyph at the cursor.
+    const map = { star: '★', circle: '●', square: '■', triangle: '▲', diamond: '◆', arrow: '➤', heart: '❤', pentagon: '⬠', hexagon: '⬡' };
     insertAtEditor('<span style="font-size:36px;color:#f59e0b;">' + (map[type] || '★') + '</span>&nbsp;');
   }
+
+  // ── Impress shapes engine ──────────────────────────────────────
+  state.selectedShapeId = null;
+  function shapeSVG(type, fill) {
+    const f = fill || '#6366f1';
+    const open = '<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%;display:block;overflow:visible;">';
+    switch (type) {
+      case 'circle': return open + '<ellipse cx="50" cy="50" rx="48" ry="48" fill="' + f + '"/></svg>';
+      case 'square': return open + '<rect x="2" y="2" width="96" height="96" rx="4" fill="' + f + '"/></svg>';
+      case 'triangle': return open + '<polygon points="50,2 98,98 2,98" fill="' + f + '"/></svg>';
+      case 'diamond': return open + '<polygon points="50,2 98,50 50,98 2,50" fill="' + f + '"/></svg>';
+      case 'star': return open + '<polygon points="50,3 61,38 98,38 68,60 79,95 50,73 21,95 32,60 2,38 39,38" fill="' + f + '"/></svg>';
+      case 'pentagon': return open + '<polygon points="50,2 98,38 80,98 20,98 2,38" fill="' + f + '"/></svg>';
+      case 'hexagon': return open + '<polygon points="25,2 75,2 98,50 75,98 25,98 2,50" fill="' + f + '"/></svg>';
+      case 'arrow': return open + '<polygon points="2,35 60,35 60,15 98,50 60,85 60,65 2,65" fill="' + f + '"/></svg>';
+      case 'heart': return open + '<path d="M50 90 C10 55 10 20 35 20 C45 20 50 30 50 35 C50 30 55 20 65 20 C90 20 90 55 50 90 Z" fill="' + f + '"/></svg>';
+      case 'line': return open + '<line x1="2" y1="50" x2="98" y2="50" stroke="' + f + '" stroke-width="6" stroke-linecap="round"/></svg>';
+      case 'speech': return open + '<path d="M5 5 H95 V70 H45 L25 92 V70 H5 Z" fill="' + f + '"/></svg>';
+      default: return open + '<rect x="2" y="2" width="96" height="96" rx="4" fill="' + f + '"/></svg>';
+    }
+  }
+  function getActiveSlide() { return state.slides.find(x => x.id === state.activeSlideId) || state.slides[0]; }
+  function addSlideShape(type) {
+    const s = getActiveSlide(); if (!s) return;
+    if (!s.shapes) s.shapes = [];
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    s.shapes.push({ id, type, xf: 0.38, yf: 0.38, wf: 0.22, hf: 0.22, fill: '#6366f1', anim: 'none' });
+    state.selectedShapeId = id;
+    renderActiveSlide();
+    showToast(type + ' shape added — drag to move, corner to resize');
+  }
+  function deleteSelectedShape() {
+    const s = getActiveSlide(); if (!s || !s.shapes) return;
+    s.shapes = s.shapes.filter(sh => sh.id !== state.selectedShapeId);
+    state.selectedShapeId = null;
+    renderActiveSlide();
+  }
+  function setShapeFill(color) {
+    const s = getActiveSlide(); if (!s || !s.shapes) return;
+    const sh = s.shapes.find(x => x.id === state.selectedShapeId);
+    if (sh) { sh.fill = color; renderActiveSlide(); } else showToast('Select a shape first');
+  }
+  function setShapeAnimation(anim) {
+    const s = getActiveSlide(); if (!s || !s.shapes) return;
+    const sh = s.shapes.find(x => x.id === state.selectedShapeId);
+    if (sh) { sh.anim = anim; showToast('Animation: ' + anim); } else showToast('Select a shape first');
+  }
+  function setSlideTransition(t) {
+    const s = getActiveSlide(); if (s) { s.transition = t; showToast('Transition: ' + t); }
+  }
+  function renderSlideShapes(host, slide, opts) {
+    opts = opts || {};
+    if (!slide.shapes) return;
+    slide.shapes.forEach(sh => {
+      const el = document.createElement('div');
+      el.className = 'slide-shape';
+      el.style.cssText = 'position:absolute;left:' + (sh.xf * 100) + '%;top:' + (sh.yf * 100) + '%;width:' + (sh.wf * 100) + '%;height:' + (sh.hf * 100) + '%;cursor:move;';
+      el.innerHTML = shapeSVG(sh.type, sh.fill);
+      if (opts.play && sh.anim && sh.anim !== 'none') {
+        el.style.animation = 'shp-' + sh.anim + ' .7s ease both';
+      }
+      if (opts.editable) {
+        if (sh.id === state.selectedShapeId) el.classList.add('selected');
+        el.addEventListener('mousedown', e => startShapeDrag(e, sh, host));
+        el.addEventListener('touchstart', e => startShapeDrag(e, sh, host), { passive: false });
+        const handle = document.createElement('div');
+        handle.className = 'shape-resize-handle';
+        handle.addEventListener('mousedown', e => { e.stopPropagation(); startShapeResize(e, sh, host); });
+        handle.addEventListener('touchstart', e => { e.stopPropagation(); startShapeResize(e, sh, host); }, { passive: false });
+        el.appendChild(handle);
+      }
+      host.appendChild(el);
+    });
+  }
+  function evtPoint(e) {
+    const t = e.touches && e.touches[0] ? e.touches[0] : e;
+    return { x: t.clientX, y: t.clientY };
+  }
+  function startShapeDrag(e, sh, host) {
+    e.preventDefault();
+    state.selectedShapeId = sh.id;
+    const r = host.getBoundingClientRect();
+    const p0 = evtPoint(e);
+    const x0 = sh.xf, y0 = sh.yf;
+    const move = ev => {
+      const p = evtPoint(ev);
+      sh.xf = Math.max(0, Math.min(1 - sh.wf, x0 + (p.x - p0.x) / r.width));
+      sh.yf = Math.max(0, Math.min(1 - sh.hf, y0 + (p.y - p0.y) / r.height));
+      renderActiveSlide();
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
+  }
+  function startShapeResize(e, sh, host) {
+    e.preventDefault();
+    const r = host.getBoundingClientRect();
+    const p0 = evtPoint(e);
+    const w0 = sh.wf, h0 = sh.hf;
+    const move = ev => {
+      const p = evtPoint(ev);
+      sh.wf = Math.max(0.05, Math.min(1 - sh.xf, w0 + (p.x - p0.x) / r.width));
+      sh.hf = Math.max(0.05, Math.min(1 - sh.yf, h0 + (p.y - p0.y) / r.height));
+      renderActiveSlide();
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
+  }
+
   function insertFootnote() { insertAtEditor('<sup style="color:#6366f1;">[1]</sup>'); showToast('Footnote inserted'); }
   function insertReferenceCitation() { insertAtEditor(' (Author, 2026) '); showToast('Citation inserted'); }
   function insertStickyNote() { insertAtEditor('<span style="background:#fef08a;padding:2px 6px;border-radius:4px;">📌 Note</span>&nbsp;'); }

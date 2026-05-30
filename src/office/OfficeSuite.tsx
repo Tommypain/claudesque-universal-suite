@@ -6,10 +6,13 @@ import "./host.css";
 /**
  * Omega Office Suite — hosted faithfully inside React/TanStack.
  *
- * The original single-file app (markup + CSS + vanilla JS) is preserved
- * verbatim. We inject the markup, load the external libraries it depends on,
- * then run the original script in global scope so its inline onclick handlers
- * keep working. This is client-only (touches document/window/localStorage).
+ * IMPORTANT: the original single-file app builds large parts of its UI
+ * imperatively (Word pages, the spreadsheet grid, slides, PDF pages…).
+ * If we let React own the markup via `dangerouslySetInnerHTML`, every
+ * re-render (e.g. StrictMode's double mount) reconciles the subtree and
+ * WIPES everything the vanilla script injected — empty workspaces and
+ * dead-looking buttons. So we inject the markup ONCE into a ref'd div
+ * that React never reconciles, then load the libs + the app script.
  */
 
 const EXTERNAL_STYLES: { id: string; href: string }[] = [
@@ -49,40 +52,55 @@ function ensureScript({ id, src }: { id: string; src: string }) {
   return new Promise<void>((resolve) => {
     const existing = document.getElementById(id) as HTMLScriptElement | null;
     if (existing) {
-      resolve();
+      if (existing.dataset.loaded === "1") resolve();
+      else existing.addEventListener("load", () => resolve());
       return;
     }
     const s = document.createElement("script");
     s.id = id;
     s.src = src;
     s.async = false;
-    s.onload = () => resolve();
+    s.onload = () => {
+      s.dataset.loaded = "1";
+      resolve();
+    };
     s.onerror = () => resolve(); // don't block the app if a CDN lib fails
     document.head.appendChild(s);
   });
 }
 
+// Module-level guard so StrictMode's double-invoke can't boot twice.
+let booted = false;
+
 export default function OfficeSuite() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const bootedRef = useRef(false);
 
   useEffect(() => {
-    if (bootedRef.current) return;
-    bootedRef.current = true;
+    const container = containerRef.current;
+    if (!container) return;
 
-    // Drive the design-system classes on <body> (CSS keys off body.app-*/layout-*).
+    // Always make sure the design-system body/html classes are present.
     const body = document.body;
-    const prevBodyClass = body.className;
-    body.classList.add("app-word", "layout-basic");
+    if (!Array.from(body.classList).some((c) => c.startsWith("app-"))) {
+      body.classList.add("app-word");
+    }
+    if (!Array.from(body.classList).some((c) => c.startsWith("layout-"))) {
+      body.classList.add("layout-basic");
+    }
     document.documentElement.classList.add("omega-host");
+
+    // StrictMode re-invokes effects on the SAME DOM node; if we've already
+    // injected and the markup is still present, do nothing.
+    if (booted && container.childElementCount > 0) return;
+    booted = true;
+
+    // Inject the markup ONCE, imperatively — React will not reconcile it.
+    container.innerHTML = markup;
 
     EXTERNAL_STYLES.forEach(ensureStyle);
 
-    let cancelled = false;
     (async () => {
       await Promise.all(EXTERNAL_SCRIPTS.map(ensureScript));
-      if (cancelled) return;
-      // Run the original suite script in global scope (after markup is mounted).
       if (!document.getElementById("omega-app-script")) {
         const appScript = document.createElement("script");
         appScript.id = "omega-app-script";
@@ -92,19 +110,9 @@ export default function OfficeSuite() {
       }
     })();
 
-    return () => {
-      cancelled = true;
-      body.className = prevBodyClass;
-      document.documentElement.classList.remove("omega-host");
-    };
+    // No destructive cleanup: this is a single-route app and the suite owns
+    // the document classes for its whole lifetime.
   }, []);
 
-  return (
-    <div
-      ref={containerRef}
-      className="omega-suite-root"
-      // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: markup }}
-    />
-  );
+  return <div ref={containerRef} className="omega-suite-root" />;
 }
