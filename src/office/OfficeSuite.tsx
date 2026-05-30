@@ -89,18 +89,13 @@ export default function OfficeSuite() {
     }
     document.documentElement.classList.add("omega-host");
 
-    if (booted) {
-      // Re-attach the already-built DOM if React replaced our node.
-      if (!container.firstChild && window.__omegaRoot) {
-        container.appendChild(window.__omegaRoot);
-      }
-      return;
-    }
+    // StrictMode re-invokes effects on the SAME DOM node; if we've already
+    // injected and the markup is still present, do nothing.
+    if (booted && container.childElementCount > 0) return;
     booted = true;
 
     // Inject the markup ONCE, imperatively — React will not reconcile it.
     container.innerHTML = markup;
-    window.__omegaRoot = container.firstElementChild as HTMLElement | undefined;
 
     EXTERNAL_STYLES.forEach(ensureStyle);
 
