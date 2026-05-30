@@ -116,9 +116,3 @@ export default function OfficeSuite() {
 
   return <div ref={containerRef} className="omega-suite-root" />;
 }
-
-declare global {
-  interface Window {
-    __omegaRoot?: HTMLElement;
-  }
-}
