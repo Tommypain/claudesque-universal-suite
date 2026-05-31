@@ -920,17 +920,6 @@ App: ${state.activeApp.toUpperCase()}`,
         if (toast) toast.remove();
         showToast(`✅ CSV "${file.name}" imported — ${rows.length} rows`);
 
-      // ── .pdf ───────────────────────────────────────────────
-      } else if (ext === 'pdf') {
-        const url = URL.createObjectURL(file);
-        switchAppMode('pdf');
-        const pdfCanvas = document.getElementById('pdf-canvas-main');
-        if (pdfCanvas) {
-          pdfCanvas.innerHTML = `<object data="${url}" type="application/pdf" style="width:100%;height:100%;min-height:800px;"></object>`;
-        }
-        if (toast) toast.remove();
-        showToast(`✅ PDF "${file.name}" opened`);
-
       } else {
         if (toast) toast.remove();
         showToast(`⚠️ Unsupported file type: .${ext}`);
