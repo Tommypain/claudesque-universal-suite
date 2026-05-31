@@ -27,6 +27,11 @@
     ],
     activeSlideId: 1,
     slideshowActiveIndex: 0,
+    slideAspect: '16:9',
+    slideW: 1280,
+    slideH: 720,
+    selectedTextId: null,
+    selectedShapeId: null,
 
     // جداول البيانات وأوراق العمل المتعددة في تطبيق Sheet
     sheets: {
