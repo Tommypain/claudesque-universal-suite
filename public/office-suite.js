@@ -1584,9 +1584,12 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       content.style.minHeight = '1em';
       content.innerHTML = tx.html || '';
       content.addEventListener('input', () => { tx.html = content.innerHTML; });
-      content.addEventListener('focus', () => { state.selectedTextId = tx.id; state.selectedShapeId = null; markSelectedText(box); });
+      content.addEventListener('focus', () => {
+        if (state.selectedTextId === tx.id && !state.selectedShapeId) return;
+        state.selectedTextId = tx.id; state.selectedShapeId = null;
+        renderActiveSlide();
+      });
       box.appendChild(content);
-      box.addEventListener('mousedown', e => { state.selectedTextId = tx.id; });
       if (tx.id === state.selectedTextId) {
         const move = document.createElement('div');
         move.className = 'tb-move';
