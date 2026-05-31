@@ -1852,6 +1852,88 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   }
   function openSignatureCanvasDialog() { setDrawingTool('pen'); showToast('✍️ Signature mode — draw on the PDF page'); }
 
+  // ── Universal PDF viewer: opens PDF / DOCX / XLSX / CSV / PPTX inside the PDF tab ──
+  async function loadRealPdf(arrayBuffer, name) {
+    if (typeof pdfjsLib === 'undefined') { showToast('⚠️ PDF engine not loaded yet — try again'); return; }
+    try {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    } catch (e) {}
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages = [];
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const page = await pdf.getPage(n);
+      const viewport = page.getViewport({ scale: 1.6 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width; canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      pages.push({ html: '<img src="' + canvas.toDataURL('image/jpeg', 0.85) + '" style="width:100%;display:block;"/>', bare: true, rotation: 0 });
+    }
+    state.pdfPages = pages;
+    state.activePdfPageIndex = 0;
+    renderPdfPages();
+  }
+
+  async function openInPdfViewer(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const toast = showToast('⏳ Opening "' + file.name + '" in PDF viewer...', 0);
+    try {
+      switchAppMode('pdf');
+      if (ext === 'pdf') {
+        await loadRealPdf(await file.arrayBuffer(), file.name);
+      } else if (ext === 'docx' || ext === 'doc') {
+        if (typeof mammoth === 'undefined') throw new Error('mammoth.js not loaded');
+        const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+        const parts = result.value.split(/<hr\s*\/?>/i).filter(p => p.trim());
+        state.pdfPages = (parts.length ? parts : [result.value]).map(p => ({ html: p, rotation: 0 }));
+        state.activePdfPageIndex = 0;
+        renderPdfPages();
+      } else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+        if (typeof XLSX === 'undefined') throw new Error('SheetJS not loaded');
+        const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+        state.pdfPages = wb.SheetNames.map(nm => ({
+          html: '<h3 style="font-weight:700;margin-bottom:10px;">' + nm + '</h3>'
+            + XLSX.utils.sheet_to_html(wb.Sheets[nm]).replace('<table', '<table style="border-collapse:collapse;width:100%;font-size:12px;" border="1"'),
+          rotation: 0
+        }));
+        state.activePdfPageIndex = 0;
+        renderPdfPages();
+      } else if (ext === 'pptx') {
+        const text = await extractPptxText(await file.arrayBuffer());
+        state.pdfPages = (text.length ? text : ['(No readable text found)']).map((t, i) => ({
+          html: '<div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">Slide ' + (i + 1) + '</div><div style="white-space:pre-wrap;font-size:15px;line-height:1.6;">' + t + '</div>',
+          rotation: 0
+        }));
+        state.activePdfPageIndex = 0;
+        renderPdfPages();
+        showToast('ℹ️ PPTX shown as text preview (full layout not rendered)', 4000);
+      } else {
+        if (toast) toast.remove();
+        showToast('⚠️ Unsupported file type: .' + ext);
+        return;
+      }
+      if (toast) toast.remove();
+      showToast('✅ "' + file.name + '" opened in PDF viewer');
+    } catch (err) {
+      if (toast) toast.remove();
+      showToast('❌ Failed to open: ' + (err.message || err));
+    }
+  }
+
+  // Best-effort PPTX text extraction (slideN.xml) without extra libs
+  async function extractPptxText(arrayBuffer) {
+    try {
+      const bytes = new Uint8Array(arrayBuffer);
+      const text = new TextDecoder('latin1').decode(bytes);
+      // PPTX is a zip; we can't unzip without a lib, so scan for readable <a:t> runs in any uncompressed parts.
+      const matches = text.match(/<a:t>([^<]+)<\/a:t>/g);
+      if (!matches) return [];
+      const joined = matches.map(m => m.replace(/<\/?a:t>/g, '')).join('\n');
+      return [joined];
+    } catch (e) { return []; }
+  }
+
+
+
   // Expose all handlers globally for inline onclick attributes
   Object.assign(window, {
     computeFormula, executeFormatting, growFontSize, shrinkFontSize, changeLineSpacing,
