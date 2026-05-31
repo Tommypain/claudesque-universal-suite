@@ -1610,11 +1610,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     computeSlideScale();
   }
 
-  function markSelectedText(box) {
-    document.querySelectorAll('#impress-slide-viewport .slide-textbox').forEach(b => b.classList.remove('selected'));
-    if (box) box.classList.add('selected');
-    renderActiveSlide();
-  }
+
 
   function startBoxDrag(e, tx, host) {
     e.preventDefault();
