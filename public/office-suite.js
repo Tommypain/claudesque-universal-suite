@@ -1520,28 +1520,182 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     sb.appendChild(add);
     renderActiveSlide();
   }
+  // Build PowerPoint-style text boxes from a slide's legacy title/subtitle/layout
+  function ensureSlideTexts(s) {
+    if (s.texts) return;
+    s.texts = [];
+    const mk = (xf, yf, wf, hf, html, size, weight, color, align) =>
+      ({ id: Date.now() + Math.floor(Math.random() * 100000), xf, yf, wf, hf, html, size, weight, color, align });
+    if (s.layout === 'Title') {
+      s.texts.push(mk(0.10, 0.34, 0.80, 0.20, s.title || 'Click to add title', 54, 800, '#1e293b', 'center'));
+      s.texts.push(mk(0.18, 0.58, 0.64, 0.12, (s.subtitle || 'Subtitle').replace(/\n/g, '<br>'), 26, 400, '#64748b', 'center'));
+    } else if (s.layout === 'TwoColumns') {
+      s.texts.push(mk(0.06, 0.06, 0.88, 0.14, s.title || 'Title', 36, 700, '#1e293b', 'left'));
+      s.texts.push(mk(0.06, 0.26, 0.42, 0.66, (s.subtitle || 'Column 1').replace(/\n/g, '<br>'), 22, 400, '#334155', 'left'));
+      s.texts.push(mk(0.52, 0.26, 0.42, 0.66, 'Column 2', 22, 400, '#334155', 'left'));
+    } else {
+      s.texts.push(mk(0.06, 0.06, 0.88, 0.16, s.title || 'Title', 38, 700, '#1e293b', 'left'));
+      s.texts.push(mk(0.06, 0.28, 0.88, 0.62, (s.subtitle || 'Click to add text').replace(/\n/g, '<br>'), 24, 400, '#334155', 'left'));
+    }
+  }
+
+  function computeSlideScale() {
+    const stage = document.getElementById('impress-slide-stage');
+    const vp = document.getElementById('impress-slide-viewport');
+    const main = document.querySelector('.impress-main-view');
+    if (!stage || !vp || !main) return;
+    const availW = main.clientWidth - 48;
+    const availH = main.clientHeight - 48;
+    const scale = Math.max(0.1, Math.min(availW / state.slideW, availH / state.slideH));
+    vp.style.width = state.slideW + 'px';
+    vp.style.height = state.slideH + 'px';
+    vp.style.transform = 'scale(' + scale + ')';
+    stage.style.width = (state.slideW * scale) + 'px';
+    stage.style.height = (state.slideH * scale) + 'px';
+  }
+
   function renderActiveSlide() {
     const vp = document.getElementById('impress-slide-viewport');
     if (!vp) return;
     const s = state.slides.find(x => x.id === state.activeSlideId) || state.slides[0];
     if (!s) return;
+    ensureSlideTexts(s);
     vp.style.background = s.bg || '#fff';
-    let body;
-    if (s.layout === 'Title') {
-      body = '<div style="margin:auto;text-align:center;width:100%;"><div data-fld="title" contenteditable="true" style="font-size:40px;font-weight:800;color:#1e293b;outline:none;">' + s.title + '</div><div data-fld="subtitle" contenteditable="true" style="font-size:20px;color:#64748b;margin-top:16px;outline:none;">' + (s.subtitle || '') + '</div></div>';
-    } else if (s.layout === 'TwoColumns') {
-      body = '<div data-fld="title" contenteditable="true" style="font-size:28px;font-weight:700;outline:none;">' + s.title + '</div><div style="display:flex;gap:24px;margin-top:24px;flex:1;"><div data-fld="subtitle" contenteditable="true" style="flex:1;font-size:15px;white-space:pre-wrap;outline:none;">' + (s.subtitle || '') + '</div><div contenteditable="true" style="flex:1;font-size:15px;outline:none;color:#64748b;">Column 2</div></div>';
-    } else {
-      body = '<div data-fld="title" contenteditable="true" style="font-size:28px;font-weight:700;outline:none;">' + s.title + '</div><div data-fld="subtitle" contenteditable="true" style="font-size:16px;color:#475569;margin-top:20px;white-space:pre-wrap;outline:none;flex:1;">' + (s.subtitle || '') + '</div>';
-    }
-    vp.innerHTML = body;
-    vp.querySelectorAll('[data-fld]').forEach(ed => {
-      ed.addEventListener('input', () => {
-        if (ed.dataset.fld === 'title') s.title = ed.innerText;
-        else s.subtitle = ed.innerText;
-      });
+    vp.innerHTML = '';
+    // Shapes (movable)
+    renderSlideShapes(vp, s, { editable: true });
+    // Text boxes (movable, editable)
+    s.texts.forEach(tx => {
+      const box = document.createElement('div');
+      box.className = 'slide-textbox' + (tx.id === state.selectedTextId ? ' selected' : '');
+      box.style.left = (tx.xf * 100) + '%';
+      box.style.top = (tx.yf * 100) + '%';
+      box.style.width = (tx.wf * 100) + '%';
+      box.style.minHeight = (tx.hf * 100) + '%';
+      box.style.fontSize = (tx.size || 24) + 'px';
+      box.style.fontWeight = tx.weight || 400;
+      box.style.color = tx.color || '#1e293b';
+      box.style.textAlign = tx.align || 'left';
+      if (tx.italic) box.style.fontStyle = 'italic';
+      if (tx.font) box.style.fontFamily = tx.font;
+      const content = document.createElement('div');
+      content.contentEditable = 'true';
+      content.style.outline = 'none';
+      content.style.minHeight = '1em';
+      content.innerHTML = tx.html || '';
+      content.addEventListener('input', () => { tx.html = content.innerHTML; });
+      content.addEventListener('focus', () => { state.selectedTextId = tx.id; state.selectedShapeId = null; markSelectedText(box); });
+      box.appendChild(content);
+      box.addEventListener('mousedown', e => { state.selectedTextId = tx.id; });
+      if (tx.id === state.selectedTextId) {
+        const move = document.createElement('div');
+        move.className = 'tb-move';
+        move.innerHTML = '✛';
+        move.contentEditable = 'false';
+        move.addEventListener('mousedown', e => startBoxDrag(e, tx, vp));
+        move.addEventListener('touchstart', e => startBoxDrag(e, tx, vp), { passive: false });
+        box.appendChild(move);
+        const rs = document.createElement('div');
+        rs.className = 'tb-resize';
+        rs.contentEditable = 'false';
+        rs.addEventListener('mousedown', e => { e.stopPropagation(); startBoxResize(e, tx, vp); });
+        rs.addEventListener('touchstart', e => { e.stopPropagation(); startBoxResize(e, tx, vp); }, { passive: false });
+        box.appendChild(rs);
+      }
+      vp.appendChild(box);
     });
+    computeSlideScale();
   }
+
+  function markSelectedText(box) {
+    document.querySelectorAll('#impress-slide-viewport .slide-textbox').forEach(b => b.classList.remove('selected'));
+    if (box) box.classList.add('selected');
+    renderActiveSlide();
+  }
+
+  function startBoxDrag(e, tx, host) {
+    e.preventDefault();
+    state.selectedTextId = tx.id;
+    const r = host.getBoundingClientRect();
+    const sc = r.width / state.slideW; // host visual width / logical width
+    const p0 = evtPoint(e);
+    const x0 = tx.xf, y0 = tx.yf;
+    const move = ev => {
+      const p = evtPoint(ev);
+      tx.xf = Math.max(0, Math.min(1 - tx.wf, x0 + (p.x - p0.x) / r.width));
+      tx.yf = Math.max(0, Math.min(0.98, y0 + (p.y - p0.y) / r.height));
+      renderActiveSlide();
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
+  }
+  function startBoxResize(e, tx, host) {
+    e.preventDefault();
+    const r = host.getBoundingClientRect();
+    const p0 = evtPoint(e);
+    const w0 = tx.wf, h0 = tx.hf;
+    const move = ev => {
+      const p = evtPoint(ev);
+      tx.wf = Math.max(0.08, Math.min(1 - tx.xf, w0 + (p.x - p0.x) / r.width));
+      tx.hf = Math.max(0.05, Math.min(1 - tx.yf, h0 + (p.y - p0.y) / r.height));
+      renderActiveSlide();
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
+  }
+
+  function getSelectedText() {
+    const s = getActiveSlide(); if (!s || !s.texts) return null;
+    return s.texts.find(t => t.id === state.selectedTextId);
+  }
+  function addTextBox() {
+    const s = getActiveSlide(); if (!s) return;
+    ensureSlideTexts(s);
+    const id = Date.now() + Math.floor(Math.random() * 100000);
+    s.texts.push({ id, xf: 0.30, yf: 0.40, wf: 0.40, hf: 0.12, html: 'New text box', size: 24, weight: 400, color: '#1e293b', align: 'left' });
+    state.selectedTextId = id;
+    if (state.activeApp !== 'impress') switchAppMode('impress');
+    renderActiveSlide();
+    showToast('Text box added — click to edit, drag ✛ to move');
+  }
+  function insertTextBoxSmart() {
+    if (state.activeApp === 'impress') addTextBox();
+    else insertStickyNote();
+  }
+  function deleteSelectedText() {
+    const s = getActiveSlide(); if (!s || !s.texts) return;
+    s.texts = s.texts.filter(t => t.id !== state.selectedTextId);
+    state.selectedTextId = null;
+    renderActiveSlide();
+  }
+  function styleSelectedText(prop, val) {
+    const t = getSelectedText();
+    if (!t) { showToast('Select a text box first'); return; }
+    if (prop === 'bold') t.weight = (t.weight >= 700 ? 400 : 700);
+    else if (prop === 'italic') t.italic = !t.italic;
+    else if (prop === 'grow') t.size = (t.size || 24) + 4;
+    else if (prop === 'shrink') t.size = Math.max(8, (t.size || 24) - 4);
+    else t[prop] = val;
+    renderActiveSlide();
+  }
+  function setSlideSize(aspect) {
+    state.slideAspect = aspect;
+    if (aspect === '4:3') { state.slideW = 960; state.slideH = 720; }
+    else { state.slideW = 1280; state.slideH = 720; }
+    renderActiveSlide();
+    showToast('Slide size: ' + aspect);
+  }
+  // Recompute scale on window resize
+  window.addEventListener('resize', () => { if (state.activeApp === 'impress') computeSlideScale(); });
+
   function addNewSlide() {
     const id = state.slides.length ? Math.max(...state.slides.map(s => s.id)) + 1 : 1;
     state.slides.push({ id, title: 'New Slide', subtitle: 'Click to edit', layout: 'Content', bg: 'linear-gradient(135deg,#fdfbfb 0%,#ebedee 100%)', shapes: [] });
