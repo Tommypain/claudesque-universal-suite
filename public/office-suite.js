@@ -1617,7 +1617,6 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     e.preventDefault();
     state.selectedTextId = tx.id;
     const r = host.getBoundingClientRect();
-    const sc = r.width / state.slideW; // host visual width / logical width
     const p0 = evtPoint(e);
     const x0 = tx.xf, y0 = tx.yf;
     const move = ev => {
