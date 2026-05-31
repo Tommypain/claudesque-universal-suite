@@ -1720,7 +1720,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   }
   function changeSlideLayout(layout) {
     const s = state.slides.find(x => x.id === state.activeSlideId);
-    if (s) { s.layout = layout; renderActiveSlide(); showToast('Layout: ' + layout); }
+    if (s) { s.layout = layout; s.texts = null; state.selectedTextId = null; renderActiveSlide(); showToast('Layout: ' + layout); }
   }
   function setSlideBackground(bg) {
     const s = state.slides.find(x => x.id === state.activeSlideId);
