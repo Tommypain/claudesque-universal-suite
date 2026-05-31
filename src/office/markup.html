@@ -516,7 +516,7 @@
           <div class="rg">
             <div class="rgr">
               <button class="btn blg" onclick="insertWordArt()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M6 20V7a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v13M6 16h12"/></svg>WordArt</button>
-              <button class="btn blg" onclick="insertStickyNote()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M14 3v4a1 1 0 0 0 1 1h4M5 7V3a2 2 0 0 1 2-2h7l5 5v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3M9 13h6M9 17h4"/></svg>Text Box</button>
+              <button class="btn blg" onclick="insertTextBoxSmart()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M14 3v4a1 1 0 0 0 1 1h4M5 7V3a2 2 0 0 1 2-2h7l5 5v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3M9 13h6M9 17h4"/></svg>Text Box</button>
               <button class="btn blg" onclick="showDialog('Drop Cap','Drop cap applied to paragraph.','ti-text-size','success')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M3 7V5h13v2M10 5v14M7 19h6M15 13v-1h6v1M18 12v7M16 19h4"/></svg>Drop Cap</button>
             </div>
             <div class="rgl">Text</div>
@@ -1007,6 +1007,11 @@
               <button class="btn blg" onclick="addNewSlide()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 8v8M8 12h8"/></svg>Add Slide</button>
               <button class="btn blg" onclick="deleteActiveSlide()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>Delete</button>
               <button class="btn blg" onclick="duplicateActiveSlide()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2M16 4h2a2 2 0 0 1 2 2v6M11 14h10M17 10l4 4-4 4"/></svg>Duplicate</button>
+              <button class="btn blg" onclick="addTextBox()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>Text Box</button>
+              <select class="fsel" id="slide-size-select" style="width:120px" onchange="setSlideSize(this.value)">
+                <option value="16:9">Widescreen 16:9</option>
+                <option value="4:3">Standard 4:3</option>
+              </select>
             </div>
             <div class="rgl">Slide Management</div>
           </div>
@@ -1040,7 +1045,7 @@
       </div>
     </div>
 
-    <input type="file" id="physical-file-uploader" class="hidden" onchange="processUploadedFile(event)" accept=".txt,.csv,.json,.docx,.xlsx,.xls,.doc,.html,.htm,.md">
+    <input type="file" id="physical-file-uploader" class="hidden" onchange="processUploadedFile(event)" accept=".txt,.csv,.json,.docx,.xlsx,.xls,.doc,.html,.htm,.md,.pdf,.pptx">
 
     <!-- مساحات العمل الديناميكية المتغيرة للتطبيقات الأربعة -->
     <!-- ══ Horizontal ruler bar — fixed below ribbon, only visible in Word mode ══ -->
@@ -1213,7 +1218,9 @@
         <div class="impress-canvas">
           <div class="impress-sidebar" id="impress-slides-sidebar"></div>
           <div class="impress-main-view">
-            <div class="impress-slide" id="impress-slide-viewport"></div>
+            <div class="impress-slide-stage" id="impress-slide-stage">
+              <div class="impress-slide" id="impress-slide-viewport"></div>
+            </div>
           </div>
         </div>
       </div>

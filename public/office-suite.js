@@ -27,6 +27,11 @@
     ],
     activeSlideId: 1,
     slideshowActiveIndex: 0,
+    slideAspect: '16:9',
+    slideW: 1280,
+    slideH: 720,
+    selectedTextId: null,
+    selectedShapeId: null,
 
     // جداول البيانات وأوراق العمل المتعددة في تطبيق Sheet
     sheets: {
@@ -804,6 +809,15 @@ App: ${state.activeApp.toUpperCase()}`,
     const file = event.target.files[0];
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
+
+    // PDF/PPTX always open in the universal PDF viewer.
+    // Any other file opened while the PDF tab is active also shows in the viewer.
+    if (ext === 'pdf' || ext === 'pptx' || state.activeApp === 'pdf') {
+      await openInPdfViewer(file);
+      if (event.target) event.target.value = '';
+      return;
+    }
+
     const toast = showToast(`⏳ Opening "${file.name}"...`, 0);
 
     try {
@@ -905,17 +919,6 @@ App: ${state.activeApp.toUpperCase()}`,
         initializeSpreadsheet();
         if (toast) toast.remove();
         showToast(`✅ CSV "${file.name}" imported — ${rows.length} rows`);
-
-      // ── .pdf ───────────────────────────────────────────────
-      } else if (ext === 'pdf') {
-        const url = URL.createObjectURL(file);
-        switchAppMode('pdf');
-        const pdfCanvas = document.getElementById('pdf-canvas-main');
-        if (pdfCanvas) {
-          pdfCanvas.innerHTML = `<object data="${url}" type="application/pdf" style="width:100%;height:100%;min-height:800px;"></object>`;
-        }
-        if (toast) toast.remove();
-        showToast(`✅ PDF "${file.name}" opened`);
 
       } else {
         if (toast) toast.remove();
@@ -1515,28 +1518,180 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     sb.appendChild(add);
     renderActiveSlide();
   }
+  // Build PowerPoint-style text boxes from a slide's legacy title/subtitle/layout
+  function ensureSlideTexts(s) {
+    if (s.texts) return;
+    s.texts = [];
+    const mk = (xf, yf, wf, hf, html, size, weight, color, align) =>
+      ({ id: Date.now() + Math.floor(Math.random() * 100000), xf, yf, wf, hf, html, size, weight, color, align });
+    if (s.layout === 'Title') {
+      s.texts.push(mk(0.10, 0.34, 0.80, 0.20, s.title || 'Click to add title', 54, 800, '#1e293b', 'center'));
+      s.texts.push(mk(0.18, 0.58, 0.64, 0.12, (s.subtitle || 'Subtitle').replace(/\n/g, '<br>'), 26, 400, '#64748b', 'center'));
+    } else if (s.layout === 'TwoColumns') {
+      s.texts.push(mk(0.06, 0.06, 0.88, 0.14, s.title || 'Title', 36, 700, '#1e293b', 'left'));
+      s.texts.push(mk(0.06, 0.26, 0.42, 0.66, (s.subtitle || 'Column 1').replace(/\n/g, '<br>'), 22, 400, '#334155', 'left'));
+      s.texts.push(mk(0.52, 0.26, 0.42, 0.66, 'Column 2', 22, 400, '#334155', 'left'));
+    } else {
+      s.texts.push(mk(0.06, 0.06, 0.88, 0.16, s.title || 'Title', 38, 700, '#1e293b', 'left'));
+      s.texts.push(mk(0.06, 0.28, 0.88, 0.62, (s.subtitle || 'Click to add text').replace(/\n/g, '<br>'), 24, 400, '#334155', 'left'));
+    }
+  }
+
+  function computeSlideScale() {
+    const stage = document.getElementById('impress-slide-stage');
+    const vp = document.getElementById('impress-slide-viewport');
+    const main = document.querySelector('.impress-main-view');
+    if (!stage || !vp || !main) return;
+    const availW = main.clientWidth - 48;
+    const availH = main.clientHeight - 48;
+    const scale = Math.max(0.1, Math.min(availW / state.slideW, availH / state.slideH));
+    vp.style.width = state.slideW + 'px';
+    vp.style.height = state.slideH + 'px';
+    vp.style.transform = 'scale(' + scale + ')';
+    stage.style.width = (state.slideW * scale) + 'px';
+    stage.style.height = (state.slideH * scale) + 'px';
+  }
+
   function renderActiveSlide() {
     const vp = document.getElementById('impress-slide-viewport');
     if (!vp) return;
     const s = state.slides.find(x => x.id === state.activeSlideId) || state.slides[0];
     if (!s) return;
+    ensureSlideTexts(s);
     vp.style.background = s.bg || '#fff';
-    let body;
-    if (s.layout === 'Title') {
-      body = '<div style="margin:auto;text-align:center;width:100%;"><div data-fld="title" contenteditable="true" style="font-size:40px;font-weight:800;color:#1e293b;outline:none;">' + s.title + '</div><div data-fld="subtitle" contenteditable="true" style="font-size:20px;color:#64748b;margin-top:16px;outline:none;">' + (s.subtitle || '') + '</div></div>';
-    } else if (s.layout === 'TwoColumns') {
-      body = '<div data-fld="title" contenteditable="true" style="font-size:28px;font-weight:700;outline:none;">' + s.title + '</div><div style="display:flex;gap:24px;margin-top:24px;flex:1;"><div data-fld="subtitle" contenteditable="true" style="flex:1;font-size:15px;white-space:pre-wrap;outline:none;">' + (s.subtitle || '') + '</div><div contenteditable="true" style="flex:1;font-size:15px;outline:none;color:#64748b;">Column 2</div></div>';
-    } else {
-      body = '<div data-fld="title" contenteditable="true" style="font-size:28px;font-weight:700;outline:none;">' + s.title + '</div><div data-fld="subtitle" contenteditable="true" style="font-size:16px;color:#475569;margin-top:20px;white-space:pre-wrap;outline:none;flex:1;">' + (s.subtitle || '') + '</div>';
-    }
-    vp.innerHTML = body;
-    vp.querySelectorAll('[data-fld]').forEach(ed => {
-      ed.addEventListener('input', () => {
-        if (ed.dataset.fld === 'title') s.title = ed.innerText;
-        else s.subtitle = ed.innerText;
+    vp.innerHTML = '';
+    // Shapes (movable)
+    renderSlideShapes(vp, s, { editable: true });
+    // Text boxes (movable, editable)
+    s.texts.forEach(tx => {
+      const box = document.createElement('div');
+      box.className = 'slide-textbox' + (tx.id === state.selectedTextId ? ' selected' : '');
+      box.style.left = (tx.xf * 100) + '%';
+      box.style.top = (tx.yf * 100) + '%';
+      box.style.width = (tx.wf * 100) + '%';
+      box.style.minHeight = (tx.hf * 100) + '%';
+      box.style.fontSize = (tx.size || 24) + 'px';
+      box.style.fontWeight = tx.weight || 400;
+      box.style.color = tx.color || '#1e293b';
+      box.style.textAlign = tx.align || 'left';
+      if (tx.italic) box.style.fontStyle = 'italic';
+      if (tx.font) box.style.fontFamily = tx.font;
+      const content = document.createElement('div');
+      content.contentEditable = 'true';
+      content.style.outline = 'none';
+      content.style.minHeight = '1em';
+      content.innerHTML = tx.html || '';
+      content.addEventListener('input', () => { tx.html = content.innerHTML; });
+      content.addEventListener('focus', () => {
+        if (state.selectedTextId === tx.id && !state.selectedShapeId) return;
+        state.selectedTextId = tx.id; state.selectedShapeId = null;
+        renderActiveSlide();
       });
+      box.appendChild(content);
+      if (tx.id === state.selectedTextId) {
+        const move = document.createElement('div');
+        move.className = 'tb-move';
+        move.innerHTML = '✛';
+        move.contentEditable = 'false';
+        move.addEventListener('mousedown', e => startBoxDrag(e, tx, vp));
+        move.addEventListener('touchstart', e => startBoxDrag(e, tx, vp), { passive: false });
+        box.appendChild(move);
+        const rs = document.createElement('div');
+        rs.className = 'tb-resize';
+        rs.contentEditable = 'false';
+        rs.addEventListener('mousedown', e => { e.stopPropagation(); startBoxResize(e, tx, vp); });
+        rs.addEventListener('touchstart', e => { e.stopPropagation(); startBoxResize(e, tx, vp); }, { passive: false });
+        box.appendChild(rs);
+      }
+      vp.appendChild(box);
     });
+    computeSlideScale();
   }
+
+
+
+  function startBoxDrag(e, tx, host) {
+    e.preventDefault();
+    state.selectedTextId = tx.id;
+    const r = host.getBoundingClientRect();
+    const p0 = evtPoint(e);
+    const x0 = tx.xf, y0 = tx.yf;
+    const move = ev => {
+      const p = evtPoint(ev);
+      tx.xf = Math.max(0, Math.min(1 - tx.wf, x0 + (p.x - p0.x) / r.width));
+      tx.yf = Math.max(0, Math.min(0.98, y0 + (p.y - p0.y) / r.height));
+      renderActiveSlide();
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
+  }
+  function startBoxResize(e, tx, host) {
+    e.preventDefault();
+    const r = host.getBoundingClientRect();
+    const p0 = evtPoint(e);
+    const w0 = tx.wf, h0 = tx.hf;
+    const move = ev => {
+      const p = evtPoint(ev);
+      tx.wf = Math.max(0.08, Math.min(1 - tx.xf, w0 + (p.x - p0.x) / r.width));
+      tx.hf = Math.max(0.05, Math.min(1 - tx.yf, h0 + (p.y - p0.y) / r.height));
+      renderActiveSlide();
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
+  }
+
+  function getSelectedText() {
+    const s = getActiveSlide(); if (!s || !s.texts) return null;
+    return s.texts.find(t => t.id === state.selectedTextId);
+  }
+  function addTextBox() {
+    const s = getActiveSlide(); if (!s) return;
+    ensureSlideTexts(s);
+    const id = Date.now() + Math.floor(Math.random() * 100000);
+    s.texts.push({ id, xf: 0.30, yf: 0.40, wf: 0.40, hf: 0.12, html: 'New text box', size: 24, weight: 400, color: '#1e293b', align: 'left' });
+    state.selectedTextId = id;
+    if (state.activeApp !== 'impress') switchAppMode('impress');
+    renderActiveSlide();
+    showToast('Text box added — click to edit, drag ✛ to move');
+  }
+  function insertTextBoxSmart() {
+    if (state.activeApp === 'impress') addTextBox();
+    else insertStickyNote();
+  }
+  function deleteSelectedText() {
+    const s = getActiveSlide(); if (!s || !s.texts) return;
+    s.texts = s.texts.filter(t => t.id !== state.selectedTextId);
+    state.selectedTextId = null;
+    renderActiveSlide();
+  }
+  function styleSelectedText(prop, val) {
+    const t = getSelectedText();
+    if (!t) { showToast('Select a text box first'); return; }
+    if (prop === 'bold') t.weight = (t.weight >= 700 ? 400 : 700);
+    else if (prop === 'italic') t.italic = !t.italic;
+    else if (prop === 'grow') t.size = (t.size || 24) + 4;
+    else if (prop === 'shrink') t.size = Math.max(8, (t.size || 24) - 4);
+    else t[prop] = val;
+    renderActiveSlide();
+  }
+  function setSlideSize(aspect) {
+    state.slideAspect = aspect;
+    if (aspect === '4:3') { state.slideW = 960; state.slideH = 720; }
+    else { state.slideW = 1280; state.slideH = 720; }
+    renderActiveSlide();
+    showToast('Slide size: ' + aspect);
+  }
+  // Recompute scale on window resize
+  window.addEventListener('resize', () => { if (state.activeApp === 'impress') computeSlideScale(); });
+
   function addNewSlide() {
     const id = state.slides.length ? Math.max(...state.slides.map(s => s.id)) + 1 : 1;
     state.slides.push({ id, title: 'New Slide', subtitle: 'Click to edit', layout: 'Content', bg: 'linear-gradient(135deg,#fdfbfb 0%,#ebedee 100%)', shapes: [] });
@@ -1565,7 +1720,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   }
   function changeSlideLayout(layout) {
     const s = state.slides.find(x => x.id === state.activeSlideId);
-    if (s) { s.layout = layout; renderActiveSlide(); showToast('Layout: ' + layout); }
+    if (s) { s.layout = layout; s.texts = null; state.selectedTextId = null; renderActiveSlide(); showToast('Layout: ' + layout); }
   }
   function setSlideBackground(bg) {
     const s = state.slides.find(x => x.id === state.activeSlideId);
@@ -1593,11 +1748,24 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     const vp = document.getElementById('slideshow-viewport');
     const s = state.slides[state.slideshowActiveIndex];
     if (!vp || !s) return;
+    ensureSlideTexts(s);
     vp.style.background = s.bg || '#fff';
-    vp.innerHTML = '<div style="text-align:center;margin:auto;"><div style="font-size:48px;font-weight:800;color:#1e293b;">' + s.title + '</div><div style="font-size:22px;color:#475569;margin-top:24px;white-space:pre-wrap;">' + (s.subtitle || '') + '</div></div>';
+    vp.style.position = 'relative';
+    vp.style.aspectRatio = (state.slideW) + ' / ' + (state.slideH);
+    vp.innerHTML = '';
+    renderSlideShapes(vp, s, { play: true });
+    s.texts.forEach(tx => {
+      const box = document.createElement('div');
+      box.style.cssText = 'position:absolute;box-sizing:border-box;padding:1.2%;left:' + (tx.xf * 100) + '%;top:' + (tx.yf * 100) + '%;width:' + (tx.wf * 100) + '%;'
+        + 'font-size:' + ((tx.size || 24) / state.slideW * 100) + 'cqw;font-weight:' + (tx.weight || 400) + ';color:' + (tx.color || '#1e293b') + ';text-align:' + (tx.align || 'left') + ';' + (tx.italic ? 'font-style:italic;' : '');
+      box.innerHTML = tx.html || '';
+      vp.appendChild(box);
+    });
+    vp.style.containerType = 'inline-size';
     const p = document.getElementById('slideshow-progress');
     if (p) p.textContent = (state.slideshowActiveIndex + 1) + ' / ' + state.slides.length;
   }
+
   function closeSlideshow() {
     slideshowOpen = false;
     const m = document.getElementById('slideshow-modal');
@@ -1623,9 +1791,14 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       cont.className = 'pdf-page-container';
       cont.id = 'pdf-page-' + i;
       cont.style.transform = 'rotate(' + (pg.rotation || 0) + 'deg)';
-      cont.innerHTML = '<canvas class="pdf-page-overlay" id="pdf-canvas-' + i + '"></canvas>' +
-        '<div class="pdf-page-content"><h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">' + pg.title + '</h2>' +
-        '<div style="font-size:11px;color:#94a3b8;margin-bottom:16px;">' + pg.subtitle + '</div><p>' + pg.content + '</p></div>';
+      let inner;
+      if (pg.html != null) {
+        inner = '<div class="pdf-page-content" style="' + (pg.bare ? 'padding:0;' : '') + '">' + pg.html + '</div>';
+      } else {
+        inner = '<div class="pdf-page-content"><h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">' + (pg.title || '') + '</h2>'
+          + '<div style="font-size:11px;color:#94a3b8;margin-bottom:16px;">' + (pg.subtitle || '') + '</div><p>' + (pg.content || '') + '</p></div>';
+      }
+      cont.innerHTML = '<canvas class="pdf-page-overlay" id="pdf-canvas-' + i + '"></canvas>' + inner;
       scroll.appendChild(cont);
       setupPdfCanvas(i);
     });
@@ -1677,6 +1850,88 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   }
   function openSignatureCanvasDialog() { setDrawingTool('pen'); showToast('✍️ Signature mode — draw on the PDF page'); }
 
+  // ── Universal PDF viewer: opens PDF / DOCX / XLSX / CSV / PPTX inside the PDF tab ──
+  async function loadRealPdf(arrayBuffer, name) {
+    if (typeof pdfjsLib === 'undefined') { showToast('⚠️ PDF engine not loaded yet — try again'); return; }
+    try {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    } catch (e) {}
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages = [];
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const page = await pdf.getPage(n);
+      const viewport = page.getViewport({ scale: 1.6 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width; canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      pages.push({ html: '<img src="' + canvas.toDataURL('image/jpeg', 0.85) + '" style="width:100%;display:block;"/>', bare: true, rotation: 0 });
+    }
+    state.pdfPages = pages;
+    state.activePdfPageIndex = 0;
+    renderPdfPages();
+  }
+
+  async function openInPdfViewer(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const toast = showToast('⏳ Opening "' + file.name + '" in PDF viewer...', 0);
+    try {
+      switchAppMode('pdf');
+      if (ext === 'pdf') {
+        await loadRealPdf(await file.arrayBuffer(), file.name);
+      } else if (ext === 'docx' || ext === 'doc') {
+        if (typeof mammoth === 'undefined') throw new Error('mammoth.js not loaded');
+        const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+        const parts = result.value.split(/<hr\s*\/?>/i).filter(p => p.trim());
+        state.pdfPages = (parts.length ? parts : [result.value]).map(p => ({ html: p, rotation: 0 }));
+        state.activePdfPageIndex = 0;
+        renderPdfPages();
+      } else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+        if (typeof XLSX === 'undefined') throw new Error('SheetJS not loaded');
+        const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+        state.pdfPages = wb.SheetNames.map(nm => ({
+          html: '<h3 style="font-weight:700;margin-bottom:10px;">' + nm + '</h3>'
+            + XLSX.utils.sheet_to_html(wb.Sheets[nm]).replace('<table', '<table style="border-collapse:collapse;width:100%;font-size:12px;" border="1"'),
+          rotation: 0
+        }));
+        state.activePdfPageIndex = 0;
+        renderPdfPages();
+      } else if (ext === 'pptx') {
+        const text = await extractPptxText(await file.arrayBuffer());
+        state.pdfPages = (text.length ? text : ['(No readable text found)']).map((t, i) => ({
+          html: '<div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">Slide ' + (i + 1) + '</div><div style="white-space:pre-wrap;font-size:15px;line-height:1.6;">' + t + '</div>',
+          rotation: 0
+        }));
+        state.activePdfPageIndex = 0;
+        renderPdfPages();
+        showToast('ℹ️ PPTX shown as text preview (full layout not rendered)', 4000);
+      } else {
+        if (toast) toast.remove();
+        showToast('⚠️ Unsupported file type: .' + ext);
+        return;
+      }
+      if (toast) toast.remove();
+      showToast('✅ "' + file.name + '" opened in PDF viewer');
+    } catch (err) {
+      if (toast) toast.remove();
+      showToast('❌ Failed to open: ' + (err.message || err));
+    }
+  }
+
+  // Best-effort PPTX text extraction (slideN.xml) without extra libs
+  async function extractPptxText(arrayBuffer) {
+    try {
+      const bytes = new Uint8Array(arrayBuffer);
+      const text = new TextDecoder('latin1').decode(bytes);
+      // PPTX is a zip; we can't unzip without a lib, so scan for readable <a:t> runs in any uncompressed parts.
+      const matches = text.match(/<a:t>([^<]+)<\/a:t>/g);
+      if (!matches) return [];
+      const joined = matches.map(m => m.replace(/<\/?a:t>/g, '')).join('\n');
+      return [joined];
+    } catch (e) { return []; }
+  }
+
+
+
   // Expose all handlers globally for inline onclick attributes
   Object.assign(window, {
     computeFormula, executeFormatting, growFontSize, shrinkFontSize, changeLineSpacing,
@@ -1690,6 +1945,9 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     renderSheetTabs, applyCellFormat, insertFormula, freezePanes, generateDynamicSheetChart,
     renderSlideList, renderActiveSlide, addNewSlide, deleteActiveSlide, duplicateActiveSlide,
     changeSlideLayout, setSlideBackground, navigateSlide, startSlideshow, closeSlideshow,
+    addTextBox, insertTextBoxSmart, deleteSelectedText, styleSelectedText, setSlideSize,
+    addSlideShape, deleteSelectedShape, setShapeFill, setShapeAnimation, setSlideTransition,
+    openInPdfViewer,
     renderPdfPages, setDrawingTool, clearActiveDrawings, rotatePDFPage, openSignatureCanvasDialog
   });
 
