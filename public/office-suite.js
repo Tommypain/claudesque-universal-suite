@@ -1750,11 +1750,24 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     const vp = document.getElementById('slideshow-viewport');
     const s = state.slides[state.slideshowActiveIndex];
     if (!vp || !s) return;
+    ensureSlideTexts(s);
     vp.style.background = s.bg || '#fff';
-    vp.innerHTML = '<div style="text-align:center;margin:auto;"><div style="font-size:48px;font-weight:800;color:#1e293b;">' + s.title + '</div><div style="font-size:22px;color:#475569;margin-top:24px;white-space:pre-wrap;">' + (s.subtitle || '') + '</div></div>';
+    vp.style.position = 'relative';
+    vp.style.aspectRatio = (state.slideW) + ' / ' + (state.slideH);
+    vp.innerHTML = '';
+    renderSlideShapes(vp, s, { play: true });
+    s.texts.forEach(tx => {
+      const box = document.createElement('div');
+      box.style.cssText = 'position:absolute;box-sizing:border-box;padding:1.2%;left:' + (tx.xf * 100) + '%;top:' + (tx.yf * 100) + '%;width:' + (tx.wf * 100) + '%;'
+        + 'font-size:' + ((tx.size || 24) / state.slideW * 100) + 'cqw;font-weight:' + (tx.weight || 400) + ';color:' + (tx.color || '#1e293b') + ';text-align:' + (tx.align || 'left') + ';' + (tx.italic ? 'font-style:italic;' : '');
+      box.innerHTML = tx.html || '';
+      vp.appendChild(box);
+    });
+    vp.style.containerType = 'inline-size';
     const p = document.getElementById('slideshow-progress');
     if (p) p.textContent = (state.slideshowActiveIndex + 1) + ' / ' + state.slides.length;
   }
+
   function closeSlideshow() {
     slideshowOpen = false;
     const m = document.getElementById('slideshow-modal');
