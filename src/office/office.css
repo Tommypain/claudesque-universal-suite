@@ -840,21 +840,59 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 32px;
-      overflow: auto;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .impress-slide-stage {
+      position: relative;
+      flex-shrink: 0;
     }
 
     .impress-slide {
-      width: 800px;
-      aspect-ratio: 16/9;
+      width: 1280px;
+      height: 720px;
       background-color: var(--color-background-primary);
       border: 1px solid var(--color-border-primary);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-      padding: 48px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: top left;
       transition: background 0.3s ease;
+      overflow: hidden;
+    }
+
+    .slide-textbox {
+      position: absolute;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      outline: none;
+      cursor: text;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .slide-textbox:hover { border-color: rgba(99,102,241,0.35); }
+    .slide-textbox.selected { border: 1px solid #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.18); cursor: move; }
+    .slide-textbox .tb-resize {
+      position: absolute;
+      width: 16px; height: 16px;
+      right: -8px; bottom: -8px;
+      background: #6366f1;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      cursor: nwse-resize;
+    }
+    .slide-textbox .tb-move {
+      position: absolute;
+      top: -26px; left: 50%; transform: translateX(-50%);
+      width: 26px; height: 20px;
+      background: #6366f1; color: #fff;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: move; font-size: 12px;
     }
 
     /* 3. هيكل جداول البيانات (Sheet) */
