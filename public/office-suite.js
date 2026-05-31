@@ -809,6 +809,15 @@ App: ${state.activeApp.toUpperCase()}`,
     const file = event.target.files[0];
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
+
+    // PDF/PPTX always open in the universal PDF viewer.
+    // Any other file opened while the PDF tab is active also shows in the viewer.
+    if (ext === 'pdf' || ext === 'pptx' || state.activeApp === 'pdf') {
+      await openInPdfViewer(file);
+      if (event.target) event.target.value = '';
+      return;
+    }
+
     const toast = showToast(`⏳ Opening "${file.name}"...`, 0);
 
     try {
