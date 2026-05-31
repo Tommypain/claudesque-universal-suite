@@ -1945,6 +1945,9 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     renderSheetTabs, applyCellFormat, insertFormula, freezePanes, generateDynamicSheetChart,
     renderSlideList, renderActiveSlide, addNewSlide, deleteActiveSlide, duplicateActiveSlide,
     changeSlideLayout, setSlideBackground, navigateSlide, startSlideshow, closeSlideshow,
+    addTextBox, insertTextBoxSmart, deleteSelectedText, styleSelectedText, setSlideSize,
+    addSlideShape, deleteSelectedShape, setShapeFill, setShapeAnimation, setSlideTransition,
+    openInPdfViewer,
     renderPdfPages, setDrawingTool, clearActiveDrawings, rotatePDFPage, openSignatureCanvasDialog
   });
 
