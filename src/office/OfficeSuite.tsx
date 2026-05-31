@@ -37,6 +37,10 @@ const EXTERNAL_SCRIPTS: { id: string; src: string }[] = [
     src: "https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js",
   },
   { id: "docx-lib", src: "https://unpkg.com/docx@8.5.0/build/index.umd.js" },
+  {
+    id: "pdfjs-lib",
+    src: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",
+  },
 ];
 
 function ensureStyle({ id, href }: { id: string; href: string }) {
