@@ -178,19 +178,19 @@
   }
 
   function toggleDarkMode() {
-    state.darkMode = !state.darkMode;
-    document.body.classList.toggle('dark', state.darkMode);
+    const next = state.darkMode ? 'light' : 'dark';
+    localStorage.setItem('octopus-theme-mode', next);
+    if (typeof applyTheme === 'function') {
+      applyTheme(next);
+    } else {
+      state.darkMode = next === 'dark';
+      document.body.classList.toggle('dark', state.darkMode);
+      document.documentElement.setAttribute('data-theme', next);
+    }
     localStorage.setItem('officeSuiteDarkMode', state.darkMode);
-    
-    const icon = document.querySelector('#dark-mode-toggle i');
-    if (icon) {
-      icon.className = state.darkMode ? 'ti ti-sun' : 'ti ti-moon';
-    }
-    
-    if (state.activeApp === 'sheet') {
-      evaluateSpreadsheet();
-    }
+    if (state.activeApp === 'sheet') evaluateSpreadsheet();
   }
+
 
   // مركز حواري مخصص لمنع تجميد المتصفح وسوء تجربة الاستخدام
   function showDialog(title, message, iconClass = 'ti-info-circle', type = 'info', confirmCallback = null) {
