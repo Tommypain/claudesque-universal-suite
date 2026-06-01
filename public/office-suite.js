@@ -672,6 +672,7 @@ App: ${state.activeApp.toUpperCase()}`,
     const currentLayoutClass = Array.from(document.body.classList).find(cls => cls.startsWith('layout-')) || 'layout-basic';
     document.body.className = `${currentLayoutClass} app-${appName} ${state.darkMode ? 'dark' : ''}`;
     state.activeApp = appName;
+    applyActiveAccent(appName);
 
     document.querySelectorAll('.workspace-view').forEach(view => view.classList.remove('active'));
     document.getElementById('status-document-info').innerText = appName.toUpperCase() + " Workspace Active";
