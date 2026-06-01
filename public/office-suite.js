@@ -2016,3 +2016,109 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     showToast('💡 Drag & drop a .docx, .xlsx, or .csv file to open it instantly  |  Ctrl+O to browse files', 5000);
   }, 1200);
 
+  // ════════════════════════════════════════════════════════════
+  // Octopus Studio — Theme & Accent Color System (Parts 1 & 2)
+  // ════════════════════════════════════════════════════════════
+  const ACCENT_DEFAULTS = {
+    write: '#1d4ed8',
+    sheet: '#15803d',
+    present: '#b45309',
+    pdf: '#7c3aed',
+  };
+  const ACCENT_VAR = {
+    write: '--color-write',
+    sheet: '--color-sheet',
+    present: '--color-present',
+    pdf: '--color-pdf',
+  };
+  // Active app -> accent token name
+  const APP_ACCENT = { word: 'write', sheet: 'sheet', impress: 'present', pdf: 'pdf' };
+
+  function loadAccentColors() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('octopus-theme-colors') || '{}'); } catch (e) { saved = {}; }
+    Object.keys(ACCENT_DEFAULTS).forEach(key => {
+      const color = saved[key] || ACCENT_DEFAULTS[key];
+      document.documentElement.style.setProperty(ACCENT_VAR[key], color);
+      const picker = document.getElementById('accent-' + key);
+      if (picker) picker.value = color;
+    });
+    applyActiveAccent(state.activeApp);
+  }
+
+  function persistAccentColors() {
+    const data = {};
+    Object.keys(ACCENT_DEFAULTS).forEach(key => {
+      data[key] = getComputedStyle(document.documentElement).getPropertyValue(ACCENT_VAR[key]).trim();
+    });
+    localStorage.setItem('octopus-theme-colors', JSON.stringify(data));
+  }
+
+  function setAccentColor(key, color) {
+    document.documentElement.style.setProperty(ACCENT_VAR[key], color);
+    const picker = document.getElementById('accent-' + key);
+    if (picker) picker.value = color;
+    applyActiveAccent(state.activeApp);
+    persistAccentColors();
+  }
+  window.setAccentColor = setAccentColor;
+
+  function resetAccentColor(key) {
+    setAccentColor(key, ACCENT_DEFAULTS[key]);
+  }
+  window.resetAccentColor = resetAccentColor;
+
+  function resetAllAccentColors() {
+    Object.keys(ACCENT_DEFAULTS).forEach(key => {
+      document.documentElement.style.setProperty(ACCENT_VAR[key], ACCENT_DEFAULTS[key]);
+      const picker = document.getElementById('accent-' + key);
+      if (picker) picker.value = ACCENT_DEFAULTS[key];
+    });
+    applyActiveAccent(state.activeApp);
+    persistAccentColors();
+  }
+  window.resetAllAccentColors = resetAllAccentColors;
+
+  // Mirror the active app's accent into the generic --color-accent token
+  function applyActiveAccent(appName) {
+    const key = APP_ACCENT[appName] || 'write';
+    const color = getComputedStyle(document.documentElement).getPropertyValue(ACCENT_VAR[key]).trim();
+    document.documentElement.style.setProperty('--color-accent', color);
+  }
+  window.applyActiveAccent = applyActiveAccent;
+
+  // ── Theme mode (light / dark / system) ──────────────────────
+  function applyTheme(mode) {
+    let dark = mode === 'dark';
+    if (mode === 'system') {
+      dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    state.darkMode = dark;
+    document.body.classList.toggle('dark', dark);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    const icon = document.querySelector('#dark-mode-toggle i');
+    if (icon) icon.className = dark ? 'ti ti-sun' : 'ti ti-moon';
+    document.querySelectorAll('#theme-selector .theme-opt').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-theme') === mode);
+    });
+    if (state.activeApp === 'sheet' && typeof evaluateSpreadsheet === 'function') evaluateSpreadsheet();
+  }
+
+  function setThemeMode(mode) {
+    localStorage.setItem('octopus-theme-mode', mode);
+    applyTheme(mode);
+  }
+  window.setThemeMode = setThemeMode;
+
+  // React to OS theme changes when in "system" mode
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (localStorage.getItem('octopus-theme-mode') === 'system') applyTheme('system');
+    });
+  }
+
+  // ── Initialize on load ──────────────────────────────────────
+  loadAccentColors();
+  applyTheme(localStorage.getItem('octopus-theme-mode') || (state.darkMode ? 'dark' : 'light'));
+
+
