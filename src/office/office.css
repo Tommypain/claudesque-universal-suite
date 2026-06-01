@@ -362,10 +362,10 @@
     }
 
     /* ألوان خط التأكيد السفلي لكل تطبيق لتطابق لقطة الشاشة بدقة */
-    .app-word .tb.a { border-bottom: 3px solid #2563eb !important; color: #2563eb !important; }
-    .app-impress .tb.a { border-bottom: 3px solid #ea580c !important; color: #ea580c !important; }
-    .app-sheet .tb.a { border-bottom: 3px solid #16a34a !important; color: #16a34a !important; }
-    .app-pdf .tb.a { border-bottom: 3px solid #dc2626 !important; color: #dc2626 !important; }
+    .app-word .tb.a { border-bottom: 3px solid var(--color-write) !important; color: var(--color-write) !important; }
+    .app-impress .tb.a { border-bottom: 3px solid var(--color-present) !important; color: var(--color-present) !important; }
+    .app-sheet .tb.a { border-bottom: 3px solid var(--color-sheet) !important; color: var(--color-sheet) !important; }
+    .app-pdf .tb.a { border-bottom: 3px solid var(--color-pdf) !important; color: var(--color-pdf) !important; }
 
     /* rbody styles moved to enhanced section below */
 
