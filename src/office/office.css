@@ -264,10 +264,10 @@
       color: var(--color-text-primary);
     }
 
-    .app-icon-btn[data-app="word"].active { color: #2563eb; background-color: rgba(37, 99, 235, 0.08); border-color: rgba(37, 99, 235, 0.25); }
-    .app-icon-btn[data-app="impress"].active { color: #ea580c; background-color: rgba(234, 88, 12, 0.08); border-color: rgba(234, 88, 12, 0.25); }
-    .app-icon-btn[data-app="sheet"].active { color: #16a34a; background-color: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.25); }
-    .app-icon-btn[data-app="pdf"].active { color: #dc2626; background-color: rgba(220, 38, 38, 0.08); border-color: rgba(220, 38, 38, 0.25); }
+    .app-icon-btn[data-app="word"].active { color: var(--color-write); background-color: color-mix(in srgb, var(--color-write) 8%, transparent); border-color: color-mix(in srgb, var(--color-write) 25%, transparent); }
+    .app-icon-btn[data-app="impress"].active { color: var(--color-present); background-color: color-mix(in srgb, var(--color-present) 8%, transparent); border-color: color-mix(in srgb, var(--color-present) 25%, transparent); }
+    .app-icon-btn[data-app="sheet"].active { color: var(--color-sheet); background-color: color-mix(in srgb, var(--color-sheet) 8%, transparent); border-color: color-mix(in srgb, var(--color-sheet) 25%, transparent); }
+    .app-icon-btn[data-app="pdf"].active { color: var(--color-pdf); background-color: color-mix(in srgb, var(--color-pdf) 8%, transparent); border-color: color-mix(in srgb, var(--color-pdf) 25%, transparent); }
 
     .main-workspace {
       flex: 1;
