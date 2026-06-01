@@ -2074,3 +2074,10 @@
   .doc-page:last-child { page-break-after: auto; }
   .doc-page::before { display: none !important; }
 }
+
+    /* Octopus Studio — theme option active state */
+    #theme-selector .theme-opt.active {
+      background-color: var(--color-accent) !important;
+      color: #ffffff !important;
+      border-color: var(--color-accent) !important;
+    }
