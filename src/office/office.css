@@ -9,6 +9,13 @@
       --color-text-primary: #1a1a1a;
       --color-text-secondary: #4a4a4a;
       --color-text-tertiary: #7a7a7a;
+
+      /* ── Octopus Studio app accent colors ── */
+      --color-write: #1d4ed8;   /* Octopus Write   — Blue   */
+      --color-sheet: #15803d;   /* Octopus Sheet   — Green  */
+      --color-present: #b45309;  /* Octopus Present — Amber  */
+      --color-pdf: #7c3aed;     /* Octopus PDF     — Purple */
+      --color-accent: var(--color-write);
       
       /* نمط الكبسولات المنفصلة الرائعة المستوحى من التصميم المطلوب */
       --color-button-bg: #eaeae4;
