@@ -2107,4 +2107,21 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   loadAccentColors();
   applyTheme(localStorage.getItem('octopus-theme-mode') || (state.darkMode ? 'dark' : 'light'));
 
+  // ── Startup boot (runs LAST so every const above is initialized) ──
+  const restored = loadFromLocalStorage();
+  // Always make sure the Word view is properly activated.
+  switchAppMode('word');
+  if (restored) {
+    renderWordPages();
+    const rulerBar = document.getElementById('word-ruler-bar');
+    if (rulerBar) rulerBar.style.display = 'flex';
+  }
+  initWordRuler();
+
+  // Show welcome hint
+  setTimeout(() => {
+    showToast('💡 Drag & drop a .docx, .xlsx, or .csv file to open it instantly  |  Ctrl+O to browse files', 5000);
+  }, 1200);
+
+
 
