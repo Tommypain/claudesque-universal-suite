@@ -1997,24 +1997,10 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     tab.addEventListener('click', () => switchRibbonTab(tab.dataset.tab));
   });
 
-  // Auto-restore from localStorage on startup
-  const restored = loadFromLocalStorage();
+  // NOTE: startup boot moved to the very end of this file so that all
+  // `const` declarations below (ACCENT_DEFAULTS, APP_ACCENT, …) are
+  // initialized before switchAppMode()/applyActiveAccent() run.
 
-  // Default startup: open Word
-  if (!restored) {
-    switchAppMode('word');
-  } else {
-    // switchAppMode already called inside loadFromLocalStorage
-    const rulerBar = document.getElementById('word-ruler-bar');
-    if (rulerBar) rulerBar.style.display = 'flex';
-  }
-
-  initWordRuler();
-
-  // Show welcome hint
-  setTimeout(() => {
-    showToast('💡 Drag & drop a .docx, .xlsx, or .csv file to open it instantly  |  Ctrl+O to browse files', 5000);
-  }, 1200);
 
   // ════════════════════════════════════════════════════════════
   // Octopus Studio — Theme & Accent Color System (Parts 1 & 2)
@@ -2120,5 +2106,22 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   // ── Initialize on load ──────────────────────────────────────
   loadAccentColors();
   applyTheme(localStorage.getItem('octopus-theme-mode') || (state.darkMode ? 'dark' : 'light'));
+
+  // ── Startup boot (runs LAST so every const above is initialized) ──
+  const restored = loadFromLocalStorage();
+  // Always make sure the Word view is properly activated.
+  switchAppMode('word');
+  if (restored) {
+    renderWordPages();
+    const rulerBar = document.getElementById('word-ruler-bar');
+    if (rulerBar) rulerBar.style.display = 'flex';
+  }
+  initWordRuler();
+
+  // Show welcome hint
+  setTimeout(() => {
+    showToast('💡 Drag & drop a .docx, .xlsx, or .csv file to open it instantly  |  Ctrl+O to browse files', 5000);
+  }, 1200);
+
 
 
