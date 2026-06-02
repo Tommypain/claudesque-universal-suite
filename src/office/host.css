@@ -21,10 +21,29 @@
     font-size: 8.5px !important;
   }
   .word-nav-sidebar,
-  .impress-sidebar,
   .pdf-sidebar {
     display: none !important;
   }
+  /* Impress: turn the slide thumbnail rail into a horizontal filmstrip
+     so slides stay navigable on small screens (like PowerPoint mobile). */
+  .impress-canvas {
+    flex-direction: column !important;
+  }
+  .impress-sidebar {
+    width: 100% !important;
+    height: 78px !important;
+    flex-direction: row !important;
+    border-right: none !important;
+    border-bottom: 0.5px solid var(--color-border-secondary);
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 8px !important;
+  }
+  .impress-sidebar .slide-thumbnail {
+    width: 96px !important;
+    flex-shrink: 0;
+  }
+
   .wrb-corner {
     width: 0 !important;
   }
