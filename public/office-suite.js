@@ -974,6 +974,31 @@ App: ${state.activeApp.toUpperCase()}`,
     return result;
   }
 
+  // Helpers for universal import
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+  // Heuristic: sample the first bytes; if too many are control/non-UTF8 chars, treat as binary
+  function looksLikeText(arrayBuffer) {
+    const bytes = new Uint8Array(arrayBuffer).subarray(0, 4096);
+    if (!bytes.length) return true;
+    let suspicious = 0;
+    for (let i = 0; i < bytes.length; i++) {
+      const b = bytes[i];
+      if (b === 0) return false; // NUL byte → binary
+      if (b < 9 || (b > 13 && b < 32)) suspicious++;
+    }
+    return suspicious / bytes.length < 0.1;
+  }
+
   // ─────────────────────────────────────────────────────────────
   //  FILE SAVE / EXPORT
   // ─────────────────────────────────────────────────────────────
