@@ -291,27 +291,14 @@ App: ${state.activeApp.toUpperCase()}`,
       pageEl.className = 'doc-page';
       pageEl.id = 'word-editor-' + idx;
 
-      // Header
-      const header = document.createElement('div');
-      header.className = 'doc-page-header';
-      header.contentEditable = 'false';
-      header.innerHTML = '<span style="opacity:.4">' + (state.wordDocTitle || 'Untitled Document') + '</span>';
-      pageEl.appendChild(header);
-
-      // Content region
+      // Content region — a clean blank white page (no decorative header/footer)
       const cr = document.createElement('div');
       cr.className = 'doc-page-content';
       cr.contentEditable = 'true';
       cr.spellcheck = true;
       cr.innerHTML = page.content || '<p><br></p>';
-      cr.style.cssText = 'min-height:880px;outline:none;padding-top:4px;';
+      cr.style.cssText = 'min-height:931px;outline:none;';
       pageEl.appendChild(cr);
-
-      // Footer
-      const footer = document.createElement('div');
-      footer.className = 'page-footer-num';
-      footer.textContent = (idx + 1) + ' / ' + state.wordPages.length;
-      pageEl.appendChild(footer);
 
       // Events
       cr.addEventListener('input', () => {
