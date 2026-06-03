@@ -1075,11 +1075,14 @@
     }
 
     .pdf-page-container {
-      width: 760px;
-      background-color: var(--color-background-primary);
-      border: 1px solid var(--color-border-secondary);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      width: 794px;
+      min-height: 1123px;
+      background-color: #ffffff;
+      border: none;
+      box-shadow: 0 2px 16px rgba(0,0,0,.18), 0 1px 4px rgba(0,0,0,.10);
       position: relative;
+      overflow: hidden;
+      margin: 0 auto 24px;
     }
 
     .pdf-page-overlay {
@@ -1093,11 +1096,12 @@
     }
 
     .pdf-page-content {
-      padding: 48px;
-      color: var(--color-text-primary);
-      font-size: 13.5px;
+      padding: 64px;
+      color: #1a1a1a;
+      font-size: 14px;
       line-height: 1.7;
-      user-select: none;
+      min-height: 1123px;
+      box-sizing: border-box;
     }
 
     /* ستايلات العناصر القابلة للسحب والتحجيم كالتوقيعات الرقمية */
