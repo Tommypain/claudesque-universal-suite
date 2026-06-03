@@ -907,10 +907,49 @@ App: ${state.activeApp.toUpperCase()}`,
         if (toast) toast.remove();
         showToast(`✅ CSV "${file.name}" imported — ${rows.length} rows`);
 
-      } else {
+      // ── .json ──────────────────────────────────────────────
+      } else if (ext === 'json') {
+        const text = await file.text();
+        let pretty = text;
+        try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch (e) {}
+        state.wordPages = [{ id: 1, content: '<pre style="font-family:Consolas,Monaco,monospace;font-size:13px;white-space:pre-wrap;">' + escapeHtml(pretty) + '</pre>' }];
+        state.wordDocTitle = file.name.replace(/\.[^.]+$/, '');
+        switchAppMode('word');
+        renderWordPages();
         if (toast) toast.remove();
-        showToast(`⚠️ Unsupported file type: .${ext}`);
+        showToast(`✅ "${file.name}" imported`);
+
+      // ── images (png/jpg/gif/webp/svg/bmp) ──────────────────
+      } else if (['png','jpg','jpeg','gif','webp','svg','bmp','avif'].includes(ext)) {
+        const dataUrl = await fileToDataUrl(file);
+        state.wordPages = [{ id: 1, content: '<p><img src="' + dataUrl + '" style="max-width:100%;height:auto;display:block;margin:0 auto;"/></p>' }];
+        state.wordDocTitle = file.name.replace(/\.[^.]+$/, '');
+        switchAppMode('word');
+        renderWordPages();
+        if (toast) toast.remove();
+        showToast(`✅ Image "${file.name}" imported — edit & export it`);
+
+      // ── any other file: best-effort text, else generic notice ─
+      } else {
+        const buf = await file.arrayBuffer();
+        if (looksLikeText(buf)) {
+          const text = new TextDecoder('utf-8').decode(buf);
+          state.wordPages = [{ id: 1, content: '<pre style="font-family:Consolas,Monaco,monospace;font-size:13px;white-space:pre-wrap;">' + escapeHtml(text) + '</pre>' }];
+          state.wordDocTitle = file.name.replace(/\.[^.]+$/, '');
+          switchAppMode('word');
+          renderWordPages();
+          if (toast) toast.remove();
+          showToast(`✅ "${file.name}" opened as text — edit & export it`);
+        } else {
+          if (toast) toast.remove();
+          showToast(`ℹ️ "${file.name}" is a binary .${ext} file — opened a blank editable page for it`);
+          state.wordPages = [{ id: 1, content: '<p><br></p>' }];
+          state.wordDocTitle = file.name.replace(/\.[^.]+$/, '');
+          switchAppMode('word');
+          renderWordPages();
+        }
       }
+
     } catch(err) {
       if (toast) toast.remove();
       showToast(`❌ Error opening file: ${err.message}`);
@@ -935,6 +974,31 @@ App: ${state.activeApp.toUpperCase()}`,
     return result;
   }
 
+  // Helpers for universal import
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+  // Heuristic: sample the first bytes; if too many are control/non-UTF8 chars, treat as binary
+  function looksLikeText(arrayBuffer) {
+    const bytes = new Uint8Array(arrayBuffer).subarray(0, 4096);
+    if (!bytes.length) return true;
+    let suspicious = 0;
+    for (let i = 0; i < bytes.length; i++) {
+      const b = bytes[i];
+      if (b === 0) return false; // NUL byte → binary
+      if (b < 9 || (b > 13 && b < 32)) suspicious++;
+    }
+    return suspicious / bytes.length < 0.1;
+  }
+
   // ─────────────────────────────────────────────────────────────
   //  FILE SAVE / EXPORT
   // ─────────────────────────────────────────────────────────────
@@ -944,11 +1008,42 @@ App: ${state.activeApp.toUpperCase()}`,
       saveWordDocument();
     } else if (state.activeApp === 'sheet') {
       saveSheetDocument();
+    } else if (state.activeApp === 'impress') {
+      exportImpress();
+    } else if (state.activeApp === 'pdf') {
+      exportPdf();
     } else {
       showToast('✅ Document saved locally');
       saveToLocalStorage();
     }
   }
+
+  // Export the current slide deck as a self-contained HTML file or PDF (print)
+  function exportImpress() {
+    const choice = window.confirm('OK = Export slides as HTML file\nCancel = Print / Save as PDF');
+    if (!choice) { window.print(); return; }
+    let body = '';
+    state.slides.forEach(s => {
+      ensureSlideTexts(s);
+      let inner = '';
+      (s.texts || []).forEach(tx => {
+        inner += '<div style="position:absolute;left:' + (tx.xf*100) + '%;top:' + (tx.yf*100) + '%;width:' + (tx.wf*100) + '%;font-size:' + (tx.size||24) + 'px;font-weight:' + (tx.weight||400) + ';color:' + (tx.color||'#1e293b') + ';text-align:' + (tx.align||'left') + ';">' + (tx.html||'') + '</div>';
+      });
+      body += '<div style="position:relative;width:1280px;height:720px;background:' + (s.bg||'#fff') + ';margin:0 auto 24px;page-break-after:always;overflow:hidden;">' + inner + '</div>';
+    });
+    const doc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Presentation</title><style>body{margin:0;background:#e5e7eb;font-family:Arial,sans-serif;}@page{size:1280px 720px;margin:0;}</style></head><body>' + body + '</body></html>';
+    const blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
+    if (typeof saveAs !== 'undefined') saveAs(blob, 'presentation.html');
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'presentation.html'; a.click(); }
+    showToast('✅ Presentation exported as HTML');
+  }
+
+  // Export the PDF workspace (print to PDF — captures pages + annotations)
+  function exportPdf() {
+    showToast('🖨️ Opening print dialog — choose "Save as PDF"');
+    window.print();
+  }
+
 
   function saveWordDocument() {
     showSaveDialog();
