@@ -1697,7 +1697,7 @@
 
     /* Content region */
     .doc-page-content {
-      min-height: calc(1123px - 192px - 64px);
+      min-height: calc(1123px - 192px);
       outline: none;
     }
 
