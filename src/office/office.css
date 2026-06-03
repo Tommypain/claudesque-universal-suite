@@ -1692,15 +1692,8 @@
     body.dark .doc-page-header { border-bottom-color: #444; color: #666; }
     body.dark .page-footer-num { color: #555; }
 
-    /* Margin indicator lines (subtle) */
-    .doc-page::before {
-      content: '';
-      position: absolute;
-      top: 96px; bottom: 64px;
-      left: 90px; right: 90px;
-      border: 0.5px dashed rgba(0,120,215,0.08);
-      pointer-events: none;
-    }
+    /* Blank white page — no margin guides or watermark */
+
 
     /* Content region */
     .doc-page-content {
