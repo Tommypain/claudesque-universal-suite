@@ -1681,7 +1681,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
 
   function addNewSlide() {
     const id = state.slides.length ? Math.max(...state.slides.map(s => s.id)) + 1 : 1;
-    state.slides.push({ id, title: 'New Slide', subtitle: 'Click to edit', layout: 'Content', bg: 'linear-gradient(135deg,#fdfbfb 0%,#ebedee 100%)', shapes: [] });
+    state.slides.push({ id, title: 'Click to add title', subtitle: 'Click to add text', layout: 'Content', bg: '#ffffff', shapes: [] });
     state.activeSlideId = id;
     renderSlideList();
     showToast('Slide added');
