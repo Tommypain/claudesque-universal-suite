@@ -22,8 +22,8 @@
 
     // شرائح العرض في تطبيق Impress
     slides: [
-      { id: 1, title: 'Developing Premium Pages', subtitle: 'Presented by Impress Suite Office', layout: 'Title', bg: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)', shapes: [] },
-      { id: 2, title: 'Key Deliverables', subtitle: '1. Fast Execution\n2. Pure Custom CSS Layouts\n3. Lightweight Frameworks Integration', layout: 'Content', bg: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)', shapes: [] }
+      { id: 1, title: 'Click to add title', subtitle: 'Click to add subtitle', layout: 'Title', bg: '#ffffff', shapes: [] },
+      { id: 2, title: 'Click to add title', subtitle: 'Click to add text', layout: 'Content', bg: '#ffffff', shapes: [] }
     ],
     activeSlideId: 1,
     slideshowActiveIndex: 0,
@@ -53,8 +53,7 @@
 
     // صفحات مستندات الـ PDF
     pdfPages: [
-      { id: 1, title: 'Standard Enterprise Executive Brief.pdf', subtitle: 'Security Standard Compliance: ISO-27001 Signed Payload', content: 'This document specifies the structural parameters for deployment of the unified collaborative workspace across regional corporate offices. Current configurations dictate utilizing secure light-footprint UI designs for absolute responsive responsiveness on multi-platform devices.', rotation: 0 },
-      { id: 2, title: 'Performance Milestones & Security Schemas', subtitle: 'Standardized benchmarking metrics', content: 'Standardized benchmarking metrics are targeted to match traditional desktop apps under strict memory bounds. Integrating a responsive layout viewport guarantees optimized frame-rates while navigating complex data sheet calculations or massive vector charts during slideshow sessions.', rotation: 0 }
+      { id: 1, html: '<p><br></p>', rotation: 0 }
     ],
     activePdfPageIndex: 0,
     pdfDrawingContexts: {},
@@ -291,27 +290,14 @@ App: ${state.activeApp.toUpperCase()}`,
       pageEl.className = 'doc-page';
       pageEl.id = 'word-editor-' + idx;
 
-      // Header
-      const header = document.createElement('div');
-      header.className = 'doc-page-header';
-      header.contentEditable = 'false';
-      header.innerHTML = '<span style="opacity:.4">' + (state.wordDocTitle || 'Untitled Document') + '</span>';
-      pageEl.appendChild(header);
-
-      // Content region
+      // Content region — a clean blank white page (no decorative header/footer)
       const cr = document.createElement('div');
       cr.className = 'doc-page-content';
       cr.contentEditable = 'true';
       cr.spellcheck = true;
       cr.innerHTML = page.content || '<p><br></p>';
-      cr.style.cssText = 'min-height:880px;outline:none;padding-top:4px;';
+      cr.style.cssText = 'min-height:931px;outline:none;';
       pageEl.appendChild(cr);
-
-      // Footer
-      const footer = document.createElement('div');
-      footer.className = 'page-footer-num';
-      footer.textContent = (idx + 1) + ' / ' + state.wordPages.length;
-      pageEl.appendChild(footer);
 
       // Events
       cr.addEventListener('input', () => {
@@ -1695,7 +1681,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
 
   function addNewSlide() {
     const id = state.slides.length ? Math.max(...state.slides.map(s => s.id)) + 1 : 1;
-    state.slides.push({ id, title: 'New Slide', subtitle: 'Click to edit', layout: 'Content', bg: 'linear-gradient(135deg,#fdfbfb 0%,#ebedee 100%)', shapes: [] });
+    state.slides.push({ id, title: 'Click to add title', subtitle: 'Click to add text', layout: 'Content', bg: '#ffffff', shapes: [] });
     state.activeSlideId = id;
     renderSlideList();
     showToast('Slide added');
@@ -1792,11 +1778,12 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       cont.className = 'pdf-page-container';
       cont.id = 'pdf-page-' + i;
       cont.style.transform = 'rotate(' + (pg.rotation || 0) + 'deg)';
+      if (pg.bare) cont.style.minHeight = 'auto';
       let inner;
       if (pg.html != null) {
-        inner = '<div class="pdf-page-content" style="' + (pg.bare ? 'padding:0;' : '') + '">' + pg.html + '</div>';
+        inner = '<div class="pdf-page-content" contenteditable="true" style="' + (pg.bare ? 'padding:0;min-height:auto;' : '') + '">' + pg.html + '</div>';
       } else {
-        inner = '<div class="pdf-page-content"><h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">' + (pg.title || '') + '</h2>'
+        inner = '<div class="pdf-page-content" contenteditable="true"><h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">' + (pg.title || '') + '</h2>'
           + '<div style="font-size:11px;color:#94a3b8;margin-bottom:16px;">' + (pg.subtitle || '') + '</div><p>' + (pg.content || '') + '</p></div>';
       }
       cont.innerHTML = '<canvas class="pdf-page-overlay" id="pdf-canvas-' + i + '"></canvas>' + inner;
