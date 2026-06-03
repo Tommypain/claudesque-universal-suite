@@ -22,8 +22,8 @@
 
     // شرائح العرض في تطبيق Impress
     slides: [
-      { id: 1, title: 'Developing Premium Pages', subtitle: 'Presented by Impress Suite Office', layout: 'Title', bg: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)', shapes: [] },
-      { id: 2, title: 'Key Deliverables', subtitle: '1. Fast Execution\n2. Pure Custom CSS Layouts\n3. Lightweight Frameworks Integration', layout: 'Content', bg: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)', shapes: [] }
+      { id: 1, title: 'Click to add title', subtitle: 'Click to add subtitle', layout: 'Title', bg: '#ffffff', shapes: [] },
+      { id: 2, title: 'Click to add title', subtitle: 'Click to add text', layout: 'Content', bg: '#ffffff', shapes: [] }
     ],
     activeSlideId: 1,
     slideshowActiveIndex: 0,
