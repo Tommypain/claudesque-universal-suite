@@ -53,8 +53,7 @@
 
     // صفحات مستندات الـ PDF
     pdfPages: [
-      { id: 1, title: 'Standard Enterprise Executive Brief.pdf', subtitle: 'Security Standard Compliance: ISO-27001 Signed Payload', content: 'This document specifies the structural parameters for deployment of the unified collaborative workspace across regional corporate offices. Current configurations dictate utilizing secure light-footprint UI designs for absolute responsive responsiveness on multi-platform devices.', rotation: 0 },
-      { id: 2, title: 'Performance Milestones & Security Schemas', subtitle: 'Standardized benchmarking metrics', content: 'Standardized benchmarking metrics are targeted to match traditional desktop apps under strict memory bounds. Integrating a responsive layout viewport guarantees optimized frame-rates while navigating complex data sheet calculations or massive vector charts during slideshow sessions.', rotation: 0 }
+      { id: 1, html: '<p><br></p>', rotation: 0 }
     ],
     activePdfPageIndex: 0,
     pdfDrawingContexts: {},
