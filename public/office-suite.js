@@ -1778,11 +1778,12 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       cont.className = 'pdf-page-container';
       cont.id = 'pdf-page-' + i;
       cont.style.transform = 'rotate(' + (pg.rotation || 0) + 'deg)';
+      if (pg.bare) cont.style.minHeight = 'auto';
       let inner;
       if (pg.html != null) {
-        inner = '<div class="pdf-page-content" style="' + (pg.bare ? 'padding:0;' : '') + '">' + pg.html + '</div>';
+        inner = '<div class="pdf-page-content" contenteditable="true" style="' + (pg.bare ? 'padding:0;min-height:auto;' : '') + '">' + pg.html + '</div>';
       } else {
-        inner = '<div class="pdf-page-content"><h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">' + (pg.title || '') + '</h2>'
+        inner = '<div class="pdf-page-content" contenteditable="true"><h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">' + (pg.title || '') + '</h2>'
           + '<div style="font-size:11px;color:#94a3b8;margin-bottom:16px;">' + (pg.subtitle || '') + '</div><p>' + (pg.content || '') + '</p></div>';
       }
       cont.innerHTML = '<canvas class="pdf-page-overlay" id="pdf-canvas-' + i + '"></canvas>' + inner;
