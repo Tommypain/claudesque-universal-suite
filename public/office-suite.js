@@ -907,10 +907,49 @@ App: ${state.activeApp.toUpperCase()}`,
         if (toast) toast.remove();
         showToast(`✅ CSV "${file.name}" imported — ${rows.length} rows`);
 
-      } else {
+      // ── .json ──────────────────────────────────────────────
+      } else if (ext === 'json') {
+        const text = await file.text();
+        let pretty = text;
+        try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch (e) {}
+        state.wordPages = [{ id: 1, content: '<pre style="font-family:Consolas,Monaco,monospace;font-size:13px;white-space:pre-wrap;">' + escapeHtml(pretty) + '</pre>' }];
+        state.wordDocTitle = file.name.replace(/\.[^.]+$/, '');
+        switchAppMode('word');
+        renderWordPages();
         if (toast) toast.remove();
-        showToast(`⚠️ Unsupported file type: .${ext}`);
+        showToast(`✅ "${file.name}" imported`);
+
+      // ── images (png/jpg/gif/webp/svg/bmp) ──────────────────
+      } else if (['png','jpg','jpeg','gif','webp','svg','bmp','avif'].includes(ext)) {
+        const dataUrl = await fileToDataUrl(file);
+        state.wordPages = [{ id: 1, content: '<p><img src="' + dataUrl + '" style="max-width:100%;height:auto;display:block;margin:0 auto;"/></p>' }];
+        state.wordDocTitle = file.name.replace(/\.[^.]+$/, '');
+        switchAppMode('word');
+        renderWordPages();
+        if (toast) toast.remove();
+        showToast(`✅ Image "${file.name}" imported — edit & export it`);
+
+      // ── any other file: best-effort text, else generic notice ─
+      } else {
+        const buf = await file.arrayBuffer();
+        if (looksLikeText(buf)) {
+          const text = new TextDecoder('utf-8').decode(buf);
+          state.wordPages = [{ id: 1, content: '<pre style="font-family:Consolas,Monaco,monospace;font-size:13px;white-space:pre-wrap;">' + escapeHtml(text) + '</pre>' }];
+          state.wordDocTitle = file.name.replace(/\.[^.]+$/, '');
+          switchAppMode('word');
+          renderWordPages();
+          if (toast) toast.remove();
+          showToast(`✅ "${file.name}" opened as text — edit & export it`);
+        } else {
+          if (toast) toast.remove();
+          showToast(`ℹ️ "${file.name}" is a binary .${ext} file — opened a blank editable page for it`);
+          state.wordPages = [{ id: 1, content: '<p><br></p>' }];
+          state.wordDocTitle = file.name.replace(/\.[^.]+$/, '');
+          switchAppMode('word');
+          renderWordPages();
+        }
       }
+
     } catch(err) {
       if (toast) toast.remove();
       showToast(`❌ Error opening file: ${err.message}`);
