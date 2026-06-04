@@ -1332,7 +1332,37 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     syncActiveWordPage(cr);
   }
   function insertWordArt() { insertAtEditor('<span style="font-size:40px;font-weight:800;background:linear-gradient(90deg,#6366f1,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;">WordArt</span>&nbsp;'); }
-  function insertMockImage() { insertAtEditor('<img src="https://picsum.photos/480/280" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="image"/>'); }
+  function insertMockImage() {
+    const cr = getActiveWordEditor();
+    if (!cr) { showToast('Open the Word app first'); return; }
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.onchange = function () {
+      const file = inp.files && inp.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        insertAtEditor('<img src="' + e.target.result + '" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="' + (file.name || 'image') + '"/>');
+      };
+      reader.readAsDataURL(file);
+    };
+    inp.click();
+  }
+  function insertWordLink() {
+    const cr = getActiveWordEditor();
+    if (!cr) { showToast('Open the Word app first'); return; }
+    cr.focus();
+    const url = window.prompt('Enter URL:', 'https://');
+    if (!url) return;
+    document.execCommand('createLink', false, url);
+    syncActiveWordPage(cr);
+  }
+  function insertWordPageBreak() {
+    insertAtEditor('<div style="page-break-after:always;break-after:page;border-top:1px dashed #cbd5e1;margin:16px 0;"></div><p><br></p>');
+  }
+  window.insertWordLink = insertWordLink;
+  window.insertWordPageBreak = insertWordPageBreak;
   function insertShape(type) {
     // In Impress, shapes are real, movable objects on the slide.
     if (state.activeApp === 'impress') {
