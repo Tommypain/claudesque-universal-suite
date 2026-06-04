@@ -1501,8 +1501,15 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     insertAtEditor(toc);
   }
   function openInsertTableDialog() {
+    const cr = getActiveWordEditor();
+    if (!cr) { showToast('Open the Word app first'); return; }
+    const dims = window.prompt('Table size — rows × columns (max 8×8):', '3x3');
+    if (!dims) return;
+    const m = dims.toLowerCase().split(/[x×*,\s]+/).map(n => parseInt(n, 10));
+    const rows = Math.max(1, Math.min(8, m[0] || 3));
+    const cols = Math.max(1, Math.min(8, m[1] || 3));
     let t = '<table style="border-collapse:collapse;width:100%;margin:8px 0;">';
-    for (let r = 0; r < 3; r++) { t += '<tr>'; for (let c = 0; c < 3; c++) t += '<td style="border:1px solid #cbd5e1;padding:6px;min-width:60px;">&nbsp;</td>'; t += '</tr>'; }
+    for (let r = 0; r < rows; r++) { t += '<tr>'; for (let c = 0; c < cols; c++) t += '<td style="border:1px solid #cbd5e1;padding:6px;min-width:60px;">&nbsp;</td>'; t += '</tr>'; }
     t += '</table>';
     insertAtEditor(t);
   }
