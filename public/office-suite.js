@@ -1332,7 +1332,37 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     syncActiveWordPage(cr);
   }
   function insertWordArt() { insertAtEditor('<span style="font-size:40px;font-weight:800;background:linear-gradient(90deg,#6366f1,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;">WordArt</span>&nbsp;'); }
-  function insertMockImage() { insertAtEditor('<img src="https://picsum.photos/480/280" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="image"/>'); }
+  function insertMockImage() {
+    const cr = getActiveWordEditor();
+    if (!cr) { showToast('Open the Word app first'); return; }
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.onchange = function () {
+      const file = inp.files && inp.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        insertAtEditor('<img src="' + e.target.result + '" style="max-width:100%;border-radius:8px;margin:8px 0;" alt="' + (file.name || 'image') + '"/>');
+      };
+      reader.readAsDataURL(file);
+    };
+    inp.click();
+  }
+  function insertWordLink() {
+    const cr = getActiveWordEditor();
+    if (!cr) { showToast('Open the Word app first'); return; }
+    cr.focus();
+    const url = window.prompt('Enter URL:', 'https://');
+    if (!url) return;
+    document.execCommand('createLink', false, url);
+    syncActiveWordPage(cr);
+  }
+  function insertWordPageBreak() {
+    insertAtEditor('<div style="page-break-after:always;break-after:page;border-top:1px dashed #cbd5e1;margin:16px 0;"></div><p><br></p>');
+  }
+  window.insertWordLink = insertWordLink;
+  window.insertWordPageBreak = insertWordPageBreak;
   function insertShape(type) {
     // In Impress, shapes are real, movable objects on the slide.
     if (state.activeApp === 'impress') {
@@ -1471,8 +1501,15 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     insertAtEditor(toc);
   }
   function openInsertTableDialog() {
+    const cr = getActiveWordEditor();
+    if (!cr) { showToast('Open the Word app first'); return; }
+    const dims = window.prompt('Table size — rows × columns (max 8×8):', '3x3');
+    if (!dims) return;
+    const m = dims.toLowerCase().split(/[x×*,\s]+/).map(n => parseInt(n, 10));
+    const rows = Math.max(1, Math.min(8, m[0] || 3));
+    const cols = Math.max(1, Math.min(8, m[1] || 3));
     let t = '<table style="border-collapse:collapse;width:100%;margin:8px 0;">';
-    for (let r = 0; r < 3; r++) { t += '<tr>'; for (let c = 0; c < 3; c++) t += '<td style="border:1px solid #cbd5e1;padding:6px;min-width:60px;">&nbsp;</td>'; t += '</tr>'; }
+    for (let r = 0; r < rows; r++) { t += '<tr>'; for (let c = 0; c < cols; c++) t += '<td style="border:1px solid #cbd5e1;padding:6px;min-width:60px;">&nbsp;</td>'; t += '</tr>'; }
     t += '</table>';
     insertAtEditor(t);
   }
