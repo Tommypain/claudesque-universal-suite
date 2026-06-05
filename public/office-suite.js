@@ -1122,6 +1122,19 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       if (typeof saveAs !== 'undefined') saveAs(blob, `${title}.txt`);
       else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${title}.txt`; a.click(); }
 
+    } else if (fmt === 'docx') {
+      if (typeof window.htmlDocx === 'undefined') {
+        showToast('⚠️ DOCX engine not loaded — saving as HTML instead');
+        const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+        (typeof saveAs !== 'undefined') ? saveAs(blob, `${title}.html`)
+          : (() => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${title}.html`; a.click(); })();
+      } else {
+        const sourceHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${fullHTML}</body></html>`;
+        const blob = window.htmlDocx.asBlob(sourceHTML);
+        (typeof saveAs !== 'undefined') ? saveAs(blob, `${title}.docx`)
+          : (() => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${title}.docx`; a.click(); })();
+      }
+
     } else if (fmt === 'print') {
       window.print();
     }
