@@ -797,10 +797,19 @@ App: ${state.activeApp.toUpperCase()}`,
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
 
-    // PDF/PPTX always open in the universal PDF viewer.
+    // PPTX → open as REAL editable slides in the Impress tab (Step 2).
+    if (ext === 'pptx') {
+      await importPPTX(file);
+      addRecentFile(file.name, file.type);
+      if (event.target) event.target.value = '';
+      return;
+    }
+
+    // PDF always opens in the universal PDF viewer.
     // Any other file opened while the PDF tab is active also shows in the viewer.
-    if (ext === 'pdf' || ext === 'pptx' || state.activeApp === 'pdf') {
+    if (ext === 'pdf' || state.activeApp === 'pdf') {
       await openInPdfViewer(file);
+      addRecentFile(file.name, file.type);
       if (event.target) event.target.value = '';
       return;
     }
