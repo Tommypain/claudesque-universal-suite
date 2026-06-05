@@ -1051,11 +1051,16 @@ App: ${state.activeApp.toUpperCase()}`,
     showToast('✅ Presentation exported as HTML');
   }
 
-  // Export the PDF workspace (print to PDF — captures pages + annotations)
+  // Export the PDF workspace — real .pdf via jsPDF (flattens annotations); else print.
   function exportPdf() {
+    if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
+      exportPDFReal();
+      return;
+    }
     showToast('🖨️ Opening print dialog — choose "Save as PDF"');
     window.print();
   }
+
 
 
   function saveWordDocument() {
