@@ -876,7 +876,7 @@ App: ${state.activeApp.toUpperCase()}`,
       } else if (ext === 'xlsx' || ext === 'xls') {
         if (typeof XLSX === 'undefined') throw new Error('SheetJS not loaded');
         const arrayBuffer = await file.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const workbook = XLSX.read(arrayBuffer, { type: 'array', cellFormula: true, cellStyles: true, cellDates: true });
         // Load each worksheet as a separate sheet tab
         state.sheets = {};
         workbook.SheetNames.forEach(shName => {
@@ -884,7 +884,11 @@ App: ${state.activeApp.toUpperCase()}`,
           const data = {};
           Object.keys(ws).forEach(key => {
             if (key.startsWith('!')) return;
-            data[key] = ws[key].v !== undefined ? String(ws[key].v) : '';
+            const cell = ws[key];
+            // Prefer a live formula, then the formatted text (.w), then the raw value.
+            if (cell.f) data[key] = '=' + cell.f;
+            else if (cell.w !== undefined) data[key] = cell.w;
+            else data[key] = cell.v !== undefined ? String(cell.v) : '';
           });
           state.sheets[shName] = { data, activeCell: 'A1' };
         });
