@@ -1080,7 +1080,8 @@ App: ${state.activeApp.toUpperCase()}`,
         <h2>💾 Save Document</h2>
         <p style="font-size:12px;color:#888;margin-bottom:16px;">Choose export format for "<strong>${state.wordDocTitle || 'Untitled'}</strong>"</p>
         <div class="save-btn-group">
-          <button class="save-btn save-btn-primary" onclick="exportWordAs('html')">📄 Save as HTML</button>
+          <button class="save-btn save-btn-primary" onclick="exportWordAs('docx')">📘 Save as Word (.docx)</button>
+          <button class="save-btn save-btn-secondary" onclick="exportWordAs('html')">📄 Save as HTML</button>
           <button class="save-btn save-btn-secondary" onclick="exportWordAs('txt')">📝 Save as TXT</button>
           <button class="save-btn save-btn-secondary" onclick="exportWordAs('print')">🖨️ Print / Save PDF</button>
         </div>
