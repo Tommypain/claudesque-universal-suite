@@ -1027,8 +1027,12 @@ App: ${state.activeApp.toUpperCase()}`,
     }
   }
 
-  // Export the current slide deck as a self-contained HTML file or PDF (print)
+  // Export the current slide deck. Prefers a real .pptx (PptxGenJS); else HTML.
   function exportImpress() {
+    if (typeof PptxGenJS !== 'undefined') {
+      const choice = window.confirm('OK = Export as PowerPoint (.pptx)\nCancel = Export as HTML file');
+      if (choice) { exportPPTX(); return; }
+    }
     const choice = window.confirm('OK = Export slides as HTML file\nCancel = Print / Save as PDF');
     if (!choice) { window.print(); return; }
     let body = '';
