@@ -797,14 +797,24 @@ App: ${state.activeApp.toUpperCase()}`,
     if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
 
-    // PDF/PPTX always open in the universal PDF viewer.
-    // Any other file opened while the PDF tab is active also shows in the viewer.
-    if (ext === 'pdf' || ext === 'pptx' || state.activeApp === 'pdf') {
-      await openInPdfViewer(file);
+    // PPTX → open as REAL editable slides in the Impress tab (Step 2).
+    if (ext === 'pptx') {
+      await importPPTX(file);
+      addRecentFile(file.name, file.type);
       if (event.target) event.target.value = '';
       return;
     }
 
+    // PDF always opens in the universal PDF viewer.
+    // Any other file opened while the PDF tab is active also shows in the viewer.
+    if (ext === 'pdf' || state.activeApp === 'pdf') {
+      await openInPdfViewer(file);
+      addRecentFile(file.name, file.type);
+      if (event.target) event.target.value = '';
+      return;
+    }
+
+    addRecentFile(file.name, file.type);
     const toast = showToast(`⏳ Opening "${file.name}"...`, 0);
 
     try {
@@ -867,7 +877,7 @@ App: ${state.activeApp.toUpperCase()}`,
       } else if (ext === 'xlsx' || ext === 'xls') {
         if (typeof XLSX === 'undefined') throw new Error('SheetJS not loaded');
         const arrayBuffer = await file.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const workbook = XLSX.read(arrayBuffer, { type: 'array', cellFormula: true, cellStyles: true, cellDates: true });
         // Load each worksheet as a separate sheet tab
         state.sheets = {};
         workbook.SheetNames.forEach(shName => {
@@ -875,7 +885,11 @@ App: ${state.activeApp.toUpperCase()}`,
           const data = {};
           Object.keys(ws).forEach(key => {
             if (key.startsWith('!')) return;
-            data[key] = ws[key].v !== undefined ? String(ws[key].v) : '';
+            const cell = ws[key];
+            // Prefer a live formula, then the formatted text (.w), then the raw value.
+            if (cell.f) data[key] = '=' + cell.f;
+            else if (cell.w !== undefined) data[key] = cell.w;
+            else data[key] = cell.v !== undefined ? String(cell.v) : '';
           });
           state.sheets[shName] = { data, activeCell: 'A1' };
         });
@@ -1018,8 +1032,12 @@ App: ${state.activeApp.toUpperCase()}`,
     }
   }
 
-  // Export the current slide deck as a self-contained HTML file or PDF (print)
+  // Export the current slide deck. Prefers a real .pptx (PptxGenJS); else HTML.
   function exportImpress() {
+    if (typeof PptxGenJS !== 'undefined') {
+      const choice = window.confirm('OK = Export as PowerPoint (.pptx)\nCancel = Export as HTML file');
+      if (choice) { exportPPTX(); return; }
+    }
     const choice = window.confirm('OK = Export slides as HTML file\nCancel = Print / Save as PDF');
     if (!choice) { window.print(); return; }
     let body = '';
@@ -1038,11 +1056,16 @@ App: ${state.activeApp.toUpperCase()}`,
     showToast('✅ Presentation exported as HTML');
   }
 
-  // Export the PDF workspace (print to PDF — captures pages + annotations)
+  // Export the PDF workspace — real .pdf via jsPDF (flattens annotations); else print.
   function exportPdf() {
+    if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
+      exportPDFReal();
+      return;
+    }
     showToast('🖨️ Opening print dialog — choose "Save as PDF"');
     window.print();
   }
+
 
 
   function saveWordDocument() {
@@ -1062,7 +1085,8 @@ App: ${state.activeApp.toUpperCase()}`,
         <h2>💾 Save Document</h2>
         <p style="font-size:12px;color:#888;margin-bottom:16px;">Choose export format for "<strong>${state.wordDocTitle || 'Untitled'}</strong>"</p>
         <div class="save-btn-group">
-          <button class="save-btn save-btn-primary" onclick="exportWordAs('html')">📄 Save as HTML</button>
+          <button class="save-btn save-btn-primary" onclick="exportWordAs('docx')">📘 Save as Word (.docx)</button>
+          <button class="save-btn save-btn-secondary" onclick="exportWordAs('html')">📄 Save as HTML</button>
           <button class="save-btn save-btn-secondary" onclick="exportWordAs('txt')">📝 Save as TXT</button>
           <button class="save-btn save-btn-secondary" onclick="exportWordAs('print')">🖨️ Print / Save PDF</button>
         </div>
@@ -1102,6 +1126,19 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       const blob = new Blob([temp.innerText], { type: 'text/plain;charset=utf-8' });
       if (typeof saveAs !== 'undefined') saveAs(blob, `${title}.txt`);
       else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${title}.txt`; a.click(); }
+
+    } else if (fmt === 'docx') {
+      if (typeof window.htmlDocx === 'undefined') {
+        showToast('⚠️ DOCX engine not loaded — saving as HTML instead');
+        const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+        (typeof saveAs !== 'undefined') ? saveAs(blob, `${title}.html`)
+          : (() => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${title}.html`; a.click(); })();
+      } else {
+        const sourceHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${fullHTML}</body></html>`;
+        const blob = window.htmlDocx.asBlob(sourceHTML);
+        (typeof saveAs !== 'undefined') ? saveAs(blob, `${title}.docx`)
+          : (() => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${title}.docx`; a.click(); })();
+      }
 
     } else if (fmt === 'print') {
       window.print();
@@ -1681,6 +1718,18 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     vp.innerHTML = '';
     // Shapes (movable)
     renderSlideShapes(vp, s, { editable: true });
+    // Imported images (from PPTX) — positioned absolutely, non-editable
+    (s.images || []).forEach(im => {
+      const img = document.createElement('img');
+      img.src = im.src;
+      img.style.position = 'absolute';
+      img.style.left = (im.xf * 100) + '%';
+      img.style.top = (im.yf * 100) + '%';
+      img.style.width = (im.wf * 100) + '%';
+      img.style.height = (im.hf * 100) + '%';
+      img.style.objectFit = 'contain';
+      vp.appendChild(img);
+    });
     // Text boxes (movable, editable)
     s.texts.forEach(tx => {
       const box = document.createElement('div');
@@ -2068,7 +2117,8 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     addTextBox, insertTextBoxSmart, deleteSelectedText, styleSelectedText, setSlideSize,
     addSlideShape, deleteSelectedShape, setShapeFill, setShapeAnimation, setSlideTransition,
     openInPdfViewer,
-    renderPdfPages, setDrawingTool, clearActiveDrawings, rotatePDFPage, openSignatureCanvasDialog
+    renderPdfPages, setDrawingTool, clearActiveDrawings, rotatePDFPage, openSignatureCanvasDialog,
+    importPPTX, exportPPTX, exportPDFReal
   });
 
   // ═══════════════════════════════════
@@ -2244,3 +2294,240 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
 
 
 
+
+  // ════════════════════════════════════════════════════════════
+  //  IMPORT / EXPORT ENGINE — PPTX (JSZip / PptxGenJS),
+  //  PDF (jsPDF), Recent Files, periodic auto-save
+  // ════════════════════════════════════════════════════════════
+
+  // ── Recent files (max 10) ──────────────────────────────────
+  function getRecentFiles() {
+    try { return JSON.parse(localStorage.getItem('omega_recent_files') || '[]'); }
+    catch (e) { return []; }
+  }
+  function addRecentFile(name, type) {
+    if (!name) return;
+    try {
+      let list = getRecentFiles().filter(f => f.name !== name);
+      list.unshift({ name: name, type: type || '', at: Date.now() });
+      localStorage.setItem('omega_recent_files', JSON.stringify(list.slice(0, 10)));
+    } catch (e) {}
+  }
+  window.getRecentFiles = getRecentFiles;
+  window.addRecentFile = addRecentFile;
+
+  // ── PPTX IMPORT — real, editable slides ─────────────────────
+  async function importPPTX(file) {
+    if (typeof JSZip === 'undefined') { showToast('⚠️ JSZip not loaded yet — try again'); return; }
+    const toast = showToast('⏳ Opening "' + file.name + '"...', 0);
+    try {
+      const slides = await parsePPTX(file);
+      if (!slides.length) throw new Error('No slides found in file');
+      state.slides = slides.map((sl, i) => ({
+        id: i + 1, layout: 'Custom', bg: sl.background || '#ffffff',
+        shapes: [], texts: sl.texts, images: sl.images
+      }));
+      state.activeSlideId = state.slides[0].id;
+      state.selectedTextId = null;
+      state.selectedShapeId = null;
+      switchAppMode('impress');
+      renderSlideList();
+      renderActiveSlide();
+      if (toast) toast.remove();
+      showToast('✅ "' + file.name + '" opened — ' + state.slides.length + ' slide(s)');
+    } catch (err) {
+      if (toast) toast.remove();
+      showToast('❌ Failed to open PPTX: ' + (err.message || err));
+      console.error(err);
+    }
+  }
+
+  async function parsePPTX(file) {
+    const zip = await JSZip.loadAsync(file);
+    // Slide size (EMU)
+    let cx = 9144000, cy = 6858000;
+    const presFile = zip.file('ppt/presentation.xml');
+    if (presFile) {
+      const presXml = await presFile.async('string');
+      const m = presXml.match(/<p:sldSz[^>]*cx="(\d+)"[^>]*cy="(\d+)"/);
+      if (m) { cx = parseInt(m[1], 10); cy = parseInt(m[2], 10); }
+    }
+    // Keep the on-screen stage proportional to the deck
+    state.slideW = 1280;
+    state.slideH = Math.round(1280 * cy / cx);
+    const ptToPx = state.slideW / (cx / 914400 * 72); // EMU→pt→px scale on our canvas
+
+    const slidePaths = Object.keys(zip.files)
+      .filter(p => /^ppt\/slides\/slide\d+\.xml$/.test(p))
+      .sort((a, b) => parseInt(a.match(/slide(\d+)/)[1], 10) - parseInt(b.match(/slide(\d+)/)[1], 10));
+
+    const out = [];
+    for (const path of slidePaths) {
+      const xmlStr = await zip.file(path).async('string');
+      const doc = new DOMParser().parseFromString(xmlStr, 'application/xml');
+
+      // Relationships (for images)
+      const rels = {};
+      const relName = path.replace(/slides\/(slide\d+\.xml)$/, 'slides/_rels/$1.rels');
+      const relFile = zip.file(relName);
+      if (relFile) {
+        const rdoc = new DOMParser().parseFromString(await relFile.async('string'), 'application/xml');
+        Array.from(rdoc.getElementsByTagName('Relationship')).forEach(r => {
+          rels[r.getAttribute('Id')] = r.getAttribute('Target');
+        });
+      }
+
+      const slide = { background: '#ffffff', texts: [], images: [] };
+
+      // Background colour
+      const bg = doc.getElementsByTagName('p:bg')[0];
+      if (bg) { const c = bg.getElementsByTagName('a:srgbClr')[0]; if (c) slide.background = '#' + c.getAttribute('val'); }
+
+      // Text shapes
+      Array.from(doc.getElementsByTagName('p:sp')).forEach(sp => {
+        const off = sp.getElementsByTagName('a:off')[0];
+        const extEl = sp.getElementsByTagName('a:ext')[0];
+        let html = '', size = 0, bold = false, ital = false, color = '', align = 'left';
+        Array.from(sp.getElementsByTagName('a:p')).forEach(p => {
+          const runs = Array.from(p.getElementsByTagName('a:t')).map(t => escapeHtml(t.textContent));
+          if (html) html += '<br>';
+          html += runs.join('');
+          const pPr = p.getElementsByTagName('a:pPr')[0];
+          if (pPr && pPr.getAttribute('algn')) {
+            const a = pPr.getAttribute('algn');
+            align = a === 'ctr' ? 'center' : (a === 'r' ? 'right' : (a === 'just' ? 'justify' : 'left'));
+          }
+          const rPr = p.getElementsByTagName('a:rPr')[0];
+          if (rPr) {
+            if (rPr.getAttribute('sz')) size = parseInt(rPr.getAttribute('sz'), 10);
+            if (rPr.getAttribute('b') === '1') bold = true;
+            if (rPr.getAttribute('i') === '1') ital = true;
+            const cc = rPr.getElementsByTagName('a:srgbClr')[0];
+            if (cc) color = '#' + cc.getAttribute('val');
+          }
+        });
+        if (!html.replace(/<br>/g, '').trim()) return;
+        slide.texts.push({
+          id: Date.now() + (Math.random() * 100000 | 0),
+          xf: off ? parseInt(off.getAttribute('x'), 10) / cx : 0.06,
+          yf: off ? parseInt(off.getAttribute('y'), 10) / cy : 0.06,
+          wf: extEl ? parseInt(extEl.getAttribute('cx'), 10) / cx : 0.88,
+          hf: extEl ? parseInt(extEl.getAttribute('cy'), 10) / cy : 0.10,
+          html: html,
+          size: size ? Math.max(8, Math.round(size / 100 * ptToPx)) : 24,
+          weight: bold ? 700 : 400, italic: ital,
+          color: color || '#1e293b', align: align
+        });
+      });
+
+      // Pictures
+      for (const pic of Array.from(doc.getElementsByTagName('p:pic'))) {
+        const off = pic.getElementsByTagName('a:off')[0];
+        const extEl = pic.getElementsByTagName('a:ext')[0];
+        const blip = pic.getElementsByTagName('a:blip')[0];
+        if (!blip) continue;
+        const embed = blip.getAttribute('r:embed') || blip.getAttribute('embed');
+        const target = rels[embed];
+        if (!target) continue;
+        const mediaPath = target.indexOf('../') === 0 ? 'ppt/' + target.replace('../', '') : ('ppt/slides/' + target);
+        const f = zip.file(mediaPath) || zip.file(target) || zip.file('ppt/media/' + target.split('/').pop());
+        if (!f) continue;
+        const b64 = await f.async('base64');
+        const e = (mediaPath.split('.').pop() || 'png').toLowerCase();
+        const mime = e === 'jpg' ? 'jpeg' : (e === 'svg' ? 'svg+xml' : e);
+        slide.images.push({
+          src: 'data:image/' + mime + ';base64,' + b64,
+          xf: off ? parseInt(off.getAttribute('x'), 10) / cx : 0.10,
+          yf: off ? parseInt(off.getAttribute('y'), 10) / cy : 0.10,
+          wf: extEl ? parseInt(extEl.getAttribute('cx'), 10) / cx : 0.30,
+          hf: extEl ? parseInt(extEl.getAttribute('cy'), 10) / cy : 0.30
+        });
+      }
+      out.push(slide);
+    }
+    return out;
+  }
+
+  // ── PPTX EXPORT — real PowerPoint file ──────────────────────
+  function exportPPTX() {
+    if (typeof PptxGenJS === 'undefined') { showToast('⚠️ PptxGenJS not loaded'); return; }
+    try {
+      const pptx = new PptxGenJS();
+      const wIn = 10;
+      const hIn = +(10 * state.slideH / state.slideW).toFixed(2);
+      pptx.defineLayout({ name: 'OMEGA', width: wIn, height: hIn });
+      pptx.layout = 'OMEGA';
+      state.slides.forEach(s => {
+        ensureSlideTexts(s);
+        const slide = pptx.addSlide();
+        slide.background = { color: (s.bg || '#ffffff').replace('#', '') };
+        (s.texts || []).forEach(tx => {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = tx.html || '';
+          const text = (tmp.innerText || tmp.textContent || '').trim();
+          if (!text) return;
+          slide.addText(text, {
+            x: (tx.xf || 0) * wIn, y: (tx.yf || 0) * hIn,
+            w: (tx.wf || 0.5) * wIn, h: Math.max(0.3, (tx.hf || 0.1) * hIn),
+            fontSize: Math.max(8, Math.round((tx.size || 24) * 720 / state.slideW)),
+            bold: (tx.weight || 400) >= 600, italic: !!tx.italic,
+            color: (tx.color || '#1e293b').replace('#', ''),
+            align: tx.align || 'left', valign: 'top'
+          });
+        });
+        (s.images || []).forEach(im => {
+          try {
+            slide.addImage({ data: im.src, x: im.xf * wIn, y: im.yf * hIn, w: im.wf * wIn, h: im.hf * hIn });
+          } catch (e) {}
+        });
+      });
+      pptx.writeFile({ fileName: (state.wordDocTitle || 'presentation') + '.pptx' });
+      showToast('✅ Presentation exported as .pptx');
+    } catch (err) {
+      showToast('❌ PPTX export failed: ' + (err.message || err));
+      console.error(err);
+    }
+  }
+
+  // ── PDF EXPORT — flatten page image + annotations via jsPDF ──
+  async function exportPDFReal() {
+    if (!(window.jspdf && window.jspdf.jsPDF)) { showToast('⚠️ jsPDF not loaded'); window.print(); return; }
+    const containers = document.querySelectorAll('.pdf-page-container');
+    if (!containers.length) { showToast('⚠️ No PDF pages to export'); return; }
+    const toast = showToast('⏳ Building PDF...', 0);
+    try {
+      const jsPDF = window.jspdf.jsPDF;
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pw = 210, ph = 297;
+      let added = false;
+      for (let i = 0; i < containers.length; i++) {
+        const cont = containers[i];
+        const img = cont.querySelector('img');
+        const overlay = cont.querySelector('canvas.pdf-page-overlay');
+        if (!img) continue; // HTML pages can't be rasterised without html2canvas
+        const base = new Image();
+        await new Promise(res => { base.onload = res; base.onerror = res; base.src = img.src; });
+        const cv = document.createElement('canvas');
+        cv.width = base.naturalWidth || cont.clientWidth || 760;
+        cv.height = base.naturalHeight || cont.clientHeight || 1000;
+        const c = cv.getContext('2d');
+        c.fillStyle = '#ffffff'; c.fillRect(0, 0, cv.width, cv.height);
+        if (base.naturalWidth) c.drawImage(base, 0, 0, cv.width, cv.height);
+        if (overlay && overlay.width) c.drawImage(overlay, 0, 0, cv.width, cv.height);
+        if (added) pdf.addPage();
+        pdf.addImage(cv.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, pw, ph);
+        added = true;
+      }
+      if (!added) { if (toast) toast.remove(); showToast('🖨️ These pages aren’t image-based — using print'); window.print(); return; }
+      pdf.save((state.wordDocTitle || 'document') + '.pdf');
+      if (toast) toast.remove();
+      showToast('✅ Exported as .pdf');
+    } catch (err) {
+      if (toast) toast.remove();
+      showToast('❌ PDF export failed: ' + (err.message || err));
+      console.error(err);
+    }
+  }
+
+  // ── Periodic auto-save (every 30s) ──────────────────────────
+  setInterval(() => { try { saveToLocalStorage(); } catch (e) {} }, 30000);

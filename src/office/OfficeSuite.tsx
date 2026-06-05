@@ -41,6 +41,22 @@ const EXTERNAL_SCRIPTS: { id: string; src: string }[] = [
     id: "pdfjs-lib",
     src: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",
   },
+  {
+    id: "jszip-lib",
+    src: "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
+  },
+  {
+    id: "pptxgen-lib",
+    src: "https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js",
+  },
+  {
+    id: "jspdf-lib",
+    src: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+  },
+  {
+    id: "htmldocx-lib",
+    src: "https://unpkg.com/html-docx-js/dist/html-docx.js",
+  },
 ];
 
 function ensureStyle({ id, href }: { id: string; href: string }) {
