@@ -814,6 +814,7 @@ App: ${state.activeApp.toUpperCase()}`,
       return;
     }
 
+    addRecentFile(file.name, file.type);
     const toast = showToast(`⏳ Opening "${file.name}"...`, 0);
 
     try {
