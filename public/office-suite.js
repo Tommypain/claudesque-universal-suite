@@ -1690,6 +1690,18 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     vp.innerHTML = '';
     // Shapes (movable)
     renderSlideShapes(vp, s, { editable: true });
+    // Imported images (from PPTX) — positioned absolutely, non-editable
+    (s.images || []).forEach(im => {
+      const img = document.createElement('img');
+      img.src = im.src;
+      img.style.position = 'absolute';
+      img.style.left = (im.xf * 100) + '%';
+      img.style.top = (im.yf * 100) + '%';
+      img.style.width = (im.wf * 100) + '%';
+      img.style.height = (im.hf * 100) + '%';
+      img.style.objectFit = 'contain';
+      vp.appendChild(img);
+    });
     // Text boxes (movable, editable)
     s.texts.forEach(tx => {
       const box = document.createElement('div');
