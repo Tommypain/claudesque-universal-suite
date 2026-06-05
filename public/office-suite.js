@@ -2117,7 +2117,8 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     addTextBox, insertTextBoxSmart, deleteSelectedText, styleSelectedText, setSlideSize,
     addSlideShape, deleteSelectedShape, setShapeFill, setShapeAnimation, setSlideTransition,
     openInPdfViewer,
-    renderPdfPages, setDrawingTool, clearActiveDrawings, rotatePDFPage, openSignatureCanvasDialog
+    renderPdfPages, setDrawingTool, clearActiveDrawings, rotatePDFPage, openSignatureCanvasDialog,
+    importPPTX, exportPPTX, exportPDFReal
   });
 
   // ═══════════════════════════════════
