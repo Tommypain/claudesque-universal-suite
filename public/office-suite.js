@@ -2344,14 +2344,20 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
 
   async function parsePPTX(file) {
     const zip = await JSZip.loadAsync(file);
-    // Slide size (EMU)
-    let cx = 9144000, cy = 6858000;
+    // Slide size (EMU) — read the REAL dimensions from the file (default 16:9)
+    let cx = 12192000, cy = 6858000;
     const presFile = zip.file('ppt/presentation.xml');
     if (presFile) {
       const presXml = await presFile.async('string');
-      const m = presXml.match(/<p:sldSz[^>]*cx="(\d+)"[^>]*cy="(\d+)"/);
-      if (m) { cx = parseInt(m[1], 10); cy = parseInt(m[2], 10); }
+      const sz = presXml.match(/<p:sldSz\b[^>]*\/?>/);
+      if (sz) {
+        const mx = sz[0].match(/cx="(\d+)"/);
+        const my = sz[0].match(/cy="(\d+)"/);
+        if (mx) cx = parseInt(mx[1], 10);
+        if (my) cy = parseInt(my[1], 10);
+      }
     }
+    if (!cx || !cy) { cx = 12192000; cy = 6858000; }
     // Keep the on-screen stage proportional to the deck
     state.slideW = 1280;
     state.slideH = Math.round(1280 * cy / cx);
