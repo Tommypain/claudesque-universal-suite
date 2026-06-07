@@ -2349,7 +2349,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       if (!slides.length) throw new Error('No slides found in file');
       state.slides = slides.map((sl, i) => ({
         id: i + 1, layout: 'Custom', bg: sl.background || '#ffffff',
-        shapes: [], texts: sl.texts, images: sl.images
+        shapes: sl.shapes || [], texts: sl.texts || [], images: sl.images || []
       }));
       state.activeSlideId = state.slides[0].id;
       state.selectedTextId = null;
@@ -2450,14 +2450,25 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
         Array.from(rdoc.getElementsByTagName('Relationship')).forEach(r => { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
       }
 
-      const slide = { background: '#ffffff', texts: [], images: [] };
+      const slide = { background: '#ffffff', shapes: [], texts: [], images: [] };
       const bg = firstLocal(doc, 'bg');
       const bgColor = colorFrom(bg);
       if (bgColor) slide.background = bgColor;
 
       Array.from(doc.getElementsByTagName('p:sp')).forEach((sp, order) => {
         const paras = byLocal(sp, 'p').filter(p => firstLocal(p, 't'));
-        if (!paras.length) return;
+        const solidFill = firstLocal(sp, 'solidFill');
+        if (!paras.length) {
+          if (solidFill) {
+            const tr = getTransform(sp);
+            slide.shapes.push({
+              id: Date.now() + order + (Math.random() * 100000 | 0),
+              type: shapeTypeFrom(sp), xf: norm(tr.x, cx), yf: norm(tr.y, cy), wf: norm(tr.w, cx), hf: norm(tr.h, cy),
+              fill: colorFrom(solidFill) || '#ffffff', anim: 'none', z: getXmlZ(sp) * 10
+            });
+          }
+          return;
+        }
         let html = '', size = 0, bold = false, ital = false, color = '', align = 'left', font = '';
         paras.forEach(p => {
           if (html) html += '<br>';
@@ -2491,7 +2502,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
           html: html,
           size: size ? Math.max(6, Math.round(size / 100 * ptToPx)) : 24,
           weight: bold ? 700 : 400, italic: ital, font: font,
-          color: color || '#1e293b', align: align, z: 20 + order
+          color: color || '#1e293b', align: align, z: getXmlZ(sp) * 10
         });
       });
 
@@ -2512,7 +2523,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
         slide.images.push({
           src: 'data:image/' + mime + ';base64,' + b64,
           xf: norm(tr.x, cx), yf: norm(tr.y, cy), wf: norm(tr.w, cx), hf: norm(tr.h, cy),
-          fit: 'fill', z: 5 + picOrder++
+          fit: 'fill', z: getXmlZ(pic) * 10 + picOrder++
         });
       }
       out.push(slide);
