@@ -2368,24 +2368,59 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
 
   async function parsePPTX(file) {
     const zip = await JSZip.loadAsync(file);
-    // Slide size (EMU) — read the REAL dimensions from the file (default 16:9)
+    const byLocal = (node, name) => Array.from(node.getElementsByTagName('*')).filter(n => n.localName === name);
+    const firstLocal = (node, name) => byLocal(node, name)[0] || null;
+    const intAttr = (node, attr, fallback) => {
+      if (!node || node.getAttribute(attr) == null) return fallback;
+      const n = parseInt(node.getAttribute(attr), 10);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const escapeAttr = s => String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const norm = (n, denom) => (Number.isFinite(n) && denom) ? (n / denom) : 0;
+    const relDir = p => p.split('/').slice(0, -1).join('/');
+    const resolveZipPath = (basePath, target) => {
+      if (!target) return '';
+      if (target[0] === '/') return target.slice(1);
+      const parts = (relDir(basePath) + '/' + target).split('/');
+      const stack = [];
+      parts.forEach(part => {
+        if (!part || part === '.') return;
+        if (part === '..') stack.pop(); else stack.push(part);
+      });
+      return stack.join('/');
+    };
+    const getTransform = el => {
+      const spPr = firstLocal(el, 'spPr');
+      const xfrm = spPr ? firstLocal(spPr, 'xfrm') : firstLocal(el, 'xfrm');
+      const off = xfrm ? firstLocal(xfrm, 'off') : null;
+      const ext = xfrm ? firstLocal(xfrm, 'ext') : null;
+      return {
+        x: intAttr(off, 'x', 0), y: intAttr(off, 'y', 0),
+        w: intAttr(ext, 'cx', cx), h: intAttr(ext, 'cy', cy)
+      };
+    };
+    const colorFrom = node => {
+      const srgb = node ? firstLocal(node, 'srgbClr') : null;
+      if (srgb && srgb.getAttribute('val')) return '#' + srgb.getAttribute('val');
+      const sys = node ? firstLocal(node, 'sysClr') : null;
+      if (sys && sys.getAttribute('lastClr')) return '#' + sys.getAttribute('lastClr');
+      return '';
+    };
+
+    // Read the real slide dimensions from ppt/presentation.xml instead of assuming one deck size.
     let cx = 12192000, cy = 6858000;
     const presFile = zip.file('ppt/presentation.xml');
     if (presFile) {
       const presXml = await presFile.async('string');
-      const sz = presXml.match(/<p:sldSz\b[^>]*\/?>/);
-      if (sz) {
-        const mx = sz[0].match(/cx="(\d+)"/);
-        const my = sz[0].match(/cy="(\d+)"/);
-        if (mx) cx = parseInt(mx[1], 10);
-        if (my) cy = parseInt(my[1], 10);
-      }
+      const pdoc = new DOMParser().parseFromString(presXml, 'application/xml');
+      const sz = firstLocal(pdoc, 'sldSz');
+      cx = intAttr(sz, 'cx', cx);
+      cy = intAttr(sz, 'cy', cy);
     }
     if (!cx || !cy) { cx = 12192000; cy = 6858000; }
-    // Keep the on-screen stage proportional to the deck
     state.slideW = 1280;
-    state.slideH = Math.round(1280 * cy / cx);
-    const ptToPx = state.slideW / (cx / 914400 * 72); // EMU→pt→px scale on our canvas
+    state.slideH = Math.round(state.slideW * cy / cx);
+    const ptToPx = state.slideW / (cx / 914400 * 72);
 
     const slidePaths = Object.keys(zip.files)
       .filter(p => /^ppt\/slides\/slide\d+\.xml$/.test(p))
@@ -2395,82 +2430,76 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     for (const path of slidePaths) {
       const xmlStr = await zip.file(path).async('string');
       const doc = new DOMParser().parseFromString(xmlStr, 'application/xml');
-
-      // Relationships (for images)
       const rels = {};
-      const relName = path.replace(/slides\/(slide\d+\.xml)$/, 'slides/_rels/$1.rels');
-      const relFile = zip.file(relName);
+      const relFile = zip.file(path.replace(/slides\/(slide\d+\.xml)$/, 'slides/_rels/$1.rels'));
       if (relFile) {
         const rdoc = new DOMParser().parseFromString(await relFile.async('string'), 'application/xml');
-        Array.from(rdoc.getElementsByTagName('Relationship')).forEach(r => {
-          rels[r.getAttribute('Id')] = r.getAttribute('Target');
-        });
+        Array.from(rdoc.getElementsByTagName('Relationship')).forEach(r => { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
       }
 
       const slide = { background: '#ffffff', texts: [], images: [] };
+      const bg = firstLocal(doc, 'bg');
+      const bgColor = colorFrom(bg);
+      if (bgColor) slide.background = bgColor;
 
-      // Background colour
-      const bg = doc.getElementsByTagName('p:bg')[0];
-      if (bg) { const c = bg.getElementsByTagName('a:srgbClr')[0]; if (c) slide.background = '#' + c.getAttribute('val'); }
-
-      // Text shapes
-      Array.from(doc.getElementsByTagName('p:sp')).forEach(sp => {
-        const off = sp.getElementsByTagName('a:off')[0];
-        const extEl = sp.getElementsByTagName('a:ext')[0];
-        let html = '', size = 0, bold = false, ital = false, color = '', align = 'left';
-        Array.from(sp.getElementsByTagName('a:p')).forEach(p => {
-          const runs = Array.from(p.getElementsByTagName('a:t')).map(t => escapeHtml(t.textContent));
+      Array.from(doc.getElementsByTagName('p:sp')).forEach((sp, order) => {
+        const paras = byLocal(sp, 'p').filter(p => firstLocal(p, 't'));
+        if (!paras.length) return;
+        let html = '', size = 0, bold = false, ital = false, color = '', align = 'left', font = '';
+        paras.forEach(p => {
           if (html) html += '<br>';
-          html += runs.join('');
-          const pPr = p.getElementsByTagName('a:pPr')[0];
-          if (pPr && pPr.getAttribute('algn')) {
-            const a = pPr.getAttribute('algn');
-            align = a === 'ctr' ? 'center' : (a === 'r' ? 'right' : (a === 'just' ? 'justify' : 'left'));
+          const runs = byLocal(p, 'r');
+          if (runs.length) {
+            html += runs.map(r => {
+              const t = firstLocal(r, 't');
+              const rPr = firstLocal(r, 'rPr');
+              if (rPr) {
+                if (rPr.getAttribute('sz')) size = parseInt(rPr.getAttribute('sz'), 10);
+                if (rPr.getAttribute('b') === '1') bold = true;
+                if (rPr.getAttribute('i') === '1') ital = true;
+                const c = colorFrom(rPr); if (c) color = c;
+                const latin = firstLocal(rPr, 'latin'); if (latin && latin.getAttribute('typeface')) font = latin.getAttribute('typeface');
+              }
+              const text = escapeHtml(t ? t.textContent : '');
+              return rPr && rPr.getAttribute('baseline') ? '<sup>' + text + '</sup>' : text;
+            }).join('');
+          } else {
+            html += byLocal(p, 't').map(t => escapeHtml(t.textContent)).join('');
           }
-          const rPr = p.getElementsByTagName('a:rPr')[0];
-          if (rPr) {
-            if (rPr.getAttribute('sz')) size = parseInt(rPr.getAttribute('sz'), 10);
-            if (rPr.getAttribute('b') === '1') bold = true;
-            if (rPr.getAttribute('i') === '1') ital = true;
-            const cc = rPr.getElementsByTagName('a:srgbClr')[0];
-            if (cc) color = '#' + cc.getAttribute('val');
-          }
+          const pPr = firstLocal(p, 'pPr');
+          const a = pPr && pPr.getAttribute('algn');
+          if (a) align = a === 'ctr' ? 'center' : (a === 'r' ? 'right' : (a === 'just' ? 'justify' : 'left'));
         });
         if (!html.replace(/<br>/g, '').trim()) return;
+        const tr = getTransform(sp);
         slide.texts.push({
-          id: Date.now() + (Math.random() * 100000 | 0),
-          xf: off ? parseInt(off.getAttribute('x'), 10) / cx : 0.06,
-          yf: off ? parseInt(off.getAttribute('y'), 10) / cy : 0.06,
-          wf: extEl ? parseInt(extEl.getAttribute('cx'), 10) / cx : 0.88,
-          hf: extEl ? parseInt(extEl.getAttribute('cy'), 10) / cy : 0.10,
+          id: Date.now() + order + (Math.random() * 100000 | 0),
+          xf: norm(tr.x, cx), yf: norm(tr.y, cy), wf: norm(tr.w, cx), hf: norm(tr.h, cy),
           html: html,
-          size: size ? Math.max(8, Math.round(size / 100 * ptToPx)) : 24,
-          weight: bold ? 700 : 400, italic: ital,
-          color: color || '#1e293b', align: align
+          size: size ? Math.max(6, Math.round(size / 100 * ptToPx)) : 24,
+          weight: bold ? 700 : 400, italic: ital, font: font,
+          color: color || '#1e293b', align: align, z: 20 + order
         });
       });
 
-      // Pictures
+      let picOrder = 0;
       for (const pic of Array.from(doc.getElementsByTagName('p:pic'))) {
-        const off = pic.getElementsByTagName('a:off')[0];
-        const extEl = pic.getElementsByTagName('a:ext')[0];
-        const blip = pic.getElementsByTagName('a:blip')[0];
+        const blip = firstLocal(pic, 'blip');
         if (!blip) continue;
-        const embed = blip.getAttribute('r:embed') || blip.getAttribute('embed');
+        const embed = blip.getAttribute('r:embed') || blip.getAttribute('embed') || blip.getAttribute('r:link');
         const target = rels[embed];
-        if (!target) continue;
-        const mediaPath = target.indexOf('../') === 0 ? 'ppt/' + target.replace('../', '') : ('ppt/slides/' + target);
-        const f = zip.file(mediaPath) || zip.file(target) || zip.file('ppt/media/' + target.split('/').pop());
+        if (!target || /^https?:/i.test(target)) continue;
+        const mediaPath = resolveZipPath(path, target);
+        const f = zip.file(mediaPath) || zip.file('ppt/media/' + target.split('/').pop());
         if (!f) continue;
+        const tr = getTransform(pic);
         const b64 = await f.async('base64');
         const e = (mediaPath.split('.').pop() || 'png').toLowerCase();
         const mime = e === 'jpg' ? 'jpeg' : (e === 'svg' ? 'svg+xml' : e);
         slide.images.push({
           src: 'data:image/' + mime + ';base64,' + b64,
-          xf: off ? parseInt(off.getAttribute('x'), 10) / cx : 0.10,
-          yf: off ? parseInt(off.getAttribute('y'), 10) / cy : 0.10,
-          wf: extEl ? parseInt(extEl.getAttribute('cx'), 10) / cx : 0.30,
-          hf: extEl ? parseInt(extEl.getAttribute('cy'), 10) / cy : 0.30
+          xf: norm(tr.x, cx), yf: norm(tr.y, cy), wf: norm(tr.w, cx), hf: norm(tr.h, cy),
+          fit: 'fill', z: 5 + picOrder++
         });
       }
       out.push(slide);
