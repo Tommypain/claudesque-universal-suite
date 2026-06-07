@@ -1466,7 +1466,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     slide.shapes.forEach(sh => {
       const el = document.createElement('div');
       el.className = 'slide-shape';
-      el.style.cssText = 'position:absolute;left:' + (sh.xf * 100) + '%;top:' + (sh.yf * 100) + '%;width:' + (sh.wf * 100) + '%;height:' + (sh.hf * 100) + '%;cursor:move;';
+      el.style.cssText = 'position:absolute;left:' + (sh.xf * 100) + '%;top:' + (sh.yf * 100) + '%;width:' + (sh.wf * 100) + '%;height:' + (sh.hf * 100) + '%;cursor:move;z-index:' + (sh.z || 10) + ';';
       el.innerHTML = shapeSVG(sh.type, sh.fill);
       if (opts.play && sh.anim && sh.anim !== 'none') {
         el.style.animation = 'shp-' + sh.anim + ' .7s ease both';
