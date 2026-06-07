@@ -2369,6 +2369,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   async function parsePPTX(file) {
     const zip = await JSZip.loadAsync(file);
     const byLocal = (node, name) => Array.from(node.getElementsByTagName('*')).filter(n => n.localName === name);
+    const directLocal = (node, name) => Array.from((node && node.children) || []).find(n => n.localName === name) || null;
     const firstLocal = (node, name) => byLocal(node, name)[0] || null;
     const intAttr = (node, attr, fallback) => {
       if (!node || node.getAttribute(attr) == null) return fallback;
@@ -2390,14 +2391,33 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       return stack.join('/');
     };
     const getTransform = el => {
-      const spPr = firstLocal(el, 'spPr');
-      const xfrm = spPr ? firstLocal(spPr, 'xfrm') : firstLocal(el, 'xfrm');
+      const spPr = directLocal(el, 'spPr') || firstLocal(el, 'spPr');
+      const xfrm = spPr ? directLocal(spPr, 'xfrm') : firstLocal(el, 'xfrm');
       const off = xfrm ? firstLocal(xfrm, 'off') : null;
       const ext = xfrm ? firstLocal(xfrm, 'ext') : null;
-      return {
+      const tr = {
         x: intAttr(off, 'x', 0), y: intAttr(off, 'y', 0),
         w: intAttr(ext, 'cx', cx), h: intAttr(ext, 'cy', cy)
       };
+      let parent = el.parentNode;
+      while (parent && parent.localName === 'grpSp') {
+        const gp = directLocal(parent, 'grpSpPr');
+        const gx = gp ? directLocal(gp, 'xfrm') : null;
+        const go = gx ? firstLocal(gx, 'off') : null;
+        const ge = gx ? firstLocal(gx, 'ext') : null;
+        const gco = gx ? firstLocal(gx, 'chOff') : null;
+        const gce = gx ? firstLocal(gx, 'chExt') : null;
+        const gx0 = intAttr(go, 'x', 0), gy0 = intAttr(go, 'y', 0);
+        const gw = Math.max(1, intAttr(ge, 'cx', cx)), gh = Math.max(1, intAttr(ge, 'cy', cy));
+        const gcx = intAttr(gco, 'x', 0), gcy = intAttr(gco, 'y', 0);
+        const gcw = Math.max(1, intAttr(gce, 'cx', gw)), gch = Math.max(1, intAttr(gce, 'cy', gh));
+        tr.x = gx0 + (tr.x - gcx) * gw / gcw;
+        tr.y = gy0 + (tr.y - gcy) * gh / gch;
+        tr.w = tr.w * gw / gcw;
+        tr.h = tr.h * gh / gch;
+        parent = parent.parentNode;
+      }
+      return tr;
     };
     const getXmlZ = el => el && el.parentNode ? Math.max(1, Array.from(el.parentNode.children).indexOf(el) + 1) : 1;
     const colorFrom = node => {
