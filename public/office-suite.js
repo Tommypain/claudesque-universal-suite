@@ -2399,12 +2399,25 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
         w: intAttr(ext, 'cx', cx), h: intAttr(ext, 'cy', cy)
       };
     };
+    const getXmlZ = el => el && el.parentNode ? Math.max(1, Array.from(el.parentNode.children).indexOf(el) + 1) : 1;
     const colorFrom = node => {
       const srgb = node ? firstLocal(node, 'srgbClr') : null;
       if (srgb && srgb.getAttribute('val')) return '#' + srgb.getAttribute('val');
       const sys = node ? firstLocal(node, 'sysClr') : null;
       if (sys && sys.getAttribute('lastClr')) return '#' + sys.getAttribute('lastClr');
       return '';
+    };
+    const shapeTypeFrom = sp => {
+      const geom = firstLocal(sp, 'prstGeom');
+      const prst = geom && geom.getAttribute('prst');
+      if (prst === 'ellipse') return 'circle';
+      if (prst === 'triangle' || prst === 'rtTriangle') return 'triangle';
+      if (prst === 'diamond') return 'diamond';
+      if (prst === 'star5') return 'star';
+      if (prst === 'heart') return 'heart';
+      if (prst && prst.indexOf('Arrow') >= 0) return 'arrow';
+      if (prst && prst.indexOf('line') >= 0) return 'line';
+      return 'square';
     };
 
     // Read the real slide dimensions from ppt/presentation.xml instead of assuming one deck size.
