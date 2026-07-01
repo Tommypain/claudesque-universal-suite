@@ -1,0 +1,707 @@
+/* ============================================================
+   Liberty Studio — Design Token System (HSL-based, mandatory)
+   Every color resolves through a CSS variable. No raw hex/rgb.
+   ============================================================ */
+
+.liberty-root {
+  /* Brand / Primary — the ONLY accent color in the app */
+  --brand-h: 24;
+  --brand-s: 95%;
+  --brand-l: 53%;
+  --brand: hsl(var(--brand-h) var(--brand-s) var(--brand-l));
+  --brand-soft: hsl(var(--brand-h) var(--brand-s) var(--brand-l) / 0.14);
+  --brand-fg: hsl(0 0% 100%);
+
+  /* Neutral scale (grayscale, HSL) */
+  --neutral-50: hsl(30 12% 98%);
+  --neutral-100: hsl(30 8% 95%);
+  --neutral-200: hsl(28 7% 90%);
+  --neutral-300: hsl(28 6% 82%);
+  --neutral-400: hsl(28 5% 66%);
+  --neutral-500: hsl(28 4% 50%);
+  --neutral-600: hsl(28 5% 38%);
+  --neutral-700: hsl(28 7% 27%);
+  --neutral-800: hsl(28 9% 16%);
+  --neutral-900: hsl(28 12% 9%);
+
+  /* Semantic tokens (used sparingly) */
+  --color-success: hsl(145 60% 42%);
+  --color-warning: hsl(38 92% 50%);
+  --color-danger: hsl(0 72% 51%);
+  --color-info: hsl(24 55% 55%);
+
+  /* Glass controls (driven live by the settings panel) */
+  --glass-blur: 0px;
+  --glass-alpha: 1;
+
+  /* Surface tokens (overridden per theme below) */
+  --surface-base: var(--neutral-50);
+  --surface-raised: hsl(0 0% 100%);
+  --surface-overlay: hsl(0 0% 100%);
+  --surface-canvas: var(--neutral-200);
+
+  /* Text tokens */
+  --text-strong: var(--neutral-900);
+  --text-muted: var(--neutral-500);
+  --text-inverse: var(--neutral-50);
+
+  /* Borders / shadows */
+  --border-soft: var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --shadow-1: 0 1px 2px hsl(28 20% 10% / 0.08);
+  --shadow-2: 0 8px 24px hsl(28 20% 10% / 0.12);
+  --shadow-3: 0 24px 60px hsl(28 20% 10% / 0.22);
+
+  /* -------- Zone-scoped variables (mandatory namespaces) -------- */
+  --qat-bg: var(--surface-raised);
+  --qat-fg: var(--text-muted);
+
+  --tabbar-bg: var(--surface-raised);
+  --tabbar-fg: var(--text-muted);
+  --tabbar-active-accent: var(--brand);
+
+  --ribbon-bg: var(--surface-raised);
+  --ribbon-group-divider: var(--border-soft);
+  --ribbon-icon-fg: var(--text-strong);
+
+  --sidebar-bg: var(--surface-raised);
+  --sidebar-active-indicator: var(--brand);
+
+  --canvas-bg: var(--surface-canvas);
+  --page-bg: hsl(0 0% 100%);
+  --page-shadow: var(--shadow-2);
+}
+
+/* ---------------- SOLID THEME ---------------- */
+.liberty-root[data-theme="solid"] {
+  --surface-base: var(--neutral-50);
+  --surface-raised: hsl(0 0% 100%);
+  --surface-overlay: hsl(0 0% 100%);
+  --surface-canvas: var(--neutral-200);
+  --glass-blur: 0px;
+  --glass-alpha: 1;
+}
+
+/* ---------------- GLASS LIGHT (macOS Ventura style) ---------------- */
+.liberty-root[data-theme="glass-light"] {
+  --surface-base: hsl(30 30% 96% / calc(var(--glass-alpha) * 0.9));
+  --surface-raised: hsl(0 0% 100% / var(--glass-alpha));
+  --surface-overlay: hsl(0 0% 100% / calc(var(--glass-alpha) + 0.06));
+  --surface-canvas: hsl(28 12% 88% / 0.6);
+  --border-soft: hsl(0 0% 100% / 0.5);
+  --border-strong: hsl(0 0% 100% / 0.7);
+  --text-strong: var(--neutral-900);
+  --text-muted: var(--neutral-600);
+  --page-bg: hsl(0 0% 100% / 0.92);
+}
+
+/* ---------------- GLASS DARK (macOS dark mode style) ---------------- */
+.liberty-root[data-theme="glass-dark"] {
+  --surface-base: hsl(28 12% 10% / calc(var(--glass-alpha) * 0.92));
+  --surface-raised: hsl(28 12% 14% / var(--glass-alpha));
+  --surface-overlay: hsl(28 12% 18% / calc(var(--glass-alpha) + 0.06));
+  --surface-canvas: hsl(28 14% 7% / 0.6);
+  --border-soft: hsl(0 0% 100% / 0.08);
+  --border-strong: hsl(0 0% 100% / 0.16);
+  --text-strong: var(--neutral-50);
+  --text-muted: var(--neutral-400);
+  --text-inverse: var(--neutral-900);
+  --page-bg: hsl(28 10% 16% / 0.96);
+  --shadow-1: 0 1px 2px hsl(0 0% 0% / 0.4);
+  --shadow-2: 0 8px 24px hsl(0 0% 0% / 0.5);
+  --shadow-3: 0 24px 60px hsl(0 0% 0% / 0.6);
+}
+
+/* Glass surfaces get the live blur when a glass theme is active */
+.liberty-root[data-theme="glass-light"] .glass-surface,
+.liberty-root[data-theme="glass-dark"] .glass-surface {
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  border: 1px solid var(--border-soft);
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+.liberty-root {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-strong);
+  background: var(--surface-base);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+}
+
+.liberty-wallpaper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(120% 120% at 15% 10%, hsl(var(--brand-h) var(--brand-s) 62% / 0.55), transparent 45%),
+    radial-gradient(120% 120% at 90% 20%, hsl(14 80% 55% / 0.45), transparent 50%),
+    linear-gradient(135deg, var(--neutral-200), var(--neutral-400));
+}
+.liberty-root[data-theme="glass-dark"] .liberty-wallpaper {
+  background:
+    radial-gradient(120% 120% at 15% 10%, hsl(var(--brand-h) var(--brand-s) 45% / 0.6), transparent 45%),
+    radial-gradient(120% 120% at 90% 20%, hsl(14 70% 30% / 0.5), transparent 50%),
+    linear-gradient(135deg, var(--neutral-900), hsl(28 14% 4%));
+}
+
+.liberty-shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Title bar */
+.lib-titlebar {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  background: var(--surface-overlay);
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+.lib-title-app {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.lib-title-sub {
+  color: var(--text-muted);
+}
+.lib-title-brandbar {
+  width: 3px;
+  height: 16px;
+  background: var(--brand);
+  border-radius: 1px;
+}
+
+/* Body split */
+.lib-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* App switcher sidebar */
+.lib-appbar {
+  width: 64px;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px 0;
+  gap: 4px;
+  transition: width 0.18s ease;
+}
+.lib-appbar.collapsed {
+  width: 0;
+  overflow: hidden;
+  border-right: none;
+}
+.lib-appbtn {
+  position: relative;
+  height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 8px;
+  letter-spacing: 0.02em;
+}
+.lib-appbtn:hover {
+  color: var(--text-strong);
+  background: var(--brand-soft);
+}
+.lib-appbtn[aria-pressed="true"] {
+  color: var(--brand);
+}
+.lib-appbtn[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--sidebar-active-indicator);
+  border-radius: 0 2px 2px 0;
+}
+.lib-appbar-spacer {
+  flex: 1;
+}
+.lib-appbar-divider {
+  height: 1px;
+  margin: 4px 12px;
+  background: var(--border-soft);
+}
+
+/* Main column */
+.lib-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ribbon area */
+.lib-ribbon-wrap {
+  background: var(--ribbon-bg);
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+
+/* QAT */
+.lib-qat {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 10px;
+  background: var(--qat-bg);
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--qat-fg);
+}
+.lib-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  min-width: 26px;
+  padding: 0 5px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.lib-iconbtn:hover {
+  background: var(--brand-soft);
+  color: var(--text-strong);
+}
+.lib-iconbtn.pressed {
+  background: var(--brand-soft);
+  color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+/* Tab bar */
+.lib-tabbar {
+  height: 36px;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0 8px;
+  background: var(--tabbar-bg);
+}
+.lib-tab {
+  position: relative;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  color: var(--tabbar-fg);
+  cursor: pointer;
+  font-size: 13px;
+}
+.lib-tab:hover {
+  color: var(--text-strong);
+}
+.lib-tab[aria-selected="true"] {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+.lib-tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  height: 2px;
+  background: var(--tabbar-active-accent);
+  border-radius: 2px;
+}
+
+/* Ribbon body */
+.lib-ribbon {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 8px 6px;
+  overflow-x: auto;
+  border-top: 1px solid var(--border-soft);
+}
+.lib-group {
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px;
+  min-width: max-content;
+}
+.lib-group + .lib-group {
+  border-left: 1px solid var(--ribbon-group-divider);
+}
+.lib-group-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  max-width: 320px;
+}
+.lib-group-label {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-top: 4px;
+}
+.lib-ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ribbon-icon-fg);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.lib-ctrl:hover {
+  background: var(--brand-soft);
+}
+.lib-ctrl.pressed {
+  background: var(--brand-soft);
+  color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+.lib-select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--surface-raised);
+  color: var(--text-strong);
+  font-size: 12px;
+}
+.lib-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--surface-raised);
+}
+.lib-stepper input {
+  width: 34px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: var(--text-strong);
+  font-size: 12px;
+}
+.lib-stepper button {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 5px;
+  height: 26px;
+}
+.lib-stepper button:hover {
+  color: var(--brand);
+}
+.lib-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border-strong);
+  background: var(--brand);
+}
+
+/* Canvas */
+.lib-canvas {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.lib-canvas-scroll {
+  flex: 1;
+  overflow: auto;
+  background: var(--canvas-bg);
+  padding: 32px;
+  display: flex;
+  justify-content: center;
+}
+.lib-page {
+  width: min(794px, 100%);
+  min-height: 1000px;
+  background: var(--page-bg);
+  box-shadow: var(--page-shadow);
+  border-radius: 2px;
+  padding: 72px 84px;
+  color: var(--text-strong);
+}
+.lib-page h1 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.lib-page .lib-doc-sub {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+.lib-page p {
+  line-height: 1.7;
+  margin-bottom: 16px;
+  color: var(--text-strong);
+}
+
+/* Right panel */
+.lib-rightpanel {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--surface-raised);
+  border-left: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.18s ease;
+}
+.lib-rightpanel.collapsed {
+  width: 0;
+  overflow: hidden;
+  border-left: none;
+}
+.lib-rightpanel-head {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.lib-segmented {
+  display: flex;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.lib-segmented button {
+  flex: 1;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+.lib-segmented button + button {
+  border-left: 1px solid var(--border-strong);
+}
+.lib-segmented button[aria-pressed="true"] {
+  background: var(--brand);
+  color: var(--brand-fg);
+}
+.lib-thumbs {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.lib-thumb {
+  background: var(--page-bg);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-1);
+  border-radius: 3px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* Panel toggle buttons on title bar */
+.lib-title-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+/* Settings FAB */
+.lib-fab {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 40;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--brand);
+  color: var(--brand-fg);
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lib-fab:hover {
+  filter: brightness(1.05);
+}
+
+/* Settings panel */
+.lib-settings {
+  position: absolute;
+  z-index: 50;
+  width: 320px;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: var(--shadow-3);
+  color: var(--text-strong);
+  overflow: hidden;
+}
+.lib-settings-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  cursor: grab;
+  user-select: none;
+  font-weight: 600;
+}
+.lib-settings-head:active {
+  cursor: grabbing;
+}
+.lib-settings-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 70vh;
+  overflow: auto;
+}
+.lib-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.lib-theme-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.lib-theme-card {
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 8px;
+  background: var(--surface-raised);
+  cursor: pointer;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.lib-theme-card[aria-pressed="true"] {
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--brand);
+  color: var(--brand);
+}
+.lib-theme-preview {
+  height: 40px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: flex-end;
+  padding: 4px;
+}
+.lib-preview-solid {
+  background: linear-gradient(180deg, hsl(0 0% 100%), var(--neutral-200));
+  border: 1px solid var(--neutral-300);
+}
+.lib-preview-glass-light {
+  background: linear-gradient(135deg, hsl(30 40% 92% / 0.9), hsl(0 0% 100% / 0.5));
+  border: 1px solid hsl(0 0% 100% / 0.7);
+}
+.lib-preview-glass-dark {
+  background: linear-gradient(135deg, hsl(28 12% 18% / 0.9), hsl(28 12% 10% / 0.7));
+  border: 1px solid hsl(0 0% 100% / 0.12);
+}
+.lib-preview-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--brand);
+}
+.lib-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.lib-slider-row label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.lib-slider-row input[type="range"] {
+  accent-color: var(--brand);
+  width: 100%;
+}
+.lib-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.lib-switch {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: 1px solid var(--border-strong);
+  background: var(--neutral-300);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.lib-switch[aria-pressed="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+.lib-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: hsl(0 0% 100%);
+  transition: transform 0.15s ease;
+}
+.lib-switch[aria-pressed="true"]::after {
+  transform: translateX(18px);
+}
+.lib-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
