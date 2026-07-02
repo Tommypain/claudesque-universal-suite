@@ -1,26 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ClientOnly } from "@tanstack/react-router";
-import OfficeSuite from "../office/OfficeSuite";
+import { createFileRoute, ClientOnly } from "@tanstack/react-router";
+import OctopusStudio from "../octopus/OctopusStudio";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Omega Office Suite — Word, Sheet, Impress & PDF" },
+      { title: "Octopus Studio — Free Online Office Suite" },
       {
         name: "description",
         content:
-          "A beautiful, Claude-inspired office suite: word processor, spreadsheets, presentations and PDF editing — works on any device.",
+          "Octopus Studio is a free browser-based office suite with Write, Sheet, Present and PDF apps. Works on any device.",
       },
-      { property: "og:title", content: "Omega Office Suite" },
+      { property: "og:title", content: "Octopus Studio" },
       {
         property: "og:description",
-        content:
-          "A beautiful, Claude-inspired office suite that runs on any platform.",
+        content: "Write, Sheet, Present and PDF — a free office suite in your browser.",
       },
-    ],
-    links: [
-      { rel: "manifest", href: "/manifest.json" },
-      { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,
@@ -28,24 +24,8 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <ClientOnly
-      fallback={
-        <div
-          style={{
-            height: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "Inter, system-ui, sans-serif",
-            color: "#7a7a7a",
-            background: "#f3f3ee",
-          }}
-        >
-          Loading Omega Office Suite…
-        </div>
-      }
-    >
-      <OfficeSuite />
+    <ClientOnly fallback={<div style={{ padding: 24 }}>Loading Octopus Studio…</div>}>
+      <OctopusStudio />
     </ClientOnly>
   );
 }
