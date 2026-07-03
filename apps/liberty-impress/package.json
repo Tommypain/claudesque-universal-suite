@@ -1,0 +1,27 @@
+{
+  "name": "@liberty/impress-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@liberty/themes": "file:../../packages/themes",
+    "@liberty/icons": "file:../../packages/icons",
+    "@liberty/shared-hooks": "file:../../packages/shared-hooks",
+    "@liberty/ui": "file:../../packages/ui",
+    "@liberty/design-system": "file:../../packages/design-system",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "typescript": "^5.8.3",
+    "vite": "^7.3.1"
+  }
+}
