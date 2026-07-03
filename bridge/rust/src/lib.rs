@@ -29,6 +29,7 @@ pub mod ffi {
         include!("kernel.h");
         include!("text_engine.h");
         include!("layout_engine.h");
+        include!("formula_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -106,5 +107,28 @@ pub mod ffi {
             font_size: f32,
             text_shaper: Pin<&mut TextEngine>,
         ) -> Vec<LayoutPage>;
+
+        // liberty::formula::FormulaEngine
+        #[namespace = "liberty::formula"]
+        type FormulaEngine;
+
+        #[namespace = "liberty::formula"]
+        fn create_formula_engine() -> UniquePtr<FormulaEngine>;
+
+        #[namespace = "liberty::formula"]
+        fn set_cell_value(
+            self: Pin<&mut FormulaEngine>,
+            cell_id: &CxxString,
+            raw_value: &CxxString,
+        );
+
+        #[namespace = "liberty::formula"]
+        fn evaluate_all(self: Pin<&mut FormulaEngine>) -> Result<String>;
+
+        #[namespace = "liberty::formula"]
+        fn has_circular_dependencies(self: &FormulaEngine) -> bool;
+
+        #[namespace = "liberty::formula"]
+        fn clear(self: Pin<&mut FormulaEngine>);
     }
 }
