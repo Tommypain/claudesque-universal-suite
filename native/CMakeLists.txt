@@ -7,5 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Export compile commands for language servers
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Include the kernel module
+# Include modules
 add_subdirectory(kernel)
+add_subdirectory(text-engine)
