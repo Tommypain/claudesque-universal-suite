@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LibertyDocsRouteImport } from './routes/liberty-docs'
 import { Route as LibertyRouteImport } from './routes/liberty'
 import { Route as IndexRouteImport } from './routes/index'
 
+const LibertyDocsRoute = LibertyDocsRouteImport.update({
+  id: '/liberty-docs',
+  path: '/liberty-docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibertyRoute = LibertyRouteImport.update({
   id: '/liberty',
   path: '/liberty',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/liberty': typeof LibertyRoute
+  '/liberty-docs': typeof LibertyDocsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/liberty': typeof LibertyRoute
+  '/liberty-docs': typeof LibertyDocsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/liberty': typeof LibertyRoute
+  '/liberty-docs': typeof LibertyDocsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/liberty'
+  fullPaths: '/' | '/liberty' | '/liberty-docs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/liberty'
-  id: '__root__' | '/' | '/liberty'
+  to: '/' | '/liberty' | '/liberty-docs'
+  id: '__root__' | '/' | '/liberty' | '/liberty-docs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibertyRoute: typeof LibertyRoute
+  LibertyDocsRoute: typeof LibertyDocsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/liberty-docs': {
+      id: '/liberty-docs'
+      path: '/liberty-docs'
+      fullPath: '/liberty-docs'
+      preLoaderRoute: typeof LibertyDocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/liberty': {
       id: '/liberty'
       path: '/liberty'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibertyRoute: LibertyRoute,
+  LibertyDocsRoute: LibertyDocsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
