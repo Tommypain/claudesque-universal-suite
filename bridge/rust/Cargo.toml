@@ -1,0 +1,16 @@
+[package]
+name = "liberty-bridge"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+name = "liberty_bridge"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+cxx = "1.0"
+
+[build-dependencies]
+cxx-build = "1.0"
+# We can also use cc or cmake depending on our compilation strategy
+cc = "1.0"
