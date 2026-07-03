@@ -10,3 +10,4 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Include modules
 add_subdirectory(kernel)
 add_subdirectory(text-engine)
+add_subdirectory(layout-engine)

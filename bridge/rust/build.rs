@@ -2,8 +2,10 @@ fn main() {
     cxx_build::bridge("src/lib.rs")
         .file("../../native/kernel/src/kernel.cpp")
         .file("../../native/text-engine/src/text_engine.cpp")
+        .file("../../native/layout-engine/src/layout_engine.cpp")
         .include("../../native/kernel/include")
         .include("../../native/text-engine/include")
+        .include("../../native/layout-engine/include")
         .flag_if_supported("-std=c++20")
         .flag_if_supported("/std:c++20")
         .compile("liberty-bridge");
@@ -13,4 +15,6 @@ fn main() {
     println!("cargo:rerun-if-changed=../../native/kernel/include/kernel.h");
     println!("cargo:rerun-if-changed=../../native/text-engine/src/text_engine.cpp");
     println!("cargo:rerun-if-changed=../../native/text-engine/include/text_engine.h");
+    println!("cargo:rerun-if-changed=../../native/layout-engine/src/layout_engine.cpp");
+    println!("cargo:rerun-if-changed=../../native/layout-engine/include/layout_engine.h");
 }

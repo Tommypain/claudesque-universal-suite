@@ -1,6 +1,6 @@
 #[cxx::bridge(namespace = "liberty")]
 pub mod ffi {
-    // Shared struct layout between Rust and C++
+    // Shared struct layout between Rust and C++ for Text Engine
     struct GlyphPosition {
         glyph_id: u32,
         x_advance: f32,
@@ -9,9 +9,26 @@ pub mod ffi {
         y_offset: f32,
     }
 
+    // Shared struct layout between Rust and C++ for Layout Engine
+    struct LineRun {
+        text: String,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+    }
+
+    struct LayoutPage {
+        page_number: u32,
+        width: f32,
+        height: f32,
+        lines: Vec<LineRun>,
+    }
+
     unsafe extern "C++" {
         include!("kernel.h");
         include!("text_engine.h");
+        include!("layout_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -70,5 +87,24 @@ pub mod ffi {
 
         #[namespace = "liberty::text"]
         fn has_font(self: &TextEngine, font_name: &CxxString) -> bool;
+
+        // liberty::layout::LayoutEngine
+        #[namespace = "liberty::layout"]
+        type LayoutEngine;
+
+        #[namespace = "liberty::layout"]
+        fn create_layout_engine() -> UniquePtr<LayoutEngine>;
+
+        #[namespace = "liberty::layout"]
+        fn reflow_document(
+            self: Pin<&mut LayoutEngine>,
+            text: &CxxString,
+            page_width: f32,
+            page_height: f32,
+            margin: f32,
+            font_name: &CxxString,
+            font_size: f32,
+            text_shaper: Pin<&mut TextEngine>,
+        ) -> Vec<LayoutPage>;
     }
 }
