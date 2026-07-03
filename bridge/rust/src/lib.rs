@@ -30,6 +30,7 @@ pub mod ffi {
         include!("text_engine.h");
         include!("layout_engine.h");
         include!("formula_engine.h");
+        include!("docs_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -130,5 +131,26 @@ pub mod ffi {
 
         #[namespace = "liberty::formula"]
         fn clear(self: Pin<&mut FormulaEngine>);
+
+        // liberty::docs::DocsEngine
+        #[namespace = "liberty::docs"]
+        type DocsEngine;
+
+        #[namespace = "liberty::docs"]
+        fn create_docs_engine() -> UniquePtr<DocsEngine>;
+
+        #[namespace = "liberty::docs"]
+        fn load_file(
+            self: Pin<&mut DocsEngine>,
+            file_bytes: &[u8],
+            extension: &CxxString,
+        ) -> Result<String>;
+
+        #[namespace = "liberty::docs"]
+        fn export_file(
+            self: Pin<&mut DocsEngine>,
+            html: &CxxString,
+            extension: &CxxString,
+        ) -> Result<Vec<u8>>;
     }
 }
