@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Ribbon } from "../ribbon/Ribbon";
-import { RibbonGroup } from "../ribbon/RibbonGroup";
-import { RibbonButton } from "../ribbon/RibbonButton";
-import { useDocumentStore } from "../../store/useDocumentStore";
-import { useAppStore } from "../../store/useAppStore";
+import { Ribbon, RibbonGroup, RibbonButton } from "@liberty/ui";
+import { useDocumentStore, useAppStore } from "@liberty/shared-hooks";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, FileOpen } from "lucide-react";
 
 const PDF_SRC =

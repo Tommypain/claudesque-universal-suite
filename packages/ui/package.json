@@ -1,0 +1,14 @@
+{
+  "name": "@liberty/ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@liberty/themes": "file:../themes",
+    "@liberty/icons": "file:../icons",
+    "@liberty/shared-hooks": "file:../shared-hooks",
+    "react": "^19.2.0",
+    "lucide-react": "^0.575.0"
+  }
+}

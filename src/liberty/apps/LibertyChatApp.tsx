@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { Ribbon } from "../ribbon/Ribbon";
-import { RibbonGroup } from "../ribbon/RibbonGroup";
-import { RibbonButton } from "../ribbon/RibbonButton";
+import { Ribbon, RibbonGroup, RibbonButton } from "@liberty/ui";
 import { Send, Bot, User } from "lucide-react";
 
 interface LibertyChatAppProps {

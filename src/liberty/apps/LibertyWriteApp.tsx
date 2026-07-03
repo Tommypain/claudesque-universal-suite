@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Ribbon } from "../ribbon/Ribbon";
-import { RibbonGroup } from "../ribbon/RibbonGroup";
-import { RibbonButton } from "../ribbon/RibbonButton";
-import { useDocumentStore } from "../../store/useDocumentStore";
+import { Ribbon, RibbonGroup, RibbonButton } from "@liberty/ui";
+import { useDocumentStore } from "@liberty/shared-hooks";
 
 const exec = (cmd: string, val?: string) =>
   document.execCommand(cmd, false, val);

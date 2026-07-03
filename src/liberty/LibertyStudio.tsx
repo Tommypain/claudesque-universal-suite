@@ -1,15 +1,8 @@
 import { useState, useEffect } from "react";
 import "../office/office.css";
 import "../office/host.css";
-import { useAppStore, type AppId } from "../store/useAppStore";
-import { useDocumentStore } from "../store/useDocumentStore";
-import { useTheme } from "../hooks/useTheme";
-import { useKeyboard } from "../hooks/useKeyboard";
-import { useFileManager } from "../hooks/useFileManager";
-import { AppShell } from "./shell/AppShell";
-import { AppSidebar } from "./shell/AppSidebar";
-import { StatusBar } from "./shell/StatusBar";
-import { BackstageSettings } from "./settings/BackstageSettings";
+import { useAppStore, useDocumentStore, useTheme, useKeyboard, useFileManager, type AppId } from "@liberty/shared-hooks";
+import { AppShell, AppSidebar, StatusBar, BackstageSettings } from "@liberty/ui";
 import { LibertyWriteApp } from "./apps/LibertyWriteApp";
 import { LibertySheetApp } from "./apps/LibertySheetApp";
 import { LibertyImpressApp } from "./apps/LibertyImpressApp";

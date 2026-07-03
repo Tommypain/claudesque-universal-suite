@@ -3,6 +3,10 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -40,6 +44,11 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/vite": "^4.2.1",
+    "@liberty/themes": "file:packages/themes",
+    "@liberty/icons": "file:packages/icons",
+    "@liberty/shared-hooks": "file:packages/shared-hooks",
+    "@liberty/ui": "file:packages/ui",
+    "@liberty/design-system": "file:packages/design-system",
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-router": "^1.168.25",
     "@tanstack/react-start": "^1.167.50",

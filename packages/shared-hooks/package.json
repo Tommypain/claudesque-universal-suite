@@ -1,0 +1,11 @@
+{
+  "name": "@liberty/shared-hooks",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "zustand": "^5.0.14",
+    "react": "^19.2.0"
+  }
+}
