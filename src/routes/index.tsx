@@ -1,19 +1,19 @@
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
-import OctopusStudio from "../octopus/OctopusStudio";
+import OfficeSuite from "../office/OfficeSuite";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Octopus Studio — Free Online Office Suite" },
+      { title: "Claudesque — Universal Office Suite" },
       {
         name: "description",
         content:
-          "Octopus Studio is a free browser-based office suite with Write, Sheet, Present and PDF apps. Works on any device.",
+          "Claudesque is a free browser-based office suite with Word, Impress, Sheet and PDF apps. Works on any device.",
       },
-      { property: "og:title", content: "Octopus Studio" },
+      { property: "og:title", content: "Claudesque Office Suite" },
       {
         property: "og:description",
-        content: "Write, Sheet, Present and PDF — a free office suite in your browser.",
+        content: "Word, Impress, Sheet and PDF — a free office suite in your browser.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -24,8 +24,8 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <ClientOnly fallback={<div style={{ padding: 24 }}>Loading Octopus Studio…</div>}>
-      <OctopusStudio />
+    <ClientOnly fallback={<div style={{ padding: 24 }}>Loading Claudesque…</div>}>
+      <OfficeSuite />
     </ClientOnly>
   );
 }
