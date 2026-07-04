@@ -32,6 +32,7 @@ pub mod ffi {
         include!("formula_engine.h");
         include!("docs_engine.h");
         include!("sheets_engine.h");
+        include!("impress_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -172,6 +173,27 @@ pub mod ffi {
         fn export_file(
             self: Pin<&mut SheetsEngine>,
             json_data: &CxxString,
+            extension: &CxxString,
+        ) -> Result<Vec<u8>>;
+
+        // liberty::impress::ImpressEngine
+        #[namespace = "liberty::impress"]
+        type ImpressEngine;
+
+        #[namespace = "liberty::impress"]
+        fn create_impress_engine() -> UniquePtr<ImpressEngine>;
+
+        #[namespace = "liberty::impress"]
+        fn load_file(
+            self: Pin<&mut ImpressEngine>,
+            file_bytes: &[u8],
+            extension: &CxxString,
+        ) -> Result<String>;
+
+        #[namespace = "liberty::impress"]
+        fn export_file(
+            self: Pin<&mut ImpressEngine>,
+            json_slides: &CxxString,
             extension: &CxxString,
         ) -> Result<Vec<u8>>;
     }

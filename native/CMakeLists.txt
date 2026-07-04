@@ -14,4 +14,6 @@ add_subdirectory(layout-engine)
 add_subdirectory(formula-engine)
 add_subdirectory(docs-engine)
 add_subdirectory(sheets-engine)
+add_subdirectory(impress-engine)
+
 

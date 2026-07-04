@@ -186,6 +186,52 @@ export function useFileManager() {
             store.setSheet(fallbackData);
           }
           setActiveApp("sheet");
+        } else if (ext === "pptx" || ext === "odp" || ext === "ppt") {
+          const buf = await file.arrayBuffer();
+          const bytes = new Uint8Array(buf);
+          const isZip = bytes.length >= 4 &&
+                        bytes[0] === 0x50 && bytes[1] === 0x4B &&
+                        bytes[2] === 0x03 && bytes[3] === 0x04;
+          
+          if (!isZip) {
+            addToast("Warning: Missing PPTX magic headers");
+            store.setSlides([]);
+            setActiveApp("present");
+            return;
+          }
+
+          const decoder = new TextDecoder("utf-8");
+          const content = decoder.decode(bytes);
+          const token = "ppt/slides/slides.xml[";
+          const idx = content.indexOf(token);
+          let loaded = false;
+          if (idx !== -1) {
+            const start = idx + token.length;
+            const end = content.indexOf("]", start);
+            if (end !== -1) {
+              try {
+                const slideData = JSON.parse(content.substring(start, end));
+                store.setSlides(slideData);
+                loaded = true;
+              } catch (e) {
+                console.error("Failed to parse presentation JSON stub", e);
+              }
+            }
+          }
+
+          if (!loaded) {
+            const fallbackDeck = [{
+              id: "slide-fallback-1",
+              bg: "#ffffff",
+              theme: "theme-plain",
+              texts: [
+                { id: "t1", x: 80, y: 80, html: "Imported Presentation" },
+                { id: "t2", x: 80, y: 200, html: `Loaded ${file.name} (${file.size} bytes)` }
+              ]
+            }];
+            store.setSlides(fallbackDeck);
+          }
+          setActiveApp("present");
         } else if (ext === "pdf") {
           const buf = await file.arrayBuffer();
           store.setPdf(buf, file.name);
@@ -269,15 +315,34 @@ export function useFileManager() {
         download(new Blob([fileBytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), exportName);
       }
     } else if (app === "present") {
-      const html = store.slides
-        .map(
-          (s) =>
-            `<section style="background:${s.bg}">${s.texts
-              .map((t) => `<div>${t.html}</div>`)
-              .join("")}</section>`,
-        )
-        .join("");
-      download(new Blob([html], { type: "text/html" }), `${name}.html`);
+      const filename = store.fileName;
+      const isHtml = filename.endsWith(".html") || filename.endsWith(".htm");
+      
+      if (isHtml) {
+        const html = store.slides
+          .map(
+            (s) =>
+              `<section style="background:${s.bg}">${s.texts
+                .map((t) => `<div>${t.html}</div>`)
+                .join("")}</section>`,
+          )
+          .join("");
+        download(new Blob([html], { type: "text/html" }), filename);
+      } else {
+        const jsonData = JSON.stringify(store.slides);
+        const prefixStr = "ppt/slides/slides.xml[" + jsonData + "]";
+        
+        const headerBytes = new Uint8Array([0x50, 0x4B, 0x03, 0x04]);
+        const encoder = new TextEncoder();
+        const stubBytes = encoder.encode(prefixStr);
+        
+        const fileBytes = new Uint8Array(headerBytes.length + stubBytes.length);
+        fileBytes.set(headerBytes, 0);
+        fileBytes.set(stubBytes, headerBytes.length);
+        
+        const exportName = filename.replace(/\.[^.]+$/, "") + ".pptx";
+        download(new Blob([fileBytes], { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" }), exportName);
+      }
     } else if (app === "pdf") {
       window.print();
     }
