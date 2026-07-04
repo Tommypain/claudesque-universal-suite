@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Ribbon, RibbonGroup, RibbonButton } from "@liberty/ui";
 import { useDocumentStore, useAppStore } from "@liberty/shared-hooks";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, FileOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 
 const PDF_SRC =
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.189/pdf.min.mjs";

@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'No build required'"
+  },
   "dependencies": {
     "zustand": "^5.0.14",
     "react": "^19.2.0"

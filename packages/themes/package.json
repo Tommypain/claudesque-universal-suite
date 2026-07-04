@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    "./*.css": "./*.css"
+  "scripts": {
+    "build": "echo 'No build required'"
   }
 }

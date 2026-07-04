@@ -5,11 +5,13 @@ fn main() {
         .file("../../native/layout-engine/src/layout_engine.cpp")
         .file("../../native/formula-engine/src/formula_engine.cpp")
         .file("../../native/docs-engine/src/docs_engine.cpp")
+        .file("../../native/sheets-engine/src/sheets_engine.cpp")
         .include("../../native/kernel/include")
         .include("../../native/text-engine/include")
         .include("../../native/layout-engine/include")
         .include("../../native/formula-engine/include")
         .include("../../native/docs-engine/include")
+        .include("../../native/sheets-engine/include")
         .flag_if_supported("-std=c++20")
         .flag_if_supported("/std:c++20")
         .compile("liberty-bridge");
@@ -25,4 +27,7 @@ fn main() {
     println!("cargo:rerun-if-changed=../../native/formula-engine/include/formula_engine.h");
     println!("cargo:rerun-if-changed=../../native/docs-engine/src/docs_engine.cpp");
     println!("cargo:rerun-if-changed=../../native/docs-engine/include/docs_engine.h");
+    println!("cargo:rerun-if-changed=../../native/sheets-engine/src/sheets_engine.cpp");
+    println!("cargo:rerun-if-changed=../../native/sheets-engine/include/sheets_engine.h");
+
 }

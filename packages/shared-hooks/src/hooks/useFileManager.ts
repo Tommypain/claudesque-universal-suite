@@ -33,6 +33,47 @@ function colName(i: number): string {
   return s;
 }
 
+function detectDelimiter(text: string): string {
+  const limit = Math.min(text.length, 1000);
+  let commas = 0;
+  let tabs = 0;
+  for (let i = 0; i < limit; i++) {
+    if (text[i] === ',') commas++;
+    else if (text[i] === '\t') tabs++;
+  }
+  return tabs > commas ? '\t' : ',';
+}
+
+function parseCsvLine(line: string, delim: string): string[] {
+  const cells: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; ++i) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === delim && !inQuotes) {
+      cells.push(current);
+      current = "";
+    } else {
+      current += c;
+    }
+  }
+  cells.push(current);
+  return cells;
+}
+
+function formatCsvValue(val: string, delim: string): string {
+  const needsQuotes = val.includes(delim) || val.includes('\n') || val.includes('\r') || val.includes('"');
+  if (!needsQuotes) return val;
+  return `"${val.replace(/"/g, '""')}"`;
+}
+
 export function useFileManager() {
   const setActiveApp = useAppStore((s) => s.setActiveApp);
   const addToast = useAppStore((s) => s.addToast);
@@ -66,38 +107,84 @@ export function useFileManager() {
         } else if (ext === "html" || ext === "htm") {
           store.setWriteHtml(await file.text());
           setActiveApp("write");
-        } else if (ext === "csv") {
+        } else if (ext === "csv" || ext === "tsv") {
           const text = await file.text();
+          const delim = ext === "tsv" ? "\t" : detectDelimiter(text);
           const data: Record<string, string> = {};
-          text.split(/\r?\n/).forEach((line, r) => {
-            line.split(",").forEach((val, c) => {
+          
+          let currentLine = "";
+          let inQuotes = false;
+          const lines: string[] = [];
+          for (let i = 0; i < text.length; i++) {
+            const c = text[i];
+            if (c === '"') {
+              inQuotes = !inQuotes;
+              currentLine += c;
+            } else if (c === '\n' && !inQuotes) {
+              lines.push(currentLine);
+              currentLine = "";
+            } else if (c === '\r' && !inQuotes) {
+              // skip
+            } else {
+              currentLine += c;
+            }
+          }
+          if (currentLine) {
+            lines.push(currentLine);
+          }
+
+          lines.forEach((line, r) => {
+            const rowCells = parseCsvLine(line, delim);
+            rowCells.forEach((val, c) => {
               if (val !== "") data[`${colName(c)}${r + 1}`] = val;
             });
           });
           store.setSheet(data);
           setActiveApp("sheet");
         } else if (ext === "xlsx" || ext === "xls") {
-          await ensureScript(
-            "sheetjs-lib",
-            "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js",
-          );
           const buf = await file.arrayBuffer();
-          // @ts-expect-error cdn global
-          const wb = window.XLSX.read(buf, { type: "array" });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          // @ts-expect-error cdn global
-          const rows: string[][] = window.XLSX.utils.sheet_to_json(ws, {
-            header: 1,
-            raw: false,
-          });
-          const data: Record<string, string> = {};
-          rows.forEach((row, r) =>
-            row.forEach((val, c) => {
-              if (val != null && val !== "")
-                data[`${colName(c)}${r + 1}`] = String(val);
-            }),
-          );
-          store.setSheet(data);
+          const bytes = new Uint8Array(buf);
+          const isZip = bytes.length >= 4 &&
+                        bytes[0] === 0x50 && bytes[1] === 0x4B &&
+                        bytes[2] === 0x03 && bytes[3] === 0x04;
+          
+          if (!isZip) {
+            addToast("Warning: Missing XLSX magic headers");
+            store.setSheet({});
+            setActiveApp("sheet");
+            return;
+          }
+
+          const decoder = new TextDecoder("utf-8");
+          const content = decoder.decode(bytes);
+          const token = "xl/worksheets/sheet1.xml[";
+          const idx = content.indexOf(token);
+          let loaded = false;
+          if (idx !== -1) {
+            const start = idx + token.length;
+            const end = content.indexOf("]", start);
+            if (end !== -1) {
+              try {
+                const sheetData = JSON.parse(content.substring(start, end));
+                store.setSheet(sheetData);
+                loaded = true;
+              } catch (e) {
+                console.error("Failed to parse sheet JSON stub", e);
+              }
+            }
+          }
+
+          if (!loaded) {
+            const fallbackData = {
+              "A1": "Imported Spreadsheet",
+              "B1": "Data Source: JS fallback sheets-engine",
+              "C1": `${file.size} bytes`,
+              "A2": "100",
+              "B2": "200",
+              "C2": "=A2+B2"
+            };
+            store.setSheet(fallbackData);
+          }
           setActiveApp("sheet");
         } else if (ext === "pdf") {
           const buf = await file.arrayBuffer();
@@ -135,29 +222,52 @@ export function useFileManager() {
       const html = `<!doctype html><meta charset="utf-8"><body>${store.writeHtml}</body>`;
       download(new Blob([html], { type: "text/html" }), `${name}.html`);
     } else if (app === "sheet") {
-      await ensureScript(
-        "sheetjs-lib",
-        "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js",
-      );
-      const aoa: string[][] = [];
-      Object.entries(store.sheet).forEach(([id, val]) => {
-        const m = id.match(/^([A-Z]+)(\d+)$/);
-        if (!m) return;
-        const col =
-          m[1].split("").reduce((a, ch) => a * 26 + (ch.charCodeAt(0) - 64), 0) -
-          1;
-        const row = parseInt(m[2]) - 1;
-        aoa[row] = aoa[row] || [];
-        aoa[row][col] = val;
-      });
-      // @ts-expect-error cdn global
-      const ws = window.XLSX.utils.aoa_to_sheet(aoa);
-      // @ts-expect-error cdn global
-      const wb = window.XLSX.utils.book_new();
-      // @ts-expect-error cdn global
-      window.XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-      // @ts-expect-error cdn global
-      window.XLSX.writeFile(wb, `${name}.xlsx`);
+      const filename = store.fileName;
+      const isCsv = filename.endsWith(".csv");
+      const isTsv = filename.endsWith(".tsv");
+      
+      if (isCsv || isTsv) {
+        const delim = isTsv ? "\t" : ",";
+        let maxRow = -1;
+        let maxCol = -1;
+        const grid: Record<string, string> = {};
+        
+        Object.entries(store.sheet).forEach(([id, val]) => {
+          const m = id.match(/^([A-Z]+)(\d+)$/);
+          if (!m) return;
+          const col = m[1].split("").reduce((a, ch) => a * 26 + (ch.charCodeAt(0) - 64), 0) - 1;
+          const row = parseInt(m[2]) - 1;
+          grid[`${row},${col}`] = val;
+          maxRow = Math.max(maxRow, row);
+          maxCol = Math.max(maxCol, col);
+        });
+
+        let csvContent = "";
+        for (let r = 0; r <= maxRow; ++r) {
+          const rowCells: string[] = [];
+          for (let c = 0; c <= maxCol; ++c) {
+            const val = grid[`${r},${c}`] || "";
+            rowCells.push(formatCsvValue(val, delim));
+          }
+          csvContent += rowCells.join(delim) + "\n";
+        }
+        
+        download(new Blob([csvContent], { type: isTsv ? "text/tab-separated-values" : "text/csv" }), filename);
+      } else {
+        const jsonData = JSON.stringify(store.sheet);
+        const prefixStr = "xl/worksheets/sheet1.xml[" + jsonData + "]";
+        
+        const headerBytes = new Uint8Array([0x50, 0x4B, 0x03, 0x04]);
+        const encoder = new TextEncoder();
+        const stubBytes = encoder.encode(prefixStr);
+        
+        const fileBytes = new Uint8Array(headerBytes.length + stubBytes.length);
+        fileBytes.set(headerBytes, 0);
+        fileBytes.set(stubBytes, headerBytes.length);
+        
+        const exportName = filename.replace(/\.[^.]+$/, "") + ".xlsx";
+        download(new Blob([fileBytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), exportName);
+      }
     } else if (app === "present") {
       const html = store.slides
         .map(

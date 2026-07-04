@@ -31,6 +31,7 @@ pub mod ffi {
         include!("layout_engine.h");
         include!("formula_engine.h");
         include!("docs_engine.h");
+        include!("sheets_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -150,6 +151,27 @@ pub mod ffi {
         fn export_file(
             self: Pin<&mut DocsEngine>,
             html: &CxxString,
+            extension: &CxxString,
+        ) -> Result<Vec<u8>>;
+
+        // liberty::sheets::SheetsEngine
+        #[namespace = "liberty::sheets"]
+        type SheetsEngine;
+
+        #[namespace = "liberty::sheets"]
+        fn create_sheets_engine() -> UniquePtr<SheetsEngine>;
+
+        #[namespace = "liberty::sheets"]
+        fn load_file(
+            self: Pin<&mut SheetsEngine>,
+            file_bytes: &[u8],
+            extension: &CxxString,
+        ) -> Result<String>;
+
+        #[namespace = "liberty::sheets"]
+        fn export_file(
+            self: Pin<&mut SheetsEngine>,
+            json_data: &CxxString,
             extension: &CxxString,
         ) -> Result<Vec<u8>>;
     }

@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'No build required'"
+  },
   "dependencies": {
     "lucide-react": "^0.575.0",
     "react": "^19.2.0"
