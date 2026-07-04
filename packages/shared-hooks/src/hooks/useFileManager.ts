@@ -232,6 +232,58 @@ export function useFileManager() {
             store.setSlides(fallbackDeck);
           }
           setActiveApp("present");
+        } else if (ext === "svg") {
+          const text = await file.text();
+          const parser = new DOMParser();
+          const docNode = parser.parseFromString(text, "image/svg+xml");
+          const shapes: any[] = [];
+          
+          docNode.querySelectorAll("rect").forEach((el) => {
+            shapes.push({
+              id: el.getAttribute("id") || `shape-${Math.random().toString(36).substring(2, 9)}`,
+              type: "rect",
+              x: parseFloat(el.getAttribute("x") || "0"),
+              y: parseFloat(el.getAttribute("y") || "0"),
+              width: parseFloat(el.getAttribute("width") || "100"),
+              height: parseFloat(el.getAttribute("height") || "100"),
+              fill: el.getAttribute("fill") || "#cccccc",
+              stroke: el.getAttribute("stroke") || "none",
+            });
+          });
+          
+          docNode.querySelectorAll("circle").forEach((el) => {
+            const r = parseFloat(el.getAttribute("r") || "50");
+            shapes.push({
+              id: el.getAttribute("id") || `shape-${Math.random().toString(36).substring(2, 9)}`,
+              type: "circle",
+              x: parseFloat(el.getAttribute("cx") || "0"),
+              y: parseFloat(el.getAttribute("cy") || "0"),
+              width: r * 2,
+              height: r * 2,
+              fill: el.getAttribute("fill") || "#cccccc",
+              stroke: el.getAttribute("stroke") || "none",
+            });
+          });
+          
+          docNode.querySelectorAll("line").forEach((el) => {
+            const x1 = parseFloat(el.getAttribute("x1") || "0");
+            const y1 = parseFloat(el.getAttribute("y1") || "0");
+            const x2 = parseFloat(el.getAttribute("x2") || "100");
+            const y2 = parseFloat(el.getAttribute("y2") || "100");
+            shapes.push({
+              id: el.getAttribute("id") || `shape-${Math.random().toString(36).substring(2, 9)}`,
+              type: "line",
+              x: x1,
+              y: y1,
+              width: x2 - x1,
+              height: y2 - y1,
+              fill: el.getAttribute("fill") || "none",
+              stroke: el.getAttribute("stroke") || "#000000",
+            });
+          });
+          
+          store.setDesignShapes(shapes);
+          setActiveApp("design");
         } else if (ext === "pdf") {
           const buf = await file.arrayBuffer();
           store.setPdf(buf, file.name);
@@ -343,6 +395,21 @@ export function useFileManager() {
         const exportName = filename.replace(/\.[^.]+$/, "") + ".pptx";
         download(new Blob([fileBytes], { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" }), exportName);
       }
+    } else if (app === "design") {
+      const filename = store.fileName;
+      let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">\n`;
+      store.designShapes.forEach((shape) => {
+        if (shape.type === "rect") {
+          svgContent += `  <rect id="${shape.id}" x="${shape.x}" y="${shape.y}" width="${shape.width}" height="${shape.height}" fill="${shape.fill}" stroke="${shape.stroke}" />\n`;
+        } else if (shape.type === "circle") {
+          svgContent += `  <circle id="${shape.id}" cx="${shape.x}" cy="${shape.y}" r="${shape.width / 2}" fill="${shape.fill}" stroke="${shape.stroke}" />\n`;
+        } else if (shape.type === "line") {
+          svgContent += `  <line id="${shape.id}" x1="${shape.x}" y1="${shape.y}" x2="${shape.x + shape.width}" y2="${shape.y + shape.height}" fill="${shape.fill}" stroke="${shape.stroke}" />\n`;
+        }
+      });
+      svgContent += `</svg>`;
+      const exportName = filename.replace(/\.[^.]+$/, "") + ".svg";
+      download(new Blob([svgContent], { type: "image/svg+xml" }), exportName);
     } else if (app === "pdf") {
       window.print();
     }

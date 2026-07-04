@@ -1,26 +1,45 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
+import { LibertyDesignApp } from "@liberty/ui";
+import { useFileManager } from "@liberty/shared-hooks";
 import "@liberty/themes/office.css";
 import "@liberty/themes/host.css";
 
-function DesignAppStub() {
+function DesignAppContainer() {
+  const [activeTab, setActiveTab] = useState("home");
+  const { save } = useFileManager();
+
+  const handleReturn = () => {
+    window.location.href = "/";
+  };
+
   return (
-    <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#f3f3ee", fontFamily: "Segoe UI, sans-serif", flexDirection: "column", gap: "12px" }}>
-      <span style={{ fontSize: "48px" }}>🎨</span>
-      <h1 style={{ fontSize: "20px", fontWeight: "bold", color: "#1a1a1a" }}>Liberty Design</h1>
-      <p style={{ fontSize: "13px", color: "#666" }}>Vector drawing and desktop publishing engine stub.</p>
-      <button 
-        onClick={() => alert("Launching Liberty Studio Hub...")}
-        style={{ marginTop: "16px", padding: "8px 16px", background: "#1d4ed8", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}
-      >
-        Return to Hub
-      </button>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* Top Header switcher link */}
+      <div style={{ display: "flex", background: "#0891b2", color: "white", padding: "8px 16px", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.1)", fontFamily: "Segoe UI, sans-serif" }}>
+        <span style={{ fontWeight: 600, fontSize: "14px" }}>Liberty Design Studio</span>
+        <button
+          onClick={handleReturn}
+          style={{ background: "rgba(255,255,255,0.2)", color: "white", border: "none", padding: "4px 12px", borderRadius: "4px", fontSize: "12px", cursor: "pointer", fontWeight: 600 }}
+        >
+          Back to Hub
+        </button>
+      </div>
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        <LibertyDesignApp
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onSave={save}
+          onUndo={() => {}}
+          onRedo={() => {}}
+        />
+      </div>
     </div>
   );
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <DesignAppStub />
+    <DesignAppContainer />
   </React.StrictMode>
 );

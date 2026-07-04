@@ -33,6 +33,7 @@ pub mod ffi {
         include!("docs_engine.h");
         include!("sheets_engine.h");
         include!("impress_engine.h");
+        include!("design_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -196,5 +197,33 @@ pub mod ffi {
             json_slides: &CxxString,
             extension: &CxxString,
         ) -> Result<Vec<u8>>;
+
+        // liberty::design::DesignEngine
+        #[namespace = "liberty::design"]
+        type DesignEngine;
+
+        #[namespace = "liberty::design"]
+        fn create_design_engine() -> UniquePtr<DesignEngine>;
+
+        #[namespace = "liberty::design"]
+        fn add_shape(
+            self: Pin<&mut DesignEngine>,
+            shape_type: &CxxString,
+            x: f32,
+            y: f32,
+            w: f32,
+            h: f32,
+            fill: &CxxString,
+            stroke: &CxxString,
+        ) -> String;
+
+        #[namespace = "liberty::design"]
+        fn export_svg(self: &DesignEngine) -> String;
+
+        #[namespace = "liberty::design"]
+        fn load_svg(self: Pin<&mut DesignEngine>, svg_data: &CxxString) -> bool;
+
+        #[namespace = "liberty::design"]
+        fn clear(self: Pin<&mut DesignEngine>);
     }
 }

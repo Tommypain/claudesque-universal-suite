@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type AppId = "write" | "sheet" | "present" | "pdf";
+export type AppId = "write" | "sheet" | "present" | "pdf" | "design";
 export type ThemeMode = "light" | "dark" | "system";
 
 export interface AppColors {
@@ -8,6 +8,7 @@ export interface AppColors {
   sheet: string;
   present: string;
   pdf: string;
+  design: string;
 }
 
 export const DEFAULT_COLORS: AppColors = {
@@ -15,6 +16,7 @@ export const DEFAULT_COLORS: AppColors = {
   sheet: "#15803d",
   present: "#b45309",
   pdf: "#7c3aed",
+  design: "#0891b2",
 };
 
 export interface Toast {

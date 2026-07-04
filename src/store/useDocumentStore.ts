@@ -12,6 +12,16 @@ export interface Slide {
   theme: string;
   texts: SlideText[];
 }
+export interface VectorShape {
+  id: string;
+  type: "rect" | "circle" | "line";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  stroke: string;
+}
 
 interface DocState {
   fileName: string;
@@ -23,6 +33,8 @@ interface DocState {
   // present
   slides: Slide[];
   currentSlide: number;
+  // design
+  designShapes: VectorShape[];
   // pdf
   pdfBuffer: ArrayBuffer | null;
   pdfName: string;
@@ -34,6 +46,8 @@ interface DocState {
   setSheet: (data: Record<string, string>) => void;
   setSlides: (s: Slide[]) => void;
   setCurrentSlide: (i: number) => void;
+  setDesignShapes: (s: VectorShape[]) => void;
+  addDesignShape: (s: VectorShape) => void;
   addSlide: () => void;
   deleteSlide: (i: number) => void;
   updateSlide: (i: number, patch: Partial<Slide>) => void;
@@ -59,6 +73,7 @@ export const useDocumentStore = create<DocState>((set) => ({
   sheet: {},
   slides: [newSlide()],
   currentSlide: 0,
+  designShapes: [],
   pdfBuffer: null,
   pdfName: "",
 
@@ -70,6 +85,8 @@ export const useDocumentStore = create<DocState>((set) => ({
   setSheet: (data) => set({ sheet: data, dirty: true }),
   setSlides: (slides) => set({ slides, dirty: true }),
   setCurrentSlide: (i) => set({ currentSlide: i }),
+  setDesignShapes: (s) => set({ designShapes: s, dirty: true }),
+  addDesignShape: (shape) => set((s) => ({ designShapes: [...s.designShapes, shape], dirty: true })),
   addSlide: () =>
     set((s) => ({
       slides: [...s.slides, newSlide()],
