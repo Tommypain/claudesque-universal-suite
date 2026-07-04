@@ -64,6 +64,19 @@ pub mod ffi {
         #[namespace = "liberty::kernel"]
         fn clear(self: Pin<&mut CommandManager>);
 
+        // liberty::kernel::PluginManager
+        #[namespace = "liberty::kernel"]
+        type PluginManager;
+
+        #[namespace = "liberty::kernel"]
+        fn create_plugin_manager() -> UniquePtr<PluginManager>;
+
+        #[namespace = "liberty::kernel"]
+        fn validate_plugin(
+            self: Pin<&mut PluginManager>,
+            manifest_json: &CxxString,
+        ) -> String;
+
         // liberty::text::TextEngine
         #[namespace = "liberty::text"]
         type TextEngine;

@@ -68,7 +68,18 @@ private:
     std::mutex mutex_;
 };
 
+// PluginManager handles security sandboxing validation for installed plugins
+class PluginManager {
+public:
+    PluginManager() = default;
+    ~PluginManager() = default;
+
+    // Validate manifest JSON and check security permissions
+    std::string validate_plugin(const std::string& manifest_json);
+};
+
 // Global helper creation routines
 std::unique_ptr<CommandManager> create_command_manager();
+std::unique_ptr<PluginManager> create_plugin_manager();
 
 } // namespace liberty::kernel
