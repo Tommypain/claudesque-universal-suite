@@ -1,0 +1,10 @@
+{
+  "name": "@liberty/plugin-sdk",
+  "version": "2.0.4",
+  "description": "Liberty Studio Plugin SDK and Sandbox Typings",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "private": true,
+  "dependencies": {}
+}
