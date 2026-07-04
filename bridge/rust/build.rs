@@ -8,6 +8,7 @@ fn main() {
         .file("../../native/sheets-engine/src/sheets_engine.cpp")
         .file("../../native/impress-engine/src/impress_engine.cpp")
         .file("../../native/design-engine/src/design_engine.cpp")
+        .file("../../native/voice-engine/src/voice_engine.cpp")
         .include("../../native/kernel/include")
         .include("../../native/text-engine/include")
         .include("../../native/layout-engine/include")
@@ -16,6 +17,7 @@ fn main() {
         .include("../../native/sheets-engine/include")
         .include("../../native/impress-engine/include")
         .include("../../native/design-engine/include")
+        .include("../../native/voice-engine/include")
         .flag_if_supported("-std=c++20")
         .flag_if_supported("/std:c++20")
         .compile("liberty-bridge");
@@ -37,4 +39,6 @@ fn main() {
     println!("cargo:rerun-if-changed=../../native/impress-engine/include/impress_engine.h");
     println!("cargo:rerun-if-changed=../../native/design-engine/src/design_engine.cpp");
     println!("cargo:rerun-if-changed=../../native/design-engine/include/design_engine.h");
+    println!("cargo:rerun-if-changed=../../native/voice-engine/src/voice_engine.cpp");
+    println!("cargo:rerun-if-changed=../../native/voice-engine/include/voice_engine.h");
 }

@@ -34,6 +34,7 @@ pub mod ffi {
         include!("sheets_engine.h");
         include!("impress_engine.h");
         include!("design_engine.h");
+        include!("voice_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -225,5 +226,18 @@ pub mod ffi {
 
         #[namespace = "liberty::design"]
         fn clear(self: Pin<&mut DesignEngine>);
+
+        // liberty::voice::VoiceEngine
+        #[namespace = "liberty::voice"]
+        type VoiceEngine;
+
+        #[namespace = "liberty::voice"]
+        fn create_voice_engine() -> UniquePtr<VoiceEngine>;
+
+        #[namespace = "liberty::voice"]
+        fn transcribe_audio(
+            self: Pin<&mut VoiceEngine>,
+            audio_bytes: &[u8],
+        ) -> String;
     }
 }
