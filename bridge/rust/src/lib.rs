@@ -36,6 +36,7 @@ pub mod ffi {
         include!("design_engine.h");
         include!("voice_engine.h");
         include!("pdf_engine.h");
+        include!("compiler_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -260,5 +261,18 @@ pub mod ffi {
             pdf_bytes: &[u8],
             annotations_json: &CxxString,
         ) -> Result<Vec<u8>>;
+
+        // liberty::compiler::CompilerEngine
+        #[namespace = "liberty::compiler"]
+        type CompilerEngine;
+
+        #[namespace = "liberty::compiler"]
+        fn create_compiler_engine() -> UniquePtr<CompilerEngine>;
+
+        #[namespace = "liberty::compiler"]
+        fn parse_to_ast(
+            self: Pin<&mut CompilerEngine>,
+            code_str: &CxxString,
+        ) -> String;
     }
 }
