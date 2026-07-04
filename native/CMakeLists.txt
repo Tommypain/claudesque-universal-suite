@@ -17,6 +17,8 @@ add_subdirectory(sheets-engine)
 add_subdirectory(impress-engine)
 add_subdirectory(design-engine)
 add_subdirectory(voice-engine)
+add_subdirectory(pdf-engine)
+
 
 
 

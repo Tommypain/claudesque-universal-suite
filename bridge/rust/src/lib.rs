@@ -35,6 +35,7 @@ pub mod ffi {
         include!("impress_engine.h");
         include!("design_engine.h");
         include!("voice_engine.h");
+        include!("pdf_engine.h");
 
         // liberty::kernel::CommandManager
         #[namespace = "liberty::kernel"]
@@ -239,5 +240,25 @@ pub mod ffi {
             self: Pin<&mut VoiceEngine>,
             audio_bytes: &[u8],
         ) -> String;
+
+        // liberty::pdf::PdfEngine
+        #[namespace = "liberty::pdf"]
+        type PdfEngine;
+
+        #[namespace = "liberty::pdf"]
+        fn create_pdf_engine() -> UniquePtr<PdfEngine>;
+
+        #[namespace = "liberty::pdf"]
+        fn load_pdf(
+            self: Pin<&mut PdfEngine>,
+            pdf_bytes: &[u8],
+        ) -> Result<String>;
+
+        #[namespace = "liberty::pdf"]
+        fn save_pdf(
+            self: Pin<&mut PdfEngine>,
+            pdf_bytes: &[u8],
+            annotations_json: &CxxString,
+        ) -> Result<Vec<u8>>;
     }
 }
