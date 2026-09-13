@@ -139,22 +139,50 @@
   }
 
   // ═══════════════════════════════════════════════════
-  // Build the word ruler bar ticks dynamically
+  // Build the physical millimeter word ruler dynamically
+  // Standard A4 portrait: 210mm (21cm) width = 794px at 96 DPI
+  // Standard A4 landscape: 297mm (29.7cm) width = 1123px at 96 DPI
   // ═══════════════════════════════════════════════════
   function initWordRuler() {
     const ticks = document.getElementById('wrb-ticks');
-    if (!ticks) return;
+    const track = document.getElementById('wrb-track');
+    const rulerWrapper = document.getElementById('wrb-ruler-wrapper');
+    const pagesContainer = document.getElementById('word-pages-container');
+    if (!ticks || !track) return;
+
+    const isLandscape = typeof wordLandscape !== 'undefined' && wordLandscape;
+    const pageW = isLandscape ? 1123 : 794;
+    const totalCm = isLandscape ? 30 : 21; // 21 cm for portrait A4, 30 cm for landscape
+    const totalMm = totalCm * 10;
+
+    track.style.width = pageW + 'px';
+    track.style.minWidth = pageW + 'px';
+    track.style.maxWidth = pageW + 'px';
+
+    // Synchronize zoom scale if active
+    const f = (state.zoom || 100) / 100;
+    track.style.transformOrigin = 'top center';
+    track.style.transform = 'scale(' + f + ')';
+
+    // Synchronize horizontal scroll between container and ruler wrapper
+    if (pagesContainer && rulerWrapper && !rulerWrapper._scrollBound) {
+      pagesContainer.addEventListener('scroll', () => {
+        rulerWrapper.scrollLeft = pagesContainer.scrollLeft;
+      });
+      rulerWrapper._scrollBound = true;
+    }
+
     ticks.innerHTML = '';
-    const count = 64; // half-centimeter ticks across page
-    for (let i = 0; i <= count; i++) {
+    for (let mm = 0; mm <= totalMm; mm++) {
       const d = document.createElement('div');
-      const isMaj = i % 4 === 0;
-      d.className = 'wrb-tick' + (isMaj ? ' maj' : '');
+      const isMaj = mm % 10 === 0;
+      const isMed = mm % 5 === 0 && !isMaj;
+      d.className = 'wrb-tick' + (isMaj ? ' maj' : isMed ? ' med' : '');
       if (isMaj) {
         const n = document.createElement('span');
         n.className = 'wn';
-        const cm = i / 4;
-        if (cm > 0) n.textContent = cm;
+        const cm = mm / 10;
+        n.textContent = cm;
         d.appendChild(n);
       }
       ticks.appendChild(d);
@@ -274,12 +302,51 @@ App: ${state.activeApp.toUpperCase()}`,
   //  WORD PROCESSOR — Core rendering
   // ═══════════════════════════════════════════════════════════════
 
+  function attachWordPageEvents(cr, idx) {
+    cr.addEventListener('input', () => {
+      if (state.wordPages[idx]) {
+        state.wordPages[idx].content = cr.innerHTML;
+      }
+      state.wordUnsaved = true;
+      updateWordStats();
+      scheduleAutoSave();
+      updatePageThumbnail(idx, cr.innerText);
+      checkPageOverflow(cr, idx);
+    });
+
+    cr.addEventListener('focus', () => {
+      state.activeWordPageIndex = idx;
+      highlightActiveWordNavThumb(idx);
+      updateWordStats();
+    });
+
+    cr.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;');
+      }
+      if (e.ctrlKey && e.key === 's') { e.preventDefault(); triggerSave(); }
+
+      // Clean Backspace behavior on empty trailing pages
+      if (e.key === 'Backspace' && idx > 0) {
+        const text = (cr.innerText || '').trim();
+        if (!text || text === '') {
+          if (idx === state.wordPages.length - 1) {
+            e.preventDefault();
+            deleteActivePage();
+            return;
+          }
+        }
+      }
+    });
+  }
+
   function renderWordPages() {
     const container = document.getElementById('word-pages-container');
     const navOutline = document.getElementById('word-pages-nav');
     if (!container) return;
     container.innerHTML = '';
-    navOutline.innerHTML = '<div style="font-size:10px;font-weight:700;color:#999;letter-spacing:.08em;text-transform:uppercase;padding:0 4px 8px;border-bottom:1px solid rgba(0,0,0,.1);margin-bottom:8px;">Pages</div>';
+    if (navOutline) navOutline.innerHTML = '';
 
     state.wordPages.forEach((page, idx) => {
       const wrapper = document.createElement('div');
@@ -290,38 +357,16 @@ App: ${state.activeApp.toUpperCase()}`,
       pageEl.className = 'doc-page';
       pageEl.id = 'word-editor-' + idx;
 
-      // Content region — a clean blank white page (no decorative header/footer)
+      // Content region — strict 931px A4 printable area (no expansion)
       const cr = document.createElement('div');
       cr.className = 'doc-page-content';
       cr.contentEditable = 'true';
       cr.spellcheck = true;
       cr.innerHTML = page.content || '<p><br></p>';
-      cr.style.cssText = 'min-height:931px;outline:none;';
+      cr.style.cssText = 'height:931px;max-height:931px;overflow:hidden;outline:none;box-sizing:border-box;';
       pageEl.appendChild(cr);
 
-      // Events
-      cr.addEventListener('input', () => {
-        page.content = cr.innerHTML;
-        state.wordUnsaved = true;
-        updateWordStats();
-        scheduleAutoSave();
-        updatePageThumbnail(idx, cr.innerText);
-        checkPageOverflow(cr, idx);
-      });
-
-      cr.addEventListener('focus', () => {
-        state.activeWordPageIndex = idx;
-        highlightActiveWordNavThumb(idx);
-        updateWordStats();
-      });
-
-      cr.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;');
-        }
-        if (e.ctrlKey && e.key === 's') { e.preventDefault(); triggerSave(); }
-      });
+      attachWordPageEvents(cr, idx);
 
       wrapper.appendChild(pageEl);
       container.appendChild(wrapper);
@@ -336,8 +381,12 @@ App: ${state.activeApp.toUpperCase()}`,
 
   function buildPageThumbnail(nav, idx, previewText) {
     const thumb = document.createElement('div');
-    thumb.className = 'word-page-thumb' + (idx === state.activeWordPageIndex ? ' active' : '');
+    thumb.className = 'liberty-thumb word-page-thumb' + (idx === state.activeWordPageIndex ? ' active' : '');
     thumb.id = 'word-thumb-' + idx;
+    const badge = document.createElement('div');
+    badge.className = 'liberty-thumb-badge';
+    badge.textContent = idx + 1;
+    thumb.appendChild(badge);
     const preview = document.createElement('div');
     preview.className = 'wpt-preview';
     preview.textContent = (previewText || '').slice(0, 200);
@@ -368,23 +417,99 @@ App: ${state.activeApp.toUpperCase()}`,
     if (t) t.classList.add('active');
   }
 
-  // Auto-pagination: overflow → new page
+  // Strict Auto-pagination: overflow → new page ONLY when content genuinely exceeds printable 931px
+  let pageOverflowTimer = null;
   function checkPageOverflow(contentEl, pageIdx) {
-    if (contentEl.scrollHeight > 900 && pageIdx === state.wordPages.length - 1) {
-      addNewPage();
-      setTimeout(() => {
-        const nextCr = document.querySelector('#word-editor-' + (pageIdx + 1) + ' .doc-page-content');
-        if (nextCr) {
-          nextCr.focus();
-          const range = document.createRange();
-          range.setStart(nextCr, 0);
-          range.collapse(true);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
+    if (!contentEl) return;
+    if (pageOverflowTimer) clearTimeout(pageOverflowTimer);
+    pageOverflowTimer = setTimeout(() => {
+      const clientH = contentEl.clientHeight || 931;
+      // Strict overflow condition: only when scrollHeight genuinely exceeds clientHeight + 4px
+      if (contentEl.scrollHeight <= clientH + 4) return;
+
+      const children = Array.from(contentEl.children);
+      if (children.length <= 1 && contentEl.scrollHeight <= clientH + 12) {
+        // Minor overflow from line-height inside single block — do not split yet
+        return;
+      }
+
+      // Find children whose bottom edge is outside clientH
+      const overflowingNodes = [];
+      for (let i = children.length - 1; i >= 0; i--) {
+        const child = children[i];
+        const bottom = child.offsetTop + child.offsetHeight;
+        if (bottom > clientH) {
+          overflowingNodes.unshift(child);
+        } else {
+          break;
         }
-      }, 120);
-    }
+      }
+
+      if (overflowingNodes.length === 0) return;
+
+      const nextIdx = pageIdx + 1;
+      let nextCr = document.querySelector('#word-editor-' + nextIdx + ' .doc-page-content');
+
+      if (!nextCr) {
+        // Create new page without destroying existing DOM
+        const nextId = state.wordPages.length ? Math.max(...state.wordPages.map(p => p.id)) + 1 : 1;
+        state.wordPages.push({ id: nextId, content: '<p><br></p>' });
+
+        const container = document.getElementById('word-pages-container');
+        if (!container) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'word-canvas';
+        wrapper.id = 'word-page-block-' + nextIdx;
+
+        const pageEl = document.createElement('div');
+        pageEl.className = 'doc-page';
+        pageEl.id = 'word-editor-' + nextIdx;
+
+        nextCr = document.createElement('div');
+        nextCr.className = 'doc-page-content';
+        nextCr.contentEditable = 'true';
+        nextCr.spellcheck = true;
+        nextCr.style.cssText = 'height:931px;max-height:931px;overflow:hidden;outline:none;box-sizing:border-box;';
+        nextCr.innerHTML = '<p><br></p>';
+
+        attachWordPageEvents(nextCr, nextIdx);
+
+        pageEl.appendChild(nextCr);
+        wrapper.appendChild(pageEl);
+        container.appendChild(wrapper);
+
+        LibertyThumbnailSystem.renderWordThumbnails();
+      }
+
+      // Move the overflowing nodes to the beginning of nextCr
+      const firstChild = nextCr.firstChild;
+      overflowingNodes.forEach(node => {
+        if (firstChild) {
+          nextCr.insertBefore(node, firstChild);
+        } else {
+          nextCr.appendChild(node);
+        }
+      });
+
+      // Update state contents
+      if (state.wordPages[pageIdx]) state.wordPages[pageIdx].content = contentEl.innerHTML;
+      if (state.wordPages[nextIdx]) state.wordPages[nextIdx].content = nextCr.innerHTML;
+      updatePageThumbnail(pageIdx, contentEl.innerText);
+      updatePageThumbnail(nextIdx, nextCr.innerText);
+      updateWordStats();
+
+      // Focus next page cleanly
+      setTimeout(() => {
+        nextCr.focus();
+        const range = document.createRange();
+        range.setStart(nextCr, 0);
+        range.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }, 50);
+    }, 120);
   }
 
   // Auto-save
@@ -1834,7 +1959,16 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   let wordLandscape = false;
   function toggleOrientation() {
     wordLandscape = !wordLandscape;
-    document.querySelectorAll('.doc-page').forEach(p => p.style.width = wordLandscape ? '1123px' : '794px');
+    document.querySelectorAll('.doc-page').forEach(p => {
+      p.style.width = wordLandscape ? '1123px' : '794px';
+      p.style.height = wordLandscape ? '794px' : '1123px';
+      p.style.maxHeight = wordLandscape ? '794px' : '1123px';
+    });
+    document.querySelectorAll('.doc-page-content').forEach(c => {
+      c.style.height = wordLandscape ? '602px' : '931px';
+      c.style.maxHeight = wordLandscape ? '602px' : '931px';
+    });
+    initWordRuler();
     showToast('Orientation: ' + (wordLandscape ? 'Landscape' : 'Portrait'));
   }
 
@@ -2103,6 +2237,13 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     const map = { word: '#word-pages-container', sheet: '#sheet-wrapper', impress: '#impress-slide-viewport', pdf: '#pdf-scroll-container' };
     const el = document.querySelector(map[state.activeApp]);
     if (el) { el.style.transformOrigin = 'top center'; el.style.transform = 'scale(' + f + ')'; }
+
+    // Synchronize millimeter ruler track with Word zoom
+    const rulerTrack = document.getElementById('wrb-track');
+    if (rulerTrack) {
+      rulerTrack.style.transformOrigin = 'top center';
+      rulerTrack.style.transform = 'scale(' + f + ')';
+    }
   }
   function adjustZoom(delta) { state.zoom = Math.max(30, Math.min(300, state.zoom + delta)); applyZoom(); }
   function resetZoom() { state.zoom = 100; applyZoom(); }

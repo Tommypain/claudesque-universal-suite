@@ -1260,8 +1260,10 @@
     }
 
     .impress-slide {
-      width: 1280px;
-      height: 720px;
+      width: 1280px !important;
+      height: 720px !important;
+      max-width: 1280px !important;
+      max-height: 720px !important;
       background-color: var(--color-background-primary);
       border: 1px solid var(--color-border-primary);
       box-shadow: 0 8px 32px rgba(0,0,0,0.10);
@@ -1271,7 +1273,8 @@
       left: 0;
       transform-origin: top left;
       transition: background 0.3s ease;
-      overflow: hidden;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
     }
 
     .slide-textbox {
@@ -1972,52 +1975,79 @@
     .spa i { font-size: 9px; }
 
     /* ═══════════════════════════════════════════════════
-       WORD RULER BAR — fixed below ribbon, above content
+       WORD RULER BAR — Centered Millimeter Precision Ruler
     ═══════════════════════════════════════════════════ */
     .word-ruler-bar {
       display: flex;
-      align-items: stretch;
-      height: 22px;
-      background: #f0f0ec;
-      border-bottom: 1px solid #c8c8c0;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
+      background: var(--surface-elevated, #f0f0ec);
+      border-bottom: 1px solid var(--color-border-tertiary, #c8c8c0);
       flex-shrink: 0;
       overflow: hidden;
       position: relative;
       z-index: 10;
+      width: 100%;
     }
 
     body.dark .word-ruler-bar {
-      background: #2a2a2a;
-      border-bottom-color: #444;
+      background: var(--surface-elevated, #202024);
+      border-bottom-color: var(--color-border-tertiary, #3a3a3a);
     }
 
-    .wrb-corner {
-      width: 180px; /* matches word nav sidebar width */
-      flex-shrink: 0;
-      background: #e8e8e2;
-      border-right: 1px solid #c8c8c0;
-    }
-
-    body.dark .wrb-corner {
-      background: #222;
-      border-right-color: #444;
+    .wrb-ruler-wrapper {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
     }
 
     .wrb-track {
-      flex: 1;
+      width: 794px;
+      min-width: 794px;
+      max-width: 794px;
+      height: 100%;
       position: relative;
       display: flex;
       align-items: flex-end;
       padding: 0;
-      overflow: hidden;
+      overflow: visible;
+      background: #e4e4de;
+      transform-origin: top center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    body.dark .wrb-track {
+      background: #252528;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    /* Active printable paper zone (between 24mm margins: 90px to 704px) */
+    .wrb-printable-zone {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 90px;
+      right: 90px;
+      background: #ffffff;
+      z-index: 0;
+    }
+    body.dark .wrb-printable-zone {
+      background: #2d2d32;
     }
 
     .wrb-ticks {
       position: absolute;
-      left: 0; right: 0; top: 0; bottom: 0;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
       display: flex;
       align-items: flex-end;
-      padding: 0 24px;
+      z-index: 1;
+      pointer-events: none;
     }
 
     .wrb-tick {
@@ -2033,75 +2063,75 @@
       content: '';
       display: block;
       width: 1px;
-      height: 5px;
-      background: #aaa;
+      height: 4px;
+      background: #bbb;
     }
+    body.dark .wrb-tick::before { background: #555; }
 
-    body.dark .wrb-tick::before { background: #666; }
+    .wrb-tick.med::before {
+      height: 7px;
+      background: #888;
+    }
+    body.dark .wrb-tick.med::before { background: #777; }
 
     .wrb-tick.maj::before {
       height: 12px;
-      background: #777;
+      background: #555;
     }
-
-    body.dark .wrb-tick.maj::before { background: #999; }
+    body.dark .wrb-tick.maj::before { background: #aaa; }
 
     .wrb-tick.maj .wn {
       display: block;
       position: absolute;
-      bottom: 13px;
+      bottom: 11px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 8px;
-      color: #777;
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-weight: 600;
+      color: #666;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
       user-select: none;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.2px;
       white-space: nowrap;
     }
-
     body.dark .wrb-tick.maj .wn { color: #aaa; }
     .wrb-tick .wn { display: none; }
 
     .wrb-margin-l, .wrb-margin-r {
       position: absolute;
       top: 0; bottom: 0;
-      background: rgba(0,0,0,0.045);
+      background: rgba(0,0,0,0.06);
       z-index: 1;
       pointer-events: none;
     }
-
     body.dark .wrb-margin-l, body.dark .wrb-margin-r {
-      background: rgba(255,255,255,0.05);
+      background: rgba(0,0,0,0.25);
     }
-
-    .wrb-margin-l { left: 0; width: 24px; border-right: 1px solid #bbb; }
-    .wrb-margin-r { right: 0; width: 24px; border-left: 1px solid #bbb; }
-
-    body.dark .wrb-margin-l, body.dark .wrb-margin-r { border-color: #555; }
+    .wrb-margin-l { left: 0; width: 90px; border-right: 1px dashed rgba(0,0,0,0.2); }
+    .wrb-margin-r { right: 0; width: 90px; border-left: 1px dashed rgba(0,0,0,0.2); }
+    body.dark .wrb-margin-l { border-right-color: rgba(255,255,255,0.2); }
+    body.dark .wrb-margin-r { border-left-color: rgba(255,255,255,0.2); }
 
     .wrb-thumb {
       position: absolute;
       top: 0;
-      width: 10px;
+      width: 12px;
       height: 100%;
       cursor: ew-resize;
-      z-index: 2;
+      z-index: 4;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
     .wrb-thumb::after {
       content: '';
       width: 2px;
-      height: 12px;
-      background: #999;
+      height: 14px;
+      background: var(--accent, #d97706);
       border-radius: 1px;
     }
-
-    .wrb-thumb-l { left: 20px; }
-    .wrb-thumb-r { right: 20px; }
+    .wrb-thumb-l { left: 84px; }
+    .wrb-thumb-r { right: 84px; }
 
 
 
@@ -2125,15 +2155,17 @@
       gap: 0;
     }
 
-    /* The actual A4 page */
+    /* The actual A4 page — STRICT RIGID BOUNDARIES */
     .doc-page {
-      width: 794px !important;           /* A4 at 96dpi */
-      min-height: 1123px !important;     /* A4 height at 96dpi */
+      width: 794px !important;           /* A4 width at 96dpi (210mm) */
+      height: 1123px !important;         /* A4 height at 96dpi (297mm) - STRICT */
+      max-height: 1123px !important;     /* STRICT: NEVER EXPANDS */
+      min-height: 1123px !important;
       background: #ffffff !important;
       border: none !important;
       border-radius: 0 !important;
       box-shadow: 0 2px 16px rgba(0,0,0,.18), 0 1px 4px rgba(0,0,0,.10) !important;
-      padding: 96px 90px !important;     /* ~1 inch margins */
+      padding: 96px 90px !important;     /* ~1 inch margins (top/bottom: 96px, left/right: 90px) */
       box-sizing: border-box !important;
       outline: none !important;
       font-size: 14px !important;
@@ -2141,8 +2173,9 @@
       color: #1a1a1a !important;
       line-height: 1.6 !important;
       position: relative !important;
-      overflow: hidden;
+      overflow: hidden !important;        /* STRICT: NEVER SPILL OUTSIDE */
       caret-color: #2563eb;
+      flex-shrink: 0 !important;
     }
 
     body.dark .doc-page {
@@ -2192,10 +2225,14 @@
     /* Blank white page — no margin guides or watermark */
 
 
-    /* Content region */
+    /* Content region — exactly 931px (1123px - 192px margins) */
     .doc-page-content {
-      min-height: calc(1123px - 192px);
-      outline: none;
+      width: 100% !important;
+      height: 931px !important;
+      max-height: 931px !important;
+      outline: none !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
     }
 
     /* Word processor typography */
@@ -2222,36 +2259,34 @@
     body.dark .wrb-track { background: #252525; }
 
     /* ── Unified Liberty Thumbnail System ─────────────────── */
-    :root {
-      --thumb-rail-width: 170px;
-      --thumb-gap: 10px;
+    :root, body.thumb-size-normal {
+      --thumb-rail-width: 175px;
+      --thumb-gap: 12px;
       --thumb-radius: 6px;
       --thumb-font-size: 11px;
       --thumb-badge-size: 9.5px;
-    }
-
-    body.thumb-size-normal {
-      --thumb-rail-width: 170px;
-      --thumb-gap: 10px;
-      --thumb-radius: 6px;
-      --thumb-font-size: 11px;
-      --thumb-badge-size: 9.5px;
+      --thumb-a4-min-h: 110px;
+      --thumb-slide-min-h: 80px;
     }
 
     body.thumb-size-medium {
-      --thumb-rail-width: 135px;
-      --thumb-gap: 8px;
+      --thumb-rail-width: 145px;
+      --thumb-gap: 10px;
       --thumb-radius: 5px;
       --thumb-font-size: 10px;
       --thumb-badge-size: 8.5px;
+      --thumb-a4-min-h: 90px;
+      --thumb-slide-min-h: 64px;
     }
 
     body.thumb-size-small {
-      --thumb-rail-width: 100px;
-      --thumb-gap: 6px;
+      --thumb-rail-width: 120px;
+      --thumb-gap: 8px;
       --thumb-radius: 4px;
       --thumb-font-size: 9px;
       --thumb-badge-size: 7.5px;
+      --thumb-a4-min-h: 75px;
+      --thumb-slide-min-h: 52px;
     }
 
     .word-nav-sidebar,
@@ -2266,8 +2301,45 @@
       transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .liberty-thumb {
+    /* Rail Header Container — perfectly contained */
+    .thumb-rail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--color-border-secondary);
+      flex-shrink: 0;
       width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      background: var(--surface-elevated, var(--color-background-secondary));
+    }
+
+    .thumb-rail-title {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted, var(--color-text-tertiary));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    body.thumb-size-small .thumb-rail-header {
+      padding: 4px 6px;
+    }
+
+    body.thumb-size-small .thumb-rail-title {
+      font-size: 8.5px;
+      letter-spacing: 0.03em;
+    }
+
+    /* Dedicated individual bounds - NO CROWDING OR SHRINKING */
+    .liberty-thumb {
+      width: 100% !important;
+      flex-shrink: 0 !important;
+      box-sizing: border-box !important;
       border: 1px solid var(--border-color, var(--color-border-secondary));
       background-color: var(--surface-elevated, var(--color-background-primary, #ffffff));
       border-radius: var(--thumb-radius, 6px);
@@ -2283,7 +2355,29 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       overflow: hidden;
       user-select: none;
+      margin-bottom: var(--thumb-gap, 10px) !important;
       animation: thumbSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .word-page-thumb,
+    .pdf-page-thumb {
+      aspect-ratio: 1 / 1.414 !important;
+      width: 100% !important;
+      min-height: var(--thumb-a4-min-h, 75px) !important;
+      flex-shrink: 0 !important;
+    }
+
+    .slide-thumbnail {
+      aspect-ratio: 16 / 9 !important;
+      width: 100% !important;
+      min-height: var(--thumb-slide-min-h, 52px) !important;
+      flex-shrink: 0 !important;
+    }
+
+    .virtual-thumb-spacer-top,
+    .virtual-thumb-spacer-bottom {
+      flex-shrink: 0 !important;
+      width: 100% !important;
     }
 
     .liberty-thumb:hover {
@@ -2307,6 +2401,7 @@
       border-radius: 6px;
       padding: 2px;
       gap: 2px;
+      flex-shrink: 0;
     }
 
     .liberty-thumb-size-control button {
@@ -2320,6 +2415,12 @@
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.12s ease;
+    }
+
+    body.thumb-size-small .liberty-thumb-size-control button {
+      padding: 1px 3.5px;
+      font-size: 8px;
+      min-width: 14px;
     }
 
     .liberty-thumb-size-control button:hover {
@@ -2340,12 +2441,19 @@
       font-size: var(--thumb-badge-size, 9.5px);
       font-weight: 700;
       color: var(--text-muted, var(--color-text-tertiary));
-      background: var(--surface, rgba(255,255,255,0.8));
+      background: var(--surface, rgba(255,255,255,0.85));
       padding: 1px 4px;
       border-radius: 3px;
       border: 0.5px solid var(--border-color, rgba(0,0,0,0.1));
       z-index: 5;
       pointer-events: none;
+    }
+
+    body.thumb-size-small .liberty-thumb-badge {
+      top: 2px;
+      left: 4px;
+      font-size: 7.5px;
+      padding: 0.5px 3px;
     }
 
     /* Liquid Glass Mode for all thumbnails */

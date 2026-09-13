@@ -1060,18 +1060,6 @@
     <input type="file" id="physical-file-uploader" class="hidden" onchange="processUploadedFile(event)" accept="*/*">
 
     <!-- مساحات العمل الديناميكية المتغيرة للتطبيقات الأربعة -->
-    <!-- ══ Horizontal ruler bar — fixed below ribbon, only visible in Word mode ══ -->
-    <div class="word-ruler-bar" id="word-ruler-bar">
-      <div class="wrb-corner"></div>
-      <div class="wrb-track" id="wrb-track">
-        <div class="wrb-margin-l" id="wrb-margin-l"></div>
-        <div class="wrb-ticks" id="wrb-ticks"></div>
-        <div class="wrb-margin-r" id="wrb-margin-r"></div>
-        <div class="wrb-thumb wrb-thumb-l" id="wrb-indent-l" title="Left Indent"></div>
-        <div class="wrb-thumb wrb-thumb-r" id="wrb-indent-r" title="Right Indent"></div>
-      </div>
-    </div>
-
     <div class="document-body-wrapper">
       
       <!-- ══ Centered Floating Settings Modal (Claude.ai Desktop Interface) ══ -->
@@ -1733,10 +1721,10 @@
 
       <!-- 1. واجهة معالج النصوص (Word Processor View) -->
       <div class="workspace-view active" id="view-word">
-        <div class="word-workspace-container">
+        <div class="word-workspace-container flex w-full h-full overflow-hidden">
           <div class="flex flex-col h-full border-r border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]" style="width:var(--thumb-rail-width);min-width:var(--thumb-rail-width);flex-shrink:0;">
-            <div class="flex items-center justify-between p-2 border-b border-[var(--color-border-secondary)]">
-              <span class="text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Pages</span>
+            <div class="thumb-rail-header">
+              <span class="thumb-rail-title">Pages</span>
               <div class="liberty-thumb-size-control">
                 <button type="button" data-size="normal" onclick="LibertyThumbnailSystem.setSize('normal')" title="Normal size">L</button>
                 <button type="button" data-size="medium" onclick="LibertyThumbnailSystem.setSize('medium')" title="Medium size">M</button>
@@ -1745,16 +1733,30 @@
             </div>
             <div class="word-nav-sidebar flex-1 overflow-y-auto p-2" id="word-pages-nav"></div>
           </div>
-          <div class="word-pages-stream" id="word-pages-container"></div>
+          <div class="flex-1 flex flex-col h-full overflow-hidden bg-[var(--color-background-tertiary)]">
+            <!-- ══ Centered Millimeter Ruler Bar ══ -->
+            <div class="word-ruler-bar" id="word-ruler-bar">
+              <div class="wrb-ruler-wrapper" id="wrb-ruler-wrapper">
+                <div class="wrb-track" id="wrb-track">
+                  <div class="wrb-margin-l" id="wrb-margin-l" title="Left Margin (24mm)"></div>
+                  <div class="wrb-ticks" id="wrb-ticks"></div>
+                  <div class="wrb-margin-r" id="wrb-margin-r" title="Right Margin (24mm)"></div>
+                  <div class="wrb-thumb wrb-thumb-l" id="wrb-indent-l" title="Left Indent"></div>
+                  <div class="wrb-thumb wrb-thumb-r" id="wrb-indent-r" title="Right Indent"></div>
+                </div>
+              </div>
+            </div>
+            <div class="word-pages-stream flex-1 overflow-y-auto" id="word-pages-container"></div>
+          </div>
         </div>
       </div>
 
       <!-- 2. واجهة برنامج العروض (Impress View) -->
       <div class="workspace-view" id="view-impress">
-        <div class="impress-canvas">
+        <div class="impress-canvas flex w-full h-full overflow-hidden">
           <div class="flex flex-col h-full border-r border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]" style="width:var(--thumb-rail-width);min-width:var(--thumb-rail-width);flex-shrink:0;">
-            <div class="flex items-center justify-between p-2 border-b border-[var(--color-border-secondary)]">
-              <span class="text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Slides</span>
+            <div class="thumb-rail-header">
+              <span class="thumb-rail-title">Slides</span>
               <div class="liberty-thumb-size-control">
                 <button type="button" data-size="normal" onclick="LibertyThumbnailSystem.setSize('normal')" title="Normal size">L</button>
                 <button type="button" data-size="medium" onclick="LibertyThumbnailSystem.setSize('medium')" title="Medium size">M</button>
@@ -1763,7 +1765,7 @@
             </div>
             <div class="impress-sidebar flex-1 overflow-y-auto p-2" id="impress-slides-sidebar"></div>
           </div>
-          <div class="impress-main-view">
+          <div class="impress-main-view flex-1 flex flex-col items-center justify-center overflow-hidden">
             <div class="impress-slide-stage" id="impress-slide-stage">
               <div class="impress-slide" id="impress-slide-viewport"></div>
             </div>
@@ -1791,10 +1793,10 @@
 
       <!-- 4. واجهة معدل ملفات الـ PDF (PDF Editor View) -->
       <div class="workspace-view" id="view-pdf">
-        <div class="pdf-canvas-view">
+        <div class="pdf-canvas-view flex w-full h-full overflow-hidden">
           <div class="flex flex-col h-full border-r border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]" style="width:var(--thumb-rail-width);min-width:var(--thumb-rail-width);flex-shrink:0;">
-            <div class="flex items-center justify-between p-2 border-b border-[var(--color-border-secondary)]">
-              <span class="text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">PDF Pages</span>
+            <div class="thumb-rail-header">
+              <span class="thumb-rail-title">Pages</span>
               <div class="liberty-thumb-size-control">
                 <button type="button" data-size="normal" onclick="LibertyThumbnailSystem.setSize('normal')" title="Normal size">L</button>
                 <button type="button" data-size="medium" onclick="LibertyThumbnailSystem.setSize('medium')" title="Medium size">M</button>
@@ -1803,7 +1805,7 @@
             </div>
             <div class="pdf-sidebar flex-1 overflow-y-auto p-2" id="pdf-pages-nav"></div>
           </div>
-          <div class="pdf-document-scroll" id="pdf-scroll-container"></div>
+          <div class="pdf-document-scroll flex-1 overflow-y-auto" id="pdf-scroll-container"></div>
         </div>
       </div>
 
