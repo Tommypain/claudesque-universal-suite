@@ -47,20 +47,17 @@ function SheetsApp() {
         }
         ribbon={null}
         content={
-          settingsOpen ? (
-            <BackstageSettings onClose={() => toggleSettings(false)} />
-          ) : (
-            <LibertySheetApp
-              activeTab={sheetTab}
-              setActiveTab={setSheetTab}
-              onSave={save}
-              onUndo={() => {}}
-              onRedo={() => {}}
-            />
-          )
+          <LibertySheetApp
+            activeTab={sheetTab}
+            setActiveTab={setSheetTab}
+            onSave={save}
+            onUndo={() => {}}
+            onRedo={() => {}}
+          />
         }
         statusBar={<StatusBar activeApp={activeApp} />}
       />
+      {settingsOpen && <BackstageSettings onClose={() => toggleSettings(false)} />}
       <LibertyFileDialog />
     </div>
   );

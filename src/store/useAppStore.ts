@@ -36,6 +36,17 @@ interface AppState {
   colors: AppColors;
   settingsOpen: boolean;
   toasts: Toast[];
+  uiDensity: "comfortable" | "compact";
+  editorFont: string;
+  editorFontSize: number;
+  editorLineHeight: string;
+  editorWordWrap: boolean;
+  canvasGrid: boolean;
+  canvasSnap: boolean;
+  canvasRulers: boolean;
+  hardwareAcceleration: boolean;
+  language: string;
+  autoSaveInterval: string;
   setActiveApp: (a: AppId) => void;
   setTheme: (t: ThemeMode) => void;
   setThemeStyle: (s: ThemeStyle) => void;
@@ -43,6 +54,17 @@ interface AppState {
   resetColor: (a: AppId) => void;
   resetAllColors: () => void;
   toggleSettings: (open?: boolean) => void;
+  setUiDensity: (d: "comfortable" | "compact") => void;
+  setEditorFont: (f: string) => void;
+  setEditorFontSize: (s: number) => void;
+  setEditorLineHeight: (l: string) => void;
+  setEditorWordWrap: (w: boolean) => void;
+  setCanvasGrid: (g: boolean) => void;
+  setCanvasSnap: (s: boolean) => void;
+  setCanvasRulers: (r: boolean) => void;
+  setHardwareAcceleration: (h: boolean) => void;
+  setLanguage: (l: string) => void;
+  setAutoSaveInterval: (i: string) => void;
   addToast: (message: string) => void;
   removeToast: (id: number) => void;
 }
@@ -85,6 +107,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   colors: loadColors(),
   settingsOpen: false,
   toasts: [],
+  uiDensity: "comfortable",
+  editorFont: "system",
+  editorFontSize: 14,
+  editorLineHeight: "1.6",
+  editorWordWrap: true,
+  canvasGrid: true,
+  canvasSnap: true,
+  canvasRulers: false,
+  hardwareAcceleration: true,
+  language: "en",
+  autoSaveInterval: "instant",
   setActiveApp: (a) => set({ activeApp: a }),
   setTheme: (t) => {
     try {
@@ -118,6 +151,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   toggleSettings: (open) =>
     set((s) => ({ settingsOpen: open ?? !s.settingsOpen })),
+  setUiDensity: (d) => set({ uiDensity: d }),
+  setEditorFont: (f) => set({ editorFont: f }),
+  setEditorFontSize: (s) => set({ editorFontSize: s }),
+  setEditorLineHeight: (l) => set({ editorLineHeight: l }),
+  setEditorWordWrap: (w) => set({ editorWordWrap: w }),
+  setCanvasGrid: (g) => set({ canvasGrid: g }),
+  setCanvasSnap: (s) => set({ canvasSnap: s }),
+  setCanvasRulers: (r) => set({ canvasRulers: r }),
+  setHardwareAcceleration: (h) => set({ hardwareAcceleration: h }),
+  setLanguage: (l) => set({ language: l }),
+  setAutoSaveInterval: (i) => set({ autoSaveInterval: i }),
   addToast: (message) => {
     const id = ++toastId;
     set((s) => ({ toasts: [...s.toasts, { id, message }] }));

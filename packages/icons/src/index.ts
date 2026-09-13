@@ -26,5 +26,7 @@ export {
   Bot as BotIcon,
   User as UserIcon,
   Send as SendIcon,
-  RefreshCw as RefreshIcon
+  RefreshCw as RefreshIcon,
+  X as CloseIcon,
+  Check as CheckIcon
 } from "lucide-react";

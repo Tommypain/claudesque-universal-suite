@@ -172,15 +172,10 @@ export default function LibertyStudio() {
           />
         }
         ribbon={null} // Ribbon is rendered inside each app component to keep tab bindings self-contained
-        content={
-          settingsOpen ? (
-            <BackstageSettings onClose={() => toggleSettings(false)} />
-          ) : (
-            renderActiveApp()
-          )
-        }
+        content={renderActiveApp()}
         statusBar={<StatusBar activeApp={activeApp} />}
       />
+      {settingsOpen && <BackstageSettings onClose={() => toggleSettings(false)} />}
       <LibertyFileDialog />
     </div>
   );

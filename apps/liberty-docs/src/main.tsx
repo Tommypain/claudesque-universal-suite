@@ -47,20 +47,17 @@ function DocsApp() {
         }
         ribbon={null}
         content={
-          settingsOpen ? (
-            <BackstageSettings onClose={() => toggleSettings(false)} />
-          ) : (
-            <LibertyWriteApp
-              activeTab={writeTab}
-              setActiveTab={setWriteTab}
-              onSave={save}
-              onUndo={() => document.execCommand("undo")}
-              onRedo={() => document.execCommand("redo")}
-            />
-          )
+          <LibertyWriteApp
+            activeTab={writeTab}
+            setActiveTab={setWriteTab}
+            onSave={save}
+            onUndo={() => document.execCommand("undo")}
+            onRedo={() => document.execCommand("redo")}
+          />
         }
         statusBar={<StatusBar activeApp={activeApp} />}
       />
+      {settingsOpen && <BackstageSettings onClose={() => toggleSettings(false)} />}
       <LibertyFileDialog />
     </div>
   );

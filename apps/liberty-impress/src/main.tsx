@@ -58,20 +58,17 @@ function ImpressApp() {
         }
         ribbon={null}
         content={
-          settingsOpen ? (
-            <BackstageSettings onClose={() => toggleSettings(false)} />
-          ) : (
-            <LibertyImpressApp
-              activeTab={impressTab}
-              setActiveTab={setImpressTab}
-              onSave={save}
-              onUndo={() => {}}
-              onRedo={() => {}}
-            />
-          )
+          <LibertyImpressApp
+            activeTab={impressTab}
+            setActiveTab={setImpressTab}
+            onSave={save}
+            onUndo={() => {}}
+            onRedo={() => {}}
+          />
         }
         statusBar={<StatusBar activeApp={activeApp} />}
       />
+      {settingsOpen && <BackstageSettings onClose={() => toggleSettings(false)} />}
       <LibertyFileDialog />
     </div>
   );
