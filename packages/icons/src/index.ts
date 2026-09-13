@@ -28,5 +28,11 @@ export {
   Send as SendIcon,
   RefreshCw as RefreshIcon,
   X as CloseIcon,
-  Check as CheckIcon
+  Check as CheckIcon,
+  Monitor as MonitorIcon,
+  Sliders as SlidersIcon,
+  Palette as PaletteIcon,
+  Keyboard as KeyboardIcon,
+  Info as InfoIcon,
+  Layout as LayoutIcon
 } from "lucide-react";

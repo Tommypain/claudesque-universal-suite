@@ -1,22 +1,45 @@
 import { useAppStore, type AppId } from "@liberty/shared-hooks";
 import { useState, useEffect } from "react";
-import { SettingsIcon, CloseIcon, CheckIcon } from "@liberty/icons";
+import {
+  SettingsIcon,
+  CloseIcon,
+  CheckIcon,
+  SearchIcon,
+  SunIcon,
+  MoonIcon,
+  MonitorIcon,
+  PaletteIcon,
+  WordIcon,
+  LayoutIcon,
+  KeyboardIcon,
+  InfoIcon,
+  SlidersIcon,
+} from "@liberty/icons";
 
 interface BackstageSettingsProps {
   onClose: () => void;
 }
 
-type SettingsSection = "appearance" | "editor" | "canvas" | "performance" | "general";
+type SettingsTab =
+  | "general"
+  | "appearance"
+  | "editor"
+  | "canvas"
+  | "shortcuts"
+  | "performance"
+  | "about";
 
 /**
- * BackstageSettings — Centered floating settings modal for Liberty Studio.
- * Floats elevated above the active application workspace, with backdrop blur,
- * full active theme adaptation (including macOS Liquid Glass), keyboard (Escape)
- * dismissal, and organized settings categories.
+ * BackstageSettings — Claude-style Settings Modal for Liberty Studio.
+ * Modeled directly after the official Claude.ai desktop control center layout:
+ * minimal, elegant, uncluttered, with segmented icon controls, clean search,
+ * and zero bloat.
  */
 export function BackstageSettings({ onClose }: BackstageSettingsProps) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>("appearance");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
+  const [searchQuery, setSearchQuery] = useState("");
 
+  // Store state
   const theme = useAppStore((s: any) => s.theme);
   const setTheme = useAppStore((s: any) => s.setTheme);
   const themeStyle = useAppStore((s: any) => s.themeStyle);
@@ -27,8 +50,6 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
   const resetAllColors = useAppStore((s: any) => s.resetAllColors);
 
   // Extended workspace preferences
-  const uiDensity = useAppStore((s: any) => s.uiDensity || "comfortable");
-  const setUiDensity = useAppStore((s: any) => s.setUiDensity);
   const editorFont = useAppStore((s: any) => s.editorFont || "system");
   const setEditorFont = useAppStore((s: any) => s.setEditorFont);
   const editorFontSize = useAppStore((s: any) => s.editorFontSize || 14);
@@ -45,18 +66,43 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
   const setCanvasRulers = useAppStore((s: any) => s.setCanvasRulers);
   const hardwareAcceleration = useAppStore((s: any) => s.hardwareAcceleration ?? true);
   const setHardwareAcceleration = useAppStore((s: any) => s.setHardwareAcceleration);
-  const language = useAppStore((s: any) => s.language || "en");
-  const setLanguage = useAppStore((s: any) => s.setLanguage);
   const autoSaveInterval = useAppStore((s: any) => s.autoSaveInterval || "instant");
   const setAutoSaveInterval = useAppStore((s: any) => s.setAutoSaveInterval);
 
-  // Local state for interactive controls
+  // Local user profile state (persisted in localStorage)
+  const [userName, setUserName] = useState(() => {
+    return (typeof localStorage !== "undefined" && localStorage.getItem("liberty-user-name")) || "Tom";
+  });
+  const [userNickname, setUserNickname] = useState(() => {
+    return (typeof localStorage !== "undefined" && localStorage.getItem("liberty-user-nick")) || "Tom";
+  });
+  const [userRole, setUserRole] = useState(() => {
+    return (typeof localStorage !== "undefined" && localStorage.getItem("liberty-user-role")) || "other";
+  });
+  const [userInstructions, setUserInstructions] = useState(() => {
+    return (typeof localStorage !== "undefined" && localStorage.getItem("liberty-user-inst")) || "";
+  });
+  const [motionPref, setMotionPref] = useState<"system" | "reduced">("system");
   const [autoPair, setAutoPair] = useState(true);
   const [lineNumbers, setLineNumbers] = useState(true);
-  const [memoryCache, setMemoryCache] = useState(true);
-  const [highDpi, setHighDpi] = useState(true);
-  const [notifications, setNotifications] = useState(true);
   const [canvasUnits, setCanvasUnits] = useState("mm");
+
+  const saveUserName = (val: string) => {
+    setUserName(val);
+    try { localStorage.setItem("liberty-user-name", val); } catch {}
+  };
+  const saveUserNick = (val: string) => {
+    setUserNickname(val);
+    try { localStorage.setItem("liberty-user-nick", val); } catch {}
+  };
+  const saveUserRole = (val: string) => {
+    setUserRole(val);
+    try { localStorage.setItem("liberty-user-role", val); } catch {}
+  };
+  const saveUserInst = (val: string) => {
+    setUserInstructions(val);
+    try { localStorage.setItem("liberty-user-inst", val); } catch {}
+  };
 
   // Keyboard dismiss on Escape
   useEffect(() => {
@@ -68,6 +114,19 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
+
+  const navSettings = [
+    { id: "general", label: "General", icon: <SettingsIcon size={16} /> },
+    { id: "appearance", label: "Appearance", icon: <PaletteIcon size={16} /> },
+    { id: "editor", label: "Editor", icon: <WordIcon size={16} /> },
+    { id: "canvas", label: "Canvas", icon: <LayoutIcon size={16} /> },
+    { id: "about", label: "About", icon: <InfoIcon size={16} /> },
+  ] as const;
+
+  const navCustomize = [
+    { id: "shortcuts", label: "Shortcuts", icon: <KeyboardIcon size={16} /> },
+    { id: "performance", label: "Performance", icon: <SlidersIcon size={16} /> },
+  ] as const;
 
   const themeOptions = [
     {
@@ -102,14 +161,6 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
     },
   ] as const;
 
-  const sections = [
-    { id: "appearance", label: "Appearance", icon: "🎨" },
-    { id: "editor", label: "Editor", icon: "📝" },
-    { id: "canvas", label: "Canvas", icon: "📐" },
-    { id: "performance", label: "Performance", icon: "⚡" },
-    { id: "general", label: "General", icon: "⚙️" },
-  ] as const;
-
   const appList: { id: AppId; label: string }[] = [
     { id: "write", label: "Docs (.docx)" },
     { id: "present", label: "Slides (.pptx)" },
@@ -119,6 +170,13 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
     { id: "design", label: "Vector Design" },
     { id: "converter", label: "Converter" },
   ];
+
+  const filteredNavSettings = navSettings.filter((item) =>
+    item.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredNavCustomize = navCustomize.filter((item) =>
+    item.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div
@@ -135,203 +193,382 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
         aria-labelledby="settings-dialog-title"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="settings-modal-header">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "8px",
-                background: "var(--color-background-secondary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "1px solid var(--color-border-secondary)",
-                color: "var(--color-accent, #1d4ed8)",
-              }}
-            >
-              <SettingsIcon size={16} />
-            </div>
-            <div>
-              <span
-                id="settings-dialog-title"
-                style={{
-                  fontWeight: 700,
-                  fontSize: "14.5px",
-                  color: "var(--color-text-primary)",
-                  display: "block",
-                  lineHeight: 1.2,
-                }}
-              >
-                Settings Console
-              </span>
-              <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                Liberty Studio Preferences
-              </span>
-            </div>
-          </div>
+        {/* Sleek Minimal Close Button (Top-Right like Claude) */}
+        <button
+          className="claude-close-btn"
+          onClick={onClose}
+          title="Close (Escape)"
+          aria-label="Close settings"
+        >
+          <CloseIcon size={18} />
+        </button>
 
-          <button
-            className="btn"
-            style={{
-              padding: "4px 8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              fontSize: "12px",
-            }}
-            onClick={onClose}
-            title="Close (Escape)"
-            aria-label="Close settings modal"
-          >
-            <CloseIcon size={14} />
-            <span>Esc</span>
-          </button>
-        </div>
-
-        {/* Modal Body: Sidebar + Content */}
-        <div className="settings-modal-body">
-          {/* Navigation Sidebar */}
-          <div className="settings-modal-sidebar">
-            {sections.map((sec) => {
-              const isActive = activeSection === sec.id;
-              return (
-                <div
-                  key={sec.id}
-                  className={`settings-modal-nav-item ${isActive ? "active" : ""}`}
-                  onClick={() => setActiveSection(sec.id)}
+        {/* Modal Body: Left Sidebar + Right Content */}
+        <div className="settings-modal-body" style={{ height: "100%" }}>
+          {/* Left Sidebar (Claude Style) */}
+          <div className="settings-modal-sidebar" style={{ width: "210px", padding: "16px 12px" }}>
+            {/* Search Box */}
+            <div className="claude-search-box">
+              <SearchIcon size={14} style={{ opacity: 0.7, flexShrink: 0 }} />
+              <input
+                type="text"
+                className="claude-search-input"
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    padding: 0,
+                    color: "inherit",
+                    opacity: 0.7,
+                  }}
+                  onClick={() => setSearchQuery("")}
                 >
-                  <span style={{ fontSize: "14px" }}>{sec.icon}</span>
-                  <span>{sec.label}</span>
-                </div>
-              );
-            })}
+                  <CloseIcon size={12} />
+                </button>
+              )}
+            </div>
+
+            {/* Section 1: Settings */}
+            <div className="claude-section-title">Settings</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              {filteredNavSettings.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className={`claude-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => setActiveTab(item.id as SettingsTab)}
+                  >
+                    <span style={{ display: "flex", alignItems: "center" }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Section 2: Customize */}
+            <div className="claude-section-title" style={{ marginTop: "12px" }}>
+              Customize
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              {filteredNavCustomize.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className={`claude-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => setActiveTab(item.id as SettingsTab)}
+                  >
+                    <span style={{ display: "flex", alignItems: "center" }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Scrollable Content Area */}
-          <div className="settings-modal-content">
-            {/* 1. Appearance Section */}
-            {activeSection === "appearance" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                <div>
-                  <h3
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: 700,
-                      color: "var(--color-text-primary)",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Theme & Style
-                  </h3>
-                  <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "12px" }}>
-                    Select the workspace visual design theme and token palette.
-                  </p>
+          {/* Right Content Area (Claude Style) */}
+          <div className="settings-modal-content" style={{ padding: "28px 36px" }}>
+            {/* 1. GENERAL TAB (Exact match to Claude Image 2) */}
+            {activeTab === "general" && (
+              <div>
+                <h2
+                  id="settings-dialog-title"
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    color: "var(--color-text-primary)",
+                    marginBottom: "20px",
+                  }}
+                >
+                  Profile
+                </h2>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {themeOptions.map((opt) => {
-                      const isSelected = (themeStyle || "default") === opt.id;
-                      return (
-                        <div
-                          key={opt.id}
-                          className={`settings-theme-card ${isSelected ? "active" : ""}`}
-                          onClick={() => setThemeStyle(opt.id)}
-                        >
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span style={{ fontWeight: 600, fontSize: "12.5px", color: "var(--color-text-primary)" }}>
-                                {opt.name}
-                              </span>
-                              {isSelected && (
-                                <span
-                                  style={{
-                                    fontSize: "10px",
-                                    padding: "1px 6px",
-                                    borderRadius: "10px",
-                                    background: "var(--color-accent, #1d4ed8)",
-                                    color: "#ffffff",
-                                    fontWeight: 600,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "2px",
-                                  }}
-                                >
-                                  <CheckIcon size={10} /> Active
-                                </span>
-                              )}
-                            </div>
-                            <div style={{ display: "flex", gap: "4px" }}>
-                              {opt.preview.map((col, i) => (
-                                <div
-                                  key={i}
-                                  style={{
-                                    width: 14,
-                                    height: 14,
-                                    borderRadius: "50%",
-                                    background: col,
-                                    border: "1px solid rgba(0,0,0,0.15)",
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)", display: "block", lineHeight: 1.35 }}>
-                            {opt.desc}
-                          </span>
-                        </div>
-                      );
-                    })}
+                <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  {/* Avatar Row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>Avatar</span>
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: "50%",
+                        background: "var(--color-background-secondary)",
+                        border: "1px solid var(--color-border-secondary)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        color: "var(--color-text-primary)",
+                      }}
+                    >
+                      {userName ? userName[0].toUpperCase() : "T"}
+                    </div>
+                  </div>
+
+                  {/* Full Name */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>Full name</label>
+                    <input
+                      type="text"
+                      className="claude-input"
+                      value={userName}
+                      onChange={(e) => saveUserName(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Nickname */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>
+                      What should Liberty call you?
+                    </label>
+                    <input
+                      type="text"
+                      className="claude-input"
+                      value={userNickname}
+                      onChange={(e) => saveUserNick(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Work Description */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>
+                      What best describes your work?
+                    </label>
+                    <select
+                      className="claude-select"
+                      value={userRole}
+                      onChange={(e) => saveUserRole(e.target.value)}
+                    >
+                      <option value="developer">Engineering / Software</option>
+                      <option value="designer">Design / Product</option>
+                      <option value="writer">Content / Authoring</option>
+                      <option value="researcher">Research / Science</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* Instructions */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>
+                      Instructions for Liberty
+                    </label>
+                    <span style={{ fontSize: "12px", color: "var(--color-text-secondary)", lineHeight: 1.4 }}>
+                      Liberty will keep these in mind across documents, presentations, and code authoring.
+                    </span>
+                    <textarea
+                      className="claude-textarea"
+                      placeholder="e.g. keep explanations brief and to the point"
+                      value={userInstructions}
+                      onChange={(e) => saveUserInst(e.target.value)}
+                    />
                   </div>
                 </div>
 
-                {/* Theme Mode: Light / Dark / System */}
-                <div style={{ borderTop: "1px solid var(--color-border-secondary)", paddingTop: "16px" }}>
-                  <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "4px" }}>
-                    System Theme Mode
-                  </h4>
-                  <p style={{ fontSize: "11.5px", color: "var(--color-text-secondary)", marginBottom: "10px" }}>
-                    Switch between daytime light mode, dark mode, or follow your operating system appearance.
-                  </p>
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    {(["light", "dark", "system"] as const).map((m) => (
+                {/* Preferences Sub-Group */}
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    color: "var(--color-text-primary)",
+                    marginTop: "32px",
+                    marginBottom: "20px",
+                  }}
+                >
+                  Preferences
+                </h2>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  {/* Appearance (Theme Mode) with Segmented Icon Pill */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>Appearance</span>
+                    <div className="claude-segmented-control">
                       <button
-                        key={m}
-                        className={`btn ${theme === m ? "active" : ""}`}
-                        style={{
-                          flex: 1,
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          fontWeight: theme === m ? 600 : 400,
-                          textTransform: "capitalize",
-                        }}
-                        onClick={() => setTheme(m)}
+                        type="button"
+                        className={`claude-segmented-btn ${theme === "system" ? "active" : ""}`}
+                        onClick={() => setTheme("system")}
+                        title="System appearance"
                       >
-                        {m === "light" ? "☀ Light" : m === "dark" ? "🌙 Dark" : "💻 System"}
+                        <MonitorIcon size={15} />
                       </button>
-                    ))}
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${theme === "light" ? "active" : ""}`}
+                        onClick={() => setTheme("light")}
+                        title="Light mode"
+                      >
+                        <SunIcon size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${theme === "dark" ? "active" : ""}`}
+                        onClick={() => setTheme("dark")}
+                        title="Dark mode"
+                      >
+                        <MoonIcon size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Workspace Font */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>Workspace font</span>
+                    <select
+                      className="claude-select"
+                      style={{ minWidth: "160px" }}
+                      value={editorFont}
+                      onChange={(e) => setEditorFont && setEditorFont(e.target.value)}
+                    >
+                      <option value="system">Liberty Sans (Default)</option>
+                      <option value="serif">Anthropic Serif</option>
+                      <option value="mono">Monospace Code</option>
+                      <option value="inter">Inter Display</option>
+                    </select>
+                  </div>
+
+                  {/* Motion with Segmented Pill */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Motion
+                      </span>
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)", display: "block", marginTop: "2px" }}>
+                        Reduce animation in interface transitions and canvas elements.
+                      </span>
+                    </div>
+                    <div className="claude-segmented-control" style={{ flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${motionPref === "system" ? "active" : ""}`}
+                        onClick={() => setMotionPref("system")}
+                      >
+                        System
+                      </button>
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${motionPref === "reduced" ? "active" : ""}`}
+                        onClick={() => setMotionPref("reduced")}
+                      >
+                        Reduced
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Auto-Save */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Auto-save interval
+                      </span>
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)", display: "block", marginTop: "2px" }}>
+                        Persist edits to local cache automatically.
+                      </span>
+                    </div>
+                    <select
+                      className="claude-select"
+                      style={{ minWidth: "180px" }}
+                      value={autoSaveInterval}
+                      onChange={(e) => setAutoSaveInterval && setAutoSaveInterval(e.target.value)}
+                    >
+                      <option value="instant">Instant on change (Recommended)</option>
+                      <option value="30s">Every 30 seconds</option>
+                      <option value="5m">Every 5 minutes</option>
+                      <option value="manual">Manual only</option>
+                    </select>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* App Accent Colors */}
-                <div style={{ borderTop: "1px solid var(--color-border-secondary)", paddingTop: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                    <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)" }}>
+            {/* 2. APPEARANCE & THEMES TAB */}
+            {activeTab === "appearance" && (
+              <div>
+                <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>
+                  Appearance & Themes
+                </h2>
+                <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "20px" }}>
+                  Choose your visual design system and customize application signature accent colors.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+                  {themeOptions.map((opt) => {
+                    const isSelected = (themeStyle || "default") === opt.id;
+                    return (
+                      <div
+                        key={opt.id}
+                        className={`settings-theme-card ${isSelected ? "active" : ""}`}
+                        onClick={() => setThemeStyle(opt.id)}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "3px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--color-text-primary)" }}>
+                              {opt.name}
+                            </span>
+                            {isSelected && (
+                              <span
+                                style={{
+                                  fontSize: "10px",
+                                  padding: "1px 6px",
+                                  borderRadius: "10px",
+                                  background: "var(--color-accent, #1d4ed8)",
+                                  color: "#ffffff",
+                                  fontWeight: 600,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "3px",
+                                }}
+                              >
+                                <CheckIcon size={10} /> Active
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: "flex", gap: "4px" }}>
+                            {opt.preview.map((c, i) => (
+                              <div
+                                key={i}
+                                style={{
+                                  width: 14,
+                                  height: 14,
+                                  borderRadius: "50%",
+                                  background: c,
+                                  border: "1px solid rgba(0,0,0,0.15)",
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)", display: "block", lineHeight: 1.35 }}>
+                          {opt.desc}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ borderTop: "1px solid var(--color-border-secondary)", paddingTop: "18px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)" }}>
                       Application Accent Colors
-                    </h4>
+                    </span>
                     <button
+                      type="button"
                       className="btn"
-                      style={{ fontSize: "11px", padding: "2px 8px" }}
+                      style={{ fontSize: "11px", padding: "3px 8px" }}
                       onClick={resetAllColors}
                     >
                       Reset All
                     </button>
                   </div>
-                  <p style={{ fontSize: "11.5px", color: "var(--color-text-secondary)", marginBottom: "12px" }}>
-                    Customize signature accent indicators for each core workspace app.
-                  </p>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                     {appList.map((app) => (
                       <div
                         key={app.id}
@@ -340,19 +577,19 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                           alignItems: "center",
                           justifyContent: "space-between",
                           padding: "6px 10px",
-                          borderRadius: "6px",
+                          borderRadius: "8px",
                           background: "var(--color-background-secondary)",
                           border: "1px solid var(--color-border-secondary)",
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <input
                             type="color"
                             value={colors[app.id] || "#1d4ed8"}
                             onChange={(e) => setColor(app.id, e.target.value)}
                             style={{
-                              width: 26,
-                              height: 26,
+                              width: 24,
+                              height: 24,
                               border: "none",
                               borderRadius: "4px",
                               cursor: "pointer",
@@ -360,13 +597,14 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                               background: "transparent",
                             }}
                           />
-                          <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--color-text-primary)" }}>
+                          <span style={{ fontSize: "12px", color: "var(--color-text-primary)", fontWeight: 500 }}>
                             {app.label}
                           </span>
                         </div>
                         <button
+                          type="button"
                           className="btn"
-                          style={{ fontSize: "11px", padding: "2px 8px" }}
+                          style={{ fontSize: "10.5px", padding: "2px 6px" }}
                           onClick={() => resetColor(app.id)}
                         >
                           Reset
@@ -375,82 +613,29 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                     ))}
                   </div>
                 </div>
-
-                {/* UI Density */}
-                <div style={{ borderTop: "1px solid var(--color-border-secondary)", paddingTop: "16px" }}>
-                  <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "4px" }}>
-                    Interface Density
-                  </h4>
-                  <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
-                    <button
-                      className={`btn ${uiDensity === "comfortable" ? "active" : ""}`}
-                      style={{ flex: 1, padding: "6px", fontSize: "12px" }}
-                      onClick={() => setUiDensity && setUiDensity("comfortable")}
-                    >
-                      Comfortable (Default)
-                    </button>
-                    <button
-                      className={`btn ${uiDensity === "compact" ? "active" : ""}`}
-                      style={{ flex: 1, padding: "6px", fontSize: "12px" }}
-                      onClick={() => setUiDensity && setUiDensity("compact")}
-                    >
-                      Compact
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
 
-            {/* 2. Editor Section */}
-            {activeSection === "editor" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                <div>
-                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "4px" }}>
-                    Editor & Typography
-                  </h3>
-                  <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "16px" }}>
-                    Fine-tune font formatting, line spacing, and code editor behavior.
-                  </p>
-                </div>
+            {/* 3. EDITOR TAB */}
+            {activeTab === "editor" && (
+              <div>
+                <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>
+                  Editor & Formatting
+                </h2>
+                <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "20px" }}>
+                  Configure typography, line spacing, and code editor behavior.
+                </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  {/* Font Size */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Font Family
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Primary typeface for editor surfaces
-                      </span>
-                    </div>
-                    <select
-                      className="fsel"
-                      value={editorFont}
-                      onChange={(e) => setEditorFont && setEditorFont(e.target.value)}
-                      style={{ minWidth: "160px", height: "28px" }}
-                    >
-                      <option value="system">System Sans-Serif</option>
-                      <option value="serif">Serif (Times / Georgia)</option>
-                      <option value="mono">Monospace (Code / Mono)</option>
-                      <option value="inter">Inter Display</option>
-                    </select>
-                  </div>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Font Size
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Default text point size
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", gap: "4px" }}>
+                    <span style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>Base font size</span>
+                    <div className="claude-segmented-control">
                       {[12, 14, 16, 18].map((sz) => (
                         <button
                           key={sz}
-                          className={`btn ${editorFontSize === sz ? "active" : ""}`}
-                          style={{ padding: "3px 10px", fontSize: "12px" }}
+                          type="button"
+                          className={`claude-segmented-btn ${editorFontSize === sz ? "active" : ""}`}
                           onClick={() => setEditorFontSize && setEditorFontSize(sz)}
                         >
                           {sz}px
@@ -459,179 +644,175 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                     </div>
                   </div>
 
+                  {/* Line Spacing */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Line Height
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Vertical paragraph and code pacing
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", gap: "4px" }}>
+                    <span style={{ fontSize: "13px", color: "var(--color-text-primary)" }}>Line spacing</span>
+                    <div className="claude-segmented-control">
                       {["1.4", "1.6", "1.8"].map((lh) => (
                         <button
                           key={lh}
-                          className={`btn ${editorLineHeight === lh ? "active" : ""}`}
-                          style={{ padding: "3px 10px", fontSize: "12px" }}
+                          type="button"
+                          className={`claude-segmented-btn ${editorLineHeight === lh ? "active" : ""}`}
                           onClick={() => setEditorLineHeight && setEditorLineHeight(lh)}
                         >
-                          {lh === "1.4" ? "Compact (1.4)" : lh === "1.6" ? "Normal (1.6)" : "Relaxed (1.8)"}
+                          {lh === "1.4" ? "Compact" : lh === "1.6" ? "Normal" : "Relaxed"}
                         </button>
                       ))}
                     </div>
                   </div>
-                </div>
 
-                <div style={{ borderTop: "1px solid var(--color-border-secondary)", paddingTop: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)" }}>
-                    Code & Markup Behavior
-                  </h4>
+                  {/* Word Wrap */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Word wrapping
+                      </span>
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)" }}>
+                        Wrap text lines automatically in source code and studio views.
+                      </span>
+                    </div>
+                    <label className="claude-toggle">
+                      <input
+                        type="checkbox"
+                        checked={editorWordWrap}
+                        onChange={(e) => setEditorWordWrap && setEditorWordWrap(e.target.checked)}
+                      />
+                      <span className="claude-toggle-slider" />
+                    </label>
+                  </div>
 
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={editorWordWrap}
-                      onChange={(e) => setEditorWordWrap && setEditorWordWrap(e.target.checked)}
-                    />
-                    <span>Enable automatic word wrapping in HTML Studio & Source Code view</span>
-                  </label>
+                  {/* Bracket Auto-Pair */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Auto-close brackets & quotes
+                      </span>
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)" }}>
+                        Automatically insert closing syntax pairs while typing.
+                      </span>
+                    </div>
+                    <label className="claude-toggle">
+                      <input
+                        type="checkbox"
+                        checked={autoPair}
+                        onChange={(e) => setAutoPair(e.target.checked)}
+                      />
+                      <span className="claude-toggle-slider" />
+                    </label>
+                  </div>
 
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={autoPair}
-                      onChange={(e) => setAutoPair(e.target.checked)}
-                    />
-                    <span>Auto-pair quotation marks and syntax brackets</span>
-                  </label>
-
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={lineNumbers}
-                      onChange={(e) => setLineNumbers(e.target.checked)}
-                    />
-                    <span>Display line numbers in code editing view</span>
-                  </label>
+                  {/* Line Numbers */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Show line numbers
+                      </span>
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)" }}>
+                        Display left margin line numbers in code and HTML editor views.
+                      </span>
+                    </div>
+                    <label className="claude-toggle">
+                      <input
+                        type="checkbox"
+                        checked={lineNumbers}
+                        onChange={(e) => setLineNumbers(e.target.checked)}
+                      />
+                      <span className="claude-toggle-slider" />
+                    </label>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* 3. Canvas Section */}
-            {activeSection === "canvas" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                <div>
-                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "4px" }}>
-                    Canvas & Layout Guides
-                  </h3>
-                  <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "16px" }}>
-                    Configure physical document canvas grids, rulers, and snap settings.
-                  </p>
-                </div>
+            {/* 4. CANVAS TAB */}
+            {activeTab === "canvas" && (
+              <div>
+                <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>
+                  Canvas & Layout Guides
+                </h2>
+                <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "20px" }}>
+                  Settings for HTML Studio, Presentation slides, and Vector Design workspaces.
+                </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      background: "var(--color-background-secondary)",
-                      border: "1px solid var(--color-border-secondary)",
-                    }}
-                  >
+                <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  {/* Grid */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Show Canvas Grid
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Show background grid
                       </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Render subtle background grid dots in HTML Studio and vector canvas
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)" }}>
+                        Render subtle alignment dot grid on document and slide canvases.
                       </span>
                     </div>
-                    <button
-                      className={`btn ${canvasGrid ? "active" : ""}`}
-                      style={{ padding: "4px 12px", fontSize: "12px" }}
-                      onClick={() => setCanvasGrid && setCanvasGrid(!canvasGrid)}
-                    >
-                      {canvasGrid ? "Enabled" : "Disabled"}
-                    </button>
+                    <label className="claude-toggle">
+                      <input
+                        type="checkbox"
+                        checked={canvasGrid}
+                        onChange={(e) => setCanvasGrid && setCanvasGrid(e.target.checked)}
+                      />
+                      <span className="claude-toggle-slider" />
+                    </label>
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      background: "var(--color-background-secondary)",
-                      border: "1px solid var(--color-border-secondary)",
-                    }}
-                  >
+                  {/* Snap */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Snap to Grid
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Snap to grid (8px)
                       </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Snap elements to 8px intervals during drag and resize operations
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)" }}>
+                        Snap elements to 8px increments when moving or resizing.
                       </span>
                     </div>
-                    <button
-                      className={`btn ${canvasSnap ? "active" : ""}`}
-                      style={{ padding: "4px 12px", fontSize: "12px" }}
-                      onClick={() => setCanvasSnap && setCanvasSnap(!canvasSnap)}
-                    >
-                      {canvasSnap ? "Enabled" : "Disabled"}
-                    </button>
+                    <label className="claude-toggle">
+                      <input
+                        type="checkbox"
+                        checked={canvasSnap}
+                        onChange={(e) => setCanvasSnap && setCanvasSnap(e.target.checked)}
+                      />
+                      <span className="claude-toggle-slider" />
+                    </label>
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      background: "var(--color-background-secondary)",
-                      border: "1px solid var(--color-border-secondary)",
-                    }}
-                  >
+                  {/* Rulers */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Physical Document Rulers
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Physical document rulers
                       </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Display top horizontal millimeter/inch ruler bar
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)" }}>
+                        Show top measurement ruler bar in Word and HTML Studio.
                       </span>
                     </div>
-                    <button
-                      className={`btn ${canvasRulers ? "active" : ""}`}
-                      style={{ padding: "4px 12px", fontSize: "12px" }}
-                      onClick={() => setCanvasRulers && setCanvasRulers(!canvasRulers)}
-                    >
-                      {canvasRulers ? "Visible" : "Hidden"}
-                    </button>
+                    <label className="claude-toggle">
+                      <input
+                        type="checkbox"
+                        checked={canvasRulers}
+                        onChange={(e) => setCanvasRulers && setCanvasRulers(e.target.checked)}
+                      />
+                      <span className="claude-toggle-slider" />
+                    </label>
                   </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+                  {/* Units */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Measurement Units
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
+                        Measurement units
                       </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Standard physical layout dimension unit
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)" }}>
+                        Physical dimension standard.
                       </span>
                     </div>
                     <select
-                      className="fsel"
+                      className="claude-select"
+                      style={{ minWidth: "150px" }}
                       value={canvasUnits}
                       onChange={(e) => setCanvasUnits(e.target.value)}
-                      style={{ minWidth: "140px", height: "28px" }}
                     >
-                      <option value="mm">Millimeters (mm) — Print</option>
-                      <option value="px">Pixels (px) — Screen</option>
+                      <option value="mm">Millimeters (mm)</option>
+                      <option value="px">Pixels (px)</option>
                       <option value="in">Inches (in)</option>
                     </select>
                   </div>
@@ -639,281 +820,133 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
               </div>
             )}
 
-            {/* 4. Performance Section */}
-            {activeSection === "performance" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                <div>
-                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "4px" }}>
-                    Performance & Engine Status
-                  </h3>
-                  <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "16px" }}>
-                    Manage client-side sandboxed calculation cores and graphics rasterization.
-                  </p>
-                </div>
+            {/* 5. SHORTCUTS TAB */}
+            {activeTab === "shortcuts" && (
+              <div>
+                <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>
+                  Keyboard Shortcuts
+                </h2>
+                <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "16px" }}>
+                  Quick desktop navigation and document editing commands.
+                </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      background: "var(--color-background-secondary)",
-                      border: "1px solid var(--color-border-secondary)",
-                    }}
-                  >
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {[
+                    { action: "Save current document", key: "Ctrl + S" },
+                    { action: "Open document file", key: "Ctrl + O" },
+                    { action: "New blank document", key: "Ctrl + N" },
+                    { action: "Undo last edit", key: "Ctrl + Z" },
+                    { action: "Redo last edit", key: "Ctrl + Y" },
+                    { action: "Close modal / dialog", key: "Escape" },
+                    { action: "Open Settings", key: "Ctrl + ," },
+                  ].map((s, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        background: "var(--color-background-secondary)",
+                        border: "1px solid var(--color-border-secondary)",
+                      }}
+                    >
+                      <span style={{ fontSize: "12.5px", color: "var(--color-text-primary)" }}>{s.action}</span>
+                      <kbd
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          background: "var(--color-background-primary)",
+                          border: "1px solid var(--color-border-secondary)",
+                          fontSize: "11px",
+                          fontFamily: "monospace",
+                          color: "var(--color-text-secondary)",
+                        }}
+                      >
+                        {s.key}
+                      </kbd>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. PERFORMANCE TAB */}
+            {activeTab === "performance" && (
+              <div>
+                <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>
+                  Performance
+                </h2>
+                <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "20px" }}>
+                  Rendering acceleration and client memory optimizations.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
+                      <span style={{ fontSize: "13px", color: "var(--color-text-primary)", display: "block" }}>
                         GPU Hardware Acceleration
                       </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Accelerate canvas rendering and glass blur shaders via WebGL
+                      <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)" }}>
+                        Accelerate canvas rendering and glass blur shaders via WebGL.
                       </span>
                     </div>
-                    <button
-                      className={`btn ${hardwareAcceleration ? "active" : ""}`}
-                      style={{ padding: "4px 12px", fontSize: "12px" }}
-                      onClick={() => setHardwareAcceleration && setHardwareAcceleration(!hardwareAcceleration)}
-                    >
-                      {hardwareAcceleration ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      background: "var(--color-background-secondary)",
-                      border: "1px solid var(--color-border-secondary)",
-                    }}
-                  >
-                    <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        In-Memory Document Cache
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Retain AST cache for instant tab switching across applications
-                      </span>
-                    </div>
-                    <button
-                      className={`btn ${memoryCache ? "active" : ""}`}
-                      style={{ padding: "4px 12px", fontSize: "12px" }}
-                      onClick={() => setMemoryCache(!memoryCache)}
-                    >
-                      {memoryCache ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      background: "var(--color-background-secondary)",
-                      border: "1px solid var(--color-border-secondary)",
-                    }}
-                  >
-                    <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        High-DPI Canvas Rendering
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Supersample vector graphics and text on Retina/4K displays
-                      </span>
-                    </div>
-                    <button
-                      className={`btn ${highDpi ? "active" : ""}`}
-                      style={{ padding: "4px 12px", fontSize: "12px" }}
-                      onClick={() => setHighDpi(!highDpi)}
-                    >
-                      {highDpi ? "Active (2x)" : "Standard"}
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: "1px solid var(--color-border-secondary)", paddingTop: "14px" }}>
-                  <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "8px" }}>
-                    Omega Engine Diagnostics
-                  </h4>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                    <div style={{ padding: "8px 10px", borderRadius: "6px", background: "var(--color-background-primary)", border: "1px solid var(--color-border-secondary)", fontSize: "11.5px" }}>
-                      <span style={{ fontWeight: 600, display: "block" }}>Formula Evaluator</span>
-                      <span style={{ color: "#16a34a", fontSize: "10.5px" }}>● Threaded Evaluator v2.1</span>
-                    </div>
-                    <div style={{ padding: "8px 10px", borderRadius: "6px", background: "var(--color-background-primary)", border: "1px solid var(--color-border-secondary)", fontSize: "11.5px" }}>
-                      <span style={{ fontWeight: 600, display: "block" }}>OOXML Parser</span>
-                      <span style={{ color: "#2563eb", fontSize: "10.5px" }}>● Mammoth.JS + Schemas</span>
-                    </div>
-                    <div style={{ padding: "8px 10px", borderRadius: "6px", background: "var(--color-background-primary)", border: "1px solid var(--color-border-secondary)", fontSize: "11.5px" }}>
-                      <span style={{ fontWeight: 600, display: "block" }}>PDF Engine</span>
-                      <span style={{ color: "#9333ea", fontSize: "10.5px" }}>● PDF.JS Worker Thread</span>
-                    </div>
-                    <div style={{ padding: "8px 10px", borderRadius: "6px", background: "var(--color-background-primary)", border: "1px solid var(--color-border-secondary)", fontSize: "11.5px" }}>
-                      <span style={{ fontWeight: 600, display: "block" }}>Vector Core</span>
-                      <span style={{ color: "#0891b2", fontSize: "10.5px" }}>● Native SVG 2.0 Engine</span>
-                    </div>
+                    <label className="claude-toggle">
+                      <input
+                        type="checkbox"
+                        checked={hardwareAcceleration}
+                        onChange={(e) => setHardwareAcceleration && setHardwareAcceleration(e.target.checked)}
+                      />
+                      <span className="claude-toggle-slider" />
+                    </label>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 5. General Section */}
-            {activeSection === "general" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                <div>
-                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "4px" }}>
-                    General Preferences & Security
-                  </h3>
-                  <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "16px" }}>
-                    Application localization, auto-save triggers, and local security registration.
-                  </p>
+            {/* 7. ABOUT TAB */}
+            {activeTab === "about" && (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: "10px",
+                    background: "var(--color-background-secondary)",
+                    border: "1px solid var(--color-border-secondary)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "12px",
+                    color: "var(--color-accent, #1d4ed8)",
+                  }}
+                >
+                  <SettingsIcon size={22} />
                 </div>
+                <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "4px" }}>
+                  Liberty Studio Suite
+                </h3>
+                <span style={{ fontSize: "12px", color: "var(--color-text-secondary)", display: "block", marginBottom: "16px" }}>
+                  Version v0.0.0.1.0 • Desktop Edition
+                </span>
+                <p style={{ fontSize: "12.5px", color: "var(--color-text-secondary)", maxWidth: "420px", margin: "0 auto", lineHeight: 1.5 }}>
+                  A unified document, presentation, spreadsheet, and HTML authoring suite designed with an authoritative, restrained Claude/Liberty aesthetic.
+                </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Interface Language
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        UI localized string presentation
-                      </span>
-                    </div>
-                    <select
-                      className="fsel"
-                      value={language}
-                      onChange={(e) => setLanguage && setLanguage(e.target.value)}
-                      style={{ minWidth: "160px", height: "28px" }}
-                    >
-                      <option value="en">English (US)</option>
-                      <option value="ar">العربية (Arabic)</option>
-                      <option value="fr">Français (French)</option>
-                      <option value="es">Español (Spanish)</option>
-                      <option value="de">Deutsch (German)</option>
-                    </select>
-                  </div>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Auto-Save Frequency
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        How often document changes sync to local cache
-                      </span>
-                    </div>
-                    <select
-                      className="fsel"
-                      value={autoSaveInterval}
-                      onChange={(e) => setAutoSaveInterval && setAutoSaveInterval(e.target.value)}
-                      style={{ minWidth: "160px", height: "28px" }}
-                    >
-                      <option value="instant">Instant on change (Recommended)</option>
-                      <option value="30s">Every 30 seconds</option>
-                      <option value="1m">Every 1 minute</option>
-                      <option value="manual">Manual only</option>
-                    </select>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      background: "var(--color-background-secondary)",
-                      border: "1px solid var(--color-border-secondary)",
-                    }}
+                <div style={{ marginTop: "24px", display: "flex", justifyContent: "center", gap: "8px" }}>
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{ fontSize: "12px", padding: "5px 14px" }}
+                    onClick={onClose}
                   >
-                    <div>
-                      <span style={{ fontSize: "13px", fontWeight: 600, display: "block", color: "var(--color-text-primary)" }}>
-                        Toast Notifications
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--color-text-secondary)" }}>
-                        Show popup status indicators when actions complete
-                      </span>
-                    </div>
-                    <button
-                      className={`btn ${notifications ? "active" : ""}`}
-                      style={{ padding: "4px 12px", fontSize: "12px" }}
-                      onClick={() => setNotifications(!notifications)}
-                    >
-                      {notifications ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: "1px solid var(--color-border-secondary)", paddingTop: "14px" }}>
-                  <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "8px" }}>
-                    Originality & Licensing Stamp
-                  </h4>
-                  <div
-                    style={{
-                      padding: "12px",
-                      borderRadius: "8px",
-                      background: "var(--color-background-secondary)",
-                      border: "1px solid var(--color-border-secondary)",
-                      fontSize: "11.5px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "5px",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ color: "var(--color-text-secondary)" }}>Build Edition:</span>
-                      <span style={{ fontWeight: 600 }}>v0.0.0.1.0 (Enterprise Sandboxed)</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ color: "var(--color-text-secondary)" }}>System Registration:</span>
-                      <span style={{ fontFamily: "monospace", fontWeight: 600 }}>OMS-9021-A938-CC21</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ color: "var(--color-text-secondary)" }}>Cryptographic Node:</span>
-                      <span style={{ color: "#16a34a", fontWeight: 600 }}>RSA-4096 Signed Environment</span>
-                    </div>
-                  </div>
+                    Close Settings
+                  </button>
                 </div>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Modal Footer */}
-        <div className="settings-modal-footer">
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: "var(--color-accent, #1d4ed8)",
-                display: "inline-block",
-              }}
-            />
-            <span>
-              Theme: <strong>{themeStyle || "default"}</strong> ({theme})
-            </span>
-          </div>
-
-          <button
-            className="btn active"
-            style={{
-              padding: "5px 18px",
-              fontWeight: 600,
-              fontSize: "12px",
-              borderRadius: "14px",
-            }}
-            onClick={onClose}
-          >
-            Done
-          </button>
         </div>
       </div>
     </div>
