@@ -729,21 +729,100 @@ App: ${state.activeApp.toUpperCase()}`,
   });
 
   function openBackstage() {
-    document.getElementById('view-backstage').classList.add('active');
+    const el = document.getElementById('view-backstage');
+    if (!el) return;
+    el.classList.add('active');
     switchSettingsSection('general');
   }
+  window.openBackstage = openBackstage;
 
   function closeBackstage() {
-    document.getElementById('view-backstage').classList.remove('active');
+    const el = document.getElementById('view-backstage');
+    if (!el) return;
+    el.classList.remove('active');
   }
+  window.closeBackstage = closeBackstage;
 
   function switchSettingsSection(sectionId) {
-    document.querySelectorAll('.backstage-menu-item').forEach(el => el.classList.remove('active'));
-    document.querySelector(`.backstage-menu-item[data-sec="${sectionId}"]`).classList.add('active');
+    document.querySelectorAll('.claude-nav-item, .backstage-menu-item').forEach(el => el.classList.remove('active'));
+    const activeBtn = document.querySelector(`.claude-nav-item[data-sec="${sectionId}"], .backstage-menu-item[data-sec="${sectionId}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 
     document.querySelectorAll('.settings-section').forEach(el => el.classList.add('hidden'));
-    document.getElementById('settings-' + sectionId).classList.remove('hidden');
+    const target = document.getElementById('settings-' + sectionId);
+    if (target) target.classList.remove('hidden');
   }
+  window.switchSettingsSection = switchSettingsSection;
+
+  function filterClaudeSettings(query) {
+    const q = (query || '').toLowerCase().trim();
+    document.querySelectorAll('.claude-nav-item').forEach(btn => {
+      const text = btn.innerText.toLowerCase();
+      if (!q || text.includes(q)) {
+        btn.style.display = 'flex';
+      } else {
+        btn.style.display = 'none';
+      }
+    });
+  }
+  window.filterClaudeSettings = filterClaudeSettings;
+
+  function selectSuiteTheme(themeId) {
+    document.querySelectorAll('.claude-theme-card').forEach(card => {
+      const isThis = card.getAttribute('data-theme-id') === themeId;
+      card.classList.toggle('active', isThis);
+      let badge = card.querySelector('.theme-active-badge');
+      if (isThis && !badge) {
+        const topRow = card.querySelector('.flex.items-center.justify-between');
+        if (topRow) {
+          const b = document.createElement('span');
+          b.className = 'text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium theme-active-badge';
+          b.innerText = 'Active';
+          topRow.appendChild(b);
+        }
+      } else if (!isThis && badge) {
+        badge.remove();
+      }
+    });
+
+    document.body.classList.remove('layout-basic', 'layout-liquid-glass', 'layout-modern', 'layout-classic', 'theme-coastal-warmth', 'theme-driftwood-slate', 'theme-sage-botanical');
+    if (themeId === 'liquid-glass') {
+      document.body.classList.add('layout-liquid-glass');
+    } else if (themeId === 'coastal-warmth') {
+      document.body.classList.add('theme-coastal-warmth');
+    } else if (themeId === 'driftwood-slate') {
+      document.body.classList.add('theme-driftwood-slate');
+    } else if (themeId === 'sage-botanical') {
+      document.body.classList.add('theme-sage-botanical');
+    } else {
+      document.body.classList.add('layout-basic');
+    }
+    localStorage.setItem('liberty-theme-id', themeId);
+    showToast(`Switched theme to ${themeId.replace('-', ' ').toUpperCase()}`, 2000);
+  }
+  window.selectSuiteTheme = selectSuiteTheme;
+
+  function setMotionMode(mode) {
+    document.querySelectorAll('#claude-motion-segmented .claude-segmented-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-motion') === mode);
+    });
+    if (mode === 'reduced') {
+      document.documentElement.classList.add('reduce-motion');
+    } else {
+      document.documentElement.classList.remove('reduce-motion');
+    }
+    localStorage.setItem('claude-motion-mode', mode);
+  }
+  window.setMotionMode = setMotionMode;
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const bs = document.getElementById('view-backstage');
+      if (bs && bs.classList.contains('active')) {
+        closeBackstage();
+      }
+    }
+  });
 
   // تغيير مظهر الأزرار والـ Ribbon حسب النمط المختار (Basic Capsule, Liquid Glass, Modern, Classic)
   function changeSuiteLayoutStyle(styleName) {
@@ -2277,7 +2356,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
     const icon = document.querySelector('#dark-mode-toggle i');
     if (icon) icon.className = dark ? 'ti ti-sun' : 'ti ti-moon';
-    document.querySelectorAll('#theme-selector .theme-opt').forEach(b => {
+    document.querySelectorAll('#theme-selector .theme-opt, #claude-appearance-segmented .claude-segmented-btn').forEach(b => {
       b.classList.toggle('active', b.getAttribute('data-theme') === mode);
     });
     if (state.activeApp === 'sheet' && typeof evaluateSpreadsheet === 'function') evaluateSpreadsheet();

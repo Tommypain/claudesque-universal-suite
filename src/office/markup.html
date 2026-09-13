@@ -1062,196 +1062,517 @@
 
     <div class="document-body-wrapper">
       
-      <!-- واجهة الإعدادات الخلفية الفاخرة للتحكم في المظهر ومحركات التشغيل وبصمتنا الأصلية -->
-      <div class="backstage-panel" id="view-backstage">
-        <div class="flex h-full">
-          <!-- القائمة الفرعية للإعدادات الخلفية -->
-          <div class="backstage-sidebar flex flex-col gap-2">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-[var(--color-text-primary)]"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Settings Console</h2>
-            <div class="backstage-menu-item active" data-sec="general" onclick="switchSettingsSection('general')">General Preferences</div>
-            <div class="backstage-menu-item" data-sec="appearance" onclick="switchSettingsSection('appearance')">Appearance & Colors</div>
-            <div class="backstage-menu-item" data-sec="engines" onclick="switchSettingsSection('engines')">Omega Core Engines</div>
-            <div class="backstage-menu-item" data-sec="security" onclick="switchSettingsSection('security')">Originality & Stamp</div>
-            <div class="backstage-menu-item" data-sec="about" onclick="switchSettingsSection('about')">Omega Licensing & About</div>
-            <button class="mt-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-2" onclick="closeBackstage()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Return to Document
-            </button>
+      <!-- ══ Centered Floating Settings Modal (Claude.ai Desktop Interface) ══ -->
+      <div class="backstage-panel" id="view-backstage" onclick="if(event.target === this) closeBackstage()">
+        <div class="claude-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="claude-settings-title" onclick="event.stopPropagation()">
+          
+          <!-- Top-Right Close Button -->
+          <button class="claude-close-btn" onclick="closeBackstage()" title="Close Settings (Esc)" aria-label="Close">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+
+          <!-- Sidebar -->
+          <div class="claude-settings-sidebar">
+            <!-- Search -->
+            <div class="claude-search-box">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" class="claude-search-input" id="claude-settings-search" placeholder="Search settings" oninput="filterClaudeSettings(this.value)" />
+            </div>
+
+            <!-- Settings Group -->
+            <div class="claude-nav-group" id="group-settings">
+              <div class="claude-section-title">Settings</div>
+              <button class="claude-nav-item active backstage-menu-item" data-sec="general" onclick="switchSettingsSection('general')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>General</span>
+              </button>
+              <button class="claude-nav-item backstage-menu-item" data-sec="appearance" onclick="switchSettingsSection('appearance')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                <span>Appearance</span>
+              </button>
+              <button class="claude-nav-item backstage-menu-item" data-sec="editor" onclick="switchSettingsSection('editor')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                <span>Editor</span>
+              </button>
+              <button class="claude-nav-item backstage-menu-item" data-sec="canvas" onclick="switchSettingsSection('canvas')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                <span>Canvas</span>
+              </button>
+              <button class="claude-nav-item backstage-menu-item" data-sec="about" onclick="switchSettingsSection('about')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                <span>About</span>
+              </button>
+            </div>
+
+            <!-- Customize Group -->
+            <div class="claude-nav-group" id="group-customize">
+              <div class="claude-section-title">Customize</div>
+              <button class="claude-nav-item backstage-menu-item" data-sec="shortcuts" onclick="switchSettingsSection('shortcuts')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"/></svg>
+                <span>Shortcuts</span>
+              </button>
+              <button class="claude-nav-item backstage-menu-item" data-sec="performance" onclick="switchSettingsSection('performance')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6M4 10h10M4 6h16M4 18h12"/></svg>
+                <span>Performance</span>
+              </button>
+            </div>
           </div>
 
-          <!-- محتوى الإعدادات الديناميكي -->
-          <div class="flex-1 pl-8 overflow-y-auto">
-            <!-- 1. واجهة الإعدادات العامة والتفضيلات -->
+          <!-- Main Content -->
+          <div class="claude-settings-content">
+            
+            <!-- 1. GENERAL TAB (Matching Claude Image 2) -->
             <div class="settings-section" id="settings-general">
-              <h3 class="text-xl font-bold mb-6 pb-2 border-b border-gray-200 dark:border-neutral-700">General Suite Preferences</h3>
-              
-              <!-- إعداد التحكم في مظهر الواجهة الرسومية (Layout Style Selector) -->
-              <div class="mb-8">
-                <h4 class="text-sm font-semibold mb-2">User Interface Layout Style</h4>
-                <p class="text-xs text-gray-500 mb-4">Choose the presentation structure of your suite workspace toolbar and buttons.</p>
-                <div class="grid grid-cols-2 gap-4">
-                  <!-- واجهة Basic الافتراضية - محفوظة بالكامل -->
-                  <div class="border border-gray-300 dark:border-neutral-700 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800" onclick="changeSuiteLayoutStyle('basic')">
-                    <span class="font-bold text-xs block mb-1">Basic Style (Default Capsule)</span>
-                    <span class="text-[10px] text-gray-500">The beautiful rounded floating chip pattern seen in original design guidelines.</span>
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">General</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Manage your profile details and workspace preferences.</p>
+
+              <!-- Profile Sub-section -->
+              <div class="mb-6">
+                <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] mb-3">Profile</div>
+                
+                <!-- Avatar & Identity row -->
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-10 h-10 rounded-full bg-amber-600 text-white font-semibold flex items-center justify-center text-sm shadow-sm">
+                    T
                   </div>
-                  <!-- واجهة Liquid Glass الخلابة والجديدة تماماً -->
-                  <div class="border border-gray-300 dark:border-neutral-700 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800" onclick="changeSuiteLayoutStyle('liquid-glass')">
-                    <span class="font-bold text-xs block mb-1 text-purple-600">Liquid Glass Layout (Apple macOS Style)</span>
-                    <span class="text-[10px] text-gray-500">Glassmorphism effects, saturated blurs, glowing boundaries inspired by Apple's design language.</span>
+                  <div>
+                    <div class="text-sm font-semibold text-[var(--color-text-primary)]">Tommy Pain</div>
+                    <div class="text-xs text-[var(--color-text-tertiary)]">tommypain@claudesque.local</div>
                   </div>
-                  <div class="border border-gray-300 dark:border-neutral-700 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800" onclick="changeSuiteLayoutStyle('modern')">
-                    <span class="font-bold text-xs block mb-1">Modern Rounded Style</span>
-                    <span class="text-[10px] text-gray-500">Borderless, sleek flat UI elements that highlighted smoothly on cursor hover.</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Full name</label>
+                    <input type="text" class="claude-input" value="Tommy Pain" />
                   </div>
-                  <div class="border border-gray-300 dark:border-neutral-700 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800" onclick="changeSuiteLayoutStyle('classic')">
-                    <span class="font-bold text-xs block mb-1">Classic Office Grid</span>
-                    <span class="text-[10px] text-gray-500">Tight packing grids with smaller boundaries, mimicking vintage desktop platforms.</span>
+                  <div>
+                    <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Nickname</label>
+                    <input type="text" class="claude-input" value="Tommy" />
                   </div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">What best describes your work?</label>
+                  <select class="claude-select w-full">
+                    <option selected>Software Engineering</option>
+                    <option>Product & Management</option>
+                    <option>Design & Creative</option>
+                    <option>Education & Research</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">What would you like Claude to know about you to provide better responses?</label>
+                  <textarea class="claude-textarea" placeholder="Share your coding style, technical stack, or preferred response format...">Pair programming on Claudesque Universal Suite (v0.0.0.1.0). Clean modular architecture, TypeScript/Rust/Node, high performance standards.</textarea>
                 </div>
               </div>
 
-              <!-- إعداد الحفظ التلقائي والخطوط الافتراضية -->
-              <div class="grid grid-cols-2 gap-6 mb-8">
-                <div class="border border-gray-200 dark:border-neutral-700 p-4 rounded-lg">
-                  <span class="font-bold text-xs block mb-2">Auto-Save Mechanism</span>
-                  <p class="text-[11px] text-gray-500 mb-4">Select the automatic state writing interval into secure local sandbox caches.</p>
-                  <select class="fsel w-full" id="settings-autosave-interval">
-                    <option value="1">Every 1 Minute (High Security)</option>
-                    <option value="5" selected>Every 5 Minutes (Standard)</option>
-                    <option value="10">Every 10 Minutes (Low Overhead)</option>
-                  </select>
-                </div>
-                <div class="border border-gray-200 dark:border-neutral-700 p-4 rounded-lg">
-                  <span class="font-bold text-xs block mb-2">Default Base Typographies</span>
-                  <p class="text-[11px] text-gray-500 mb-4">Set default typographic family to render on all document streams initialization.</p>
-                  <select class="fsel w-full" id="settings-default-font">
-                    <option value="Calibri">Calibri (Standard)</option>
-                    <option value="Arial">Arial (Sleek)</option>
-                    <option value="Georgia">Georgia (Classic Book)</option>
-                  </select>
+              <!-- Preferences Sub-section -->
+              <div class="pt-4 border-t border-[var(--color-border-secondary)]">
+                <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] mb-4">Preferences</div>
+
+                <div class="space-y-4">
+                  <!-- Appearance mode -->
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="text-xs font-medium text-[var(--color-text-primary)]">Appearance</div>
+                      <div class="text-[11px] text-[var(--color-text-tertiary)]">Choose your interface color scheme</div>
+                    </div>
+                    <div class="claude-segmented-control" id="claude-appearance-segmented">
+                      <button type="button" class="claude-segmented-btn" data-theme="system" onclick="setThemeMode('system')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                        System
+                      </button>
+                      <button type="button" class="claude-segmented-btn" data-theme="light" onclick="setThemeMode('light')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                        Light
+                      </button>
+                      <button type="button" class="claude-segmented-btn" data-theme="dark" onclick="setThemeMode('dark')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                        Dark
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Font family -->
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="text-xs font-medium text-[var(--color-text-primary)]">Workspace Font</div>
+                      <div class="text-[11px] text-[var(--color-text-tertiary)]">Default typography for documents</div>
+                    </div>
+                    <select class="claude-select" style="min-width:180px;" onchange="document.body.style.fontFamily = this.value">
+                      <option value="system-ui, sans-serif" selected>System default</option>
+                      <option value="Georgia, serif">Georgia (Serif)</option>
+                      <option value="'JetBrains Mono', monospace">JetBrains Mono (Code)</option>
+                      <option value="'Inter', sans-serif">Inter (Modern)</option>
+                    </select>
+                  </div>
+
+                  <!-- Motion -->
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="text-xs font-medium text-[var(--color-text-primary)]">Motion</div>
+                      <div class="text-[11px] text-[var(--color-text-tertiary)]">Control transitions and animation fluidity</div>
+                    </div>
+                    <div class="claude-segmented-control" id="claude-motion-segmented">
+                      <button type="button" class="claude-segmented-btn active" data-motion="system" onclick="setMotionMode('system')">System</button>
+                      <button type="button" class="claude-segmented-btn" data-motion="reduced" onclick="setMotionMode('reduced')">Reduced</button>
+                    </div>
+                  </div>
+
+                  <!-- Auto-save interval -->
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="text-xs font-medium text-[var(--color-text-primary)]">Auto-save interval</div>
+                      <div class="text-[11px] text-[var(--color-text-tertiary)]">State caching frequency</div>
+                    </div>
+                    <select class="claude-select" id="settings-autosave-interval" style="min-width:180px;">
+                      <option value="0" selected>Instant (On change)</option>
+                      <option value="1">Every 1 minute</option>
+                      <option value="5">Every 5 minutes</option>
+                      <option value="manual">Manual (Ctrl+S only)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Appearance & Colors -->
+            <!-- 2. APPEARANCE TAB -->
             <div class="settings-section hidden" id="settings-appearance">
-              <h3 class="text-xl font-bold mb-6 pb-2 border-b border-gray-200 dark:border-neutral-700">Appearance & Colors</h3>
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Appearance</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Customize themes, palettes, and application accent highlights.</p>
 
-              <!-- Theme selector -->
-              <div class="mb-8">
-                <h4 class="text-sm font-semibold mb-3">Theme</h4>
-                <div class="flex gap-3" id="theme-selector">
-                  <button class="theme-opt btn" data-theme="light" onclick="setThemeMode('light')">Light</button>
-                  <button class="theme-opt btn" data-theme="dark" onclick="setThemeMode('dark')">Dark</button>
-                  <button class="theme-opt btn" data-theme="system" onclick="setThemeMode('system')">System</button>
+              <!-- Themes Grid -->
+              <div class="mb-6">
+                <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] mb-3">Theme Presets</div>
+                <div class="grid grid-cols-2 gap-3" id="theme-presets-grid">
+                  <div class="claude-theme-card active cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="default" onclick="selectSuiteTheme('default')">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Default (Liberty Classic)</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium">Active</span>
+                    </div>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Ivory surfaces with warm borders and classic capsule buttons.</p>
+                    <div class="flex gap-1.5">
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #fafaf9;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #2563eb;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #16a34a;"></div>
+                    </div>
+                  </div>
+
+                  <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="liquid-glass" onclick="selectSuiteTheme('liquid-glass')">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">macOS Liquid Glass</span>
+                    </div>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Translucent acrylic materials, specular borders, saturated blur.</p>
+                    <div class="flex gap-1.5">
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: rgba(255,255,255,0.76);"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #007aff;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #5856d6;"></div>
+                    </div>
+                  </div>
+
+                  <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="coastal-warmth" onclick="selectSuiteTheme('coastal-warmth')">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Coastal Warmth</span>
+                    </div>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Muslin parchment canvas, terracotta tones, chambray accents.</p>
+                    <div class="flex gap-1.5">
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #fdfbf7;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #c2410c;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #3b82f6;"></div>
+                    </div>
+                  </div>
+
+                  <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="driftwood-slate" onclick="selectSuiteTheme('driftwood-slate')">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Driftwood & Slate</span>
+                    </div>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Pearl Shell surfaces, Slate Pebble accents, Coastal Sand cards.</p>
+                    <div class="flex gap-1.5">
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #f4f4f3;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #475569;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #d97706;"></div>
+                    </div>
+                  </div>
+
+                  <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="sage-botanical" onclick="selectSuiteTheme('sage-botanical')">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Sage Botanical</span>
+                    </div>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Plaster surfaces with eucalyptus accents and botanical moss highlights.</p>
+                    <div class="flex gap-1.5">
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #f2f5f3;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #059669;"></div>
+                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #10b981;"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Accent colors -->
-              <div class="mb-8">
-                <h4 class="text-sm font-semibold mb-3">App Accent Colors</h4>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="flex items-center gap-3 border border-gray-200 dark:border-neutral-700 p-3 rounded-lg">
-                    <input type="color" id="accent-write" value="#1d4ed8" onchange="setAccentColor('write', this.value)" style="width:40px;height:40px;border:none;background:none;cursor:pointer;border-radius:8px">
-                    <div class="flex-1"><span class="font-bold text-xs block">Octopus Write</span><span class="text-[10px] text-gray-500">Document accent</span></div>
+              <!-- Accent Colors -->
+              <div class="pt-4 border-t border-[var(--color-border-secondary)]">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">Suite Accent Colors</div>
+                  <button type="button" class="btn text-xs" onclick="resetAllAccentColors()">Reset all</button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="flex items-center gap-3 p-2.5 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]">
+                    <input type="color" id="accent-write" value="#1d4ed8" onchange="setAccentColor('write', this.value)" style="width:34px;height:34px;border:none;background:none;cursor:pointer;border-radius:6px" />
+                    <div class="flex-1 min-w-0">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)] block truncate">Word Processor</span>
+                      <span class="text-[10px] text-[var(--color-text-tertiary)]">Document accent</span>
+                    </div>
                     <button class="btn text-[10px]" onclick="resetAccentColor('write')">Reset</button>
                   </div>
-                  <div class="flex items-center gap-3 border border-gray-200 dark:border-neutral-700 p-3 rounded-lg">
-                    <input type="color" id="accent-sheet" value="#15803d" onchange="setAccentColor('sheet', this.value)" style="width:40px;height:40px;border:none;background:none;cursor:pointer;border-radius:8px">
-                    <div class="flex-1"><span class="font-bold text-xs block">Octopus Sheet</span><span class="text-[10px] text-gray-500">Spreadsheet accent</span></div>
+
+                  <div class="flex items-center gap-3 p-2.5 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]">
+                    <input type="color" id="accent-sheet" value="#15803d" onchange="setAccentColor('sheet', this.value)" style="width:34px;height:34px;border:none;background:none;cursor:pointer;border-radius:6px" />
+                    <div class="flex-1 min-w-0">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)] block truncate">Spreadsheet</span>
+                      <span class="text-[10px] text-[var(--color-text-tertiary)]">Grid & cell accent</span>
+                    </div>
                     <button class="btn text-[10px]" onclick="resetAccentColor('sheet')">Reset</button>
                   </div>
-                  <div class="flex items-center gap-3 border border-gray-200 dark:border-neutral-700 p-3 rounded-lg">
-                    <input type="color" id="accent-present" value="#b45309" onchange="setAccentColor('present', this.value)" style="width:40px;height:40px;border:none;background:none;cursor:pointer;border-radius:8px">
-                    <div class="flex-1"><span class="font-bold text-xs block">Octopus Present</span><span class="text-[10px] text-gray-500">Presentation accent</span></div>
+
+                  <div class="flex items-center gap-3 p-2.5 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]">
+                    <input type="color" id="accent-present" value="#b45309" onchange="setAccentColor('present', this.value)" style="width:34px;height:34px;border:none;background:none;cursor:pointer;border-radius:6px" />
+                    <div class="flex-1 min-w-0">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)] block truncate">Impress Slides</span>
+                      <span class="text-[10px] text-[var(--color-text-tertiary)]">Presentation accent</span>
+                    </div>
                     <button class="btn text-[10px]" onclick="resetAccentColor('present')">Reset</button>
                   </div>
-                  <div class="flex items-center gap-3 border border-gray-200 dark:border-neutral-700 p-3 rounded-lg">
-                    <input type="color" id="accent-pdf" value="#7c3aed" onchange="setAccentColor('pdf', this.value)" style="width:40px;height:40px;border:none;background:none;cursor:pointer;border-radius:8px">
-                    <div class="flex-1"><span class="font-bold text-xs block">Octopus PDF</span><span class="text-[10px] text-gray-500">PDF accent</span></div>
+
+                  <div class="flex items-center gap-3 p-2.5 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]">
+                    <input type="color" id="accent-pdf" value="#7c3aed" onchange="setAccentColor('pdf', this.value)" style="width:34px;height:34px;border:none;background:none;cursor:pointer;border-radius:6px" />
+                    <div class="flex-1 min-w-0">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)] block truncate">PDF Editor</span>
+                      <span class="text-[10px] text-[var(--color-text-tertiary)]">Annotation accent</span>
+                    </div>
                     <button class="btn text-[10px]" onclick="resetAccentColor('pdf')">Reset</button>
                   </div>
                 </div>
               </div>
-
-              <!-- Preview swatch -->
-              <div class="mb-8">
-                <h4 class="text-sm font-semibold mb-3">Preview</h4>
-                <div style="display:inline-grid;grid-template-columns:48px 48px;grid-template-rows:48px 48px;gap:4px;border-radius:50%;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.15)">
-                  <div id="swatch-write" style="background:var(--color-write)"></div>
-                  <div id="swatch-sheet" style="background:var(--color-sheet)"></div>
-                  <div id="swatch-present" style="background:var(--color-present)"></div>
-                  <div id="swatch-pdf" style="background:var(--color-pdf)"></div>
-                </div>
-              </div>
-
-              <button class="btn" onclick="resetAllAccentColors()" style="font-weight:600">Reset all to defaults</button>
             </div>
 
-            <!-- 2. محركات ومكتبات أوميجا المستقلة والأصلية بالكامل لمنع مشاكل مايكروسوفت -->
-            <div class="settings-section hidden" id="settings-engines">
-              <h3 class="text-xl font-bold mb-6 pb-2 border-b border-gray-200 dark:border-neutral-700">Proprietary Omega Core Engines</h3>
-              <p class="text-xs text-gray-500 mb-6">Omega Office utilizes proprietary engines completely independent of Microsoft proprietary APIs. This guarantees 100% legal compliance and absolute execution safety.</p>
+            <!-- 3. EDITOR TAB -->
+            <div class="settings-section hidden" id="settings-editor">
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Editor</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Configure document rendering, text behavior, and typography sizing.</p>
 
               <div class="space-y-4">
-                <div class="border border-gray-200 dark:border-neutral-700 p-4 rounded-lg flex items-center justify-between">
+                <div class="flex items-center justify-between">
                   <div>
-                    <span class="font-bold text-sm block">OmegaCalc Engine v4.1 (Spreadsheet Parser)</span>
-                    <span class="text-xs text-gray-500 block">Proprietary math parser running localized matrix mathematics for the Sheets app.</span>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Base Font Size</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Default font size across page streams</div>
                   </div>
-                  <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">Running (Original API)</span>
+                  <select class="claude-select" style="min-width:160px;">
+                    <option>12px (Compact)</option>
+                    <option selected>14px (Standard)</option>
+                    <option>16px (Comfortable)</option>
+                    <option>18px (Large)</option>
+                  </select>
                 </div>
-                <div class="border border-gray-200 dark:border-neutral-700 p-4 rounded-lg flex items-center justify-between">
+
+                <div class="flex items-center justify-between">
                   <div>
-                    <span class="font-bold text-sm block">OmegaRender Engine v5.2 (Word & Presentation Layer)</span>
-                    <span class="text-xs text-gray-500 block">Independently styled pagination and text-bounding flow processor.</span>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Line Height</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Vertical line spacing within document text</div>
                   </div>
-                  <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">Running (Original API)</span>
+                  <select class="claude-select" style="min-width:160px;">
+                    <option>Compact (1.4)</option>
+                    <option selected>Normal (1.6)</option>
+                    <option>Relaxed (1.8)</option>
+                  </select>
                 </div>
-                <div class="border border-gray-200 dark:border-neutral-700 p-4 rounded-lg flex items-center justify-between">
+
+                <div class="flex items-center justify-between pt-3 border-t border-[var(--color-border-secondary)]">
                   <div>
-                    <span class="font-bold text-sm block">OmegaSign & Ink Core v3.5 (PDF Drawing Engine)</span>
-                    <span class="text-xs text-gray-500 block">Vector overlay layout supporting pen tracking, erasing, and signature physics.</span>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Auto Word Wrap</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Wrap lines automatically to match print boundaries</div>
                   </div>
-                  <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">Running (Original API)</span>
+                  <label class="claude-toggle">
+                    <input type="checkbox" checked />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Bracket & Quote Auto-Pairing</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Automatically insert closing brackets and quotation marks</div>
+                  </div>
+                  <label class="claude-toggle">
+                    <input type="checkbox" checked />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Line Numbers & Margin Guides</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Show gutter line counters and page bleed marks</div>
+                  </div>
+                  <label class="claude-toggle">
+                    <input type="checkbox" />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
                 </div>
               </div>
             </div>
 
-            <!-- 3. بصمتنا الأصلية وبراءة التصميم المستقلة -->
-            <div class="settings-section hidden" id="settings-security">
-              <h3 class="text-xl font-bold mb-6 pb-2 border-b border-gray-200 dark:border-neutral-700">Originality Stamp & Brand Certificate</h3>
-              <div class="border border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900/50 p-6 rounded-lg mb-6">
-                <h4 class="font-bold text-sm text-yellow-800 dark:text-yellow-400 mb-2">Originality Assurance & Legal Compliance Guarantee</h4>
-                <p class="text-xs text-yellow-900 dark:text-yellow-300 leading-relaxed">
-                  Omega Office Suite is certified original software. Built strictly on open-standard web vector structures (SVG, HTML5 Canvas, OmegaCalc engines), it contains <strong>no proprietary code or trademarks owned by Microsoft Corporation</strong>. This ensures full compliance with global antitrust legislation and safe enterprise application usage.
-                </p>
-              </div>
-              <div class="flex gap-4">
-                <div class="border border-gray-200 dark:border-neutral-700 p-4 rounded-lg text-center flex-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"/></svg>
-                  <span class="font-bold text-xs block mb-1">Microsoft Compliant</span>
-                  <p class="text-[10px] text-gray-500">100% legal and decoupled from traditional proprietary office frameworks.</p>
+            <!-- 4. CANVAS TAB -->
+            <div class="settings-section hidden" id="settings-canvas">
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Canvas</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Grid, snap parameters, rulers, and measurement dimensions.</p>
+
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Background Dot Grid</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Render subtle dot grid on drawing canvases and slides</div>
+                  </div>
+                  <label class="claude-toggle">
+                    <input type="checkbox" checked />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
                 </div>
-                <div class="border border-gray-200 dark:border-neutral-700 p-4 rounded-lg text-center flex-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M14 6l-8.5 8.5 3 3L17 9M19 4l1 1M4 20l.5.5"/></svg>
-                  <span class="font-bold text-xs block mb-1">Open Standards Approved</span>
-                  <p class="text-[10px] text-gray-500">Adhering completely to OpenDocument schemas and JSON formats.</p>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Snap to 8px Grid</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Constrain element moves to 8px intervals</div>
+                  </div>
+                  <label class="claude-toggle">
+                    <input type="checkbox" checked />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Document Rulers</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Display real physical centimeter/inch rulers</div>
+                  </div>
+                  <label class="claude-toggle">
+                    <input type="checkbox" checked />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-[var(--color-border-secondary)]">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Measurement Unit</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Primary scale for margins, padding, and layout</div>
+                  </div>
+                  <select class="claude-select" style="min-width:160px;">
+                    <option selected>Millimeters (mm — Physical A4)</option>
+                    <option>Pixels (px — Digital 96 DPI)</option>
+                    <option>Inches (in — US Letter)</option>
+                  </select>
                 </div>
               </div>
             </div>
 
-            <!-- 4. الترخيص والمعلومات الفنية -->
+            <!-- 5. ABOUT TAB (Zero Bloat) -->
             <div class="settings-section hidden" id="settings-about">
-              <h3 class="text-xl font-bold mb-6 pb-2 border-b border-gray-200 dark:border-neutral-700">Omega Licensing & About</h3>
-              <div class="border border-gray-200 dark:border-neutral-700 p-6 rounded-lg text-center">
-                <div class="w-16 h-16 rounded-full border border-gray-400 flex items-center justify-center font-bold text-xl mx-auto mb-4 bg-gray-50 dark:bg-neutral-800">Ω</div>
-                <h4 class="font-bold text-base mb-1">Omega Office Suite</h4>
-                <span class="text-xs text-gray-400 block mb-4">Enterprise Edition - v3.5 (Fully Licensed)</span>
-                <p class="text-xs text-gray-500 max-w-lg mx-auto leading-relaxed mb-6">
-                  Copyright © 2026 Omega Core Technologies. All software parameters, calculations engines, vector draw canvases and layout presets are legally signed, protected, and fully compiled under local sandbox paradigms.
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">About</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Suite version and application details.</p>
+
+              <div class="p-4 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] mb-4">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-8 h-8 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center text-sm">C</div>
+                  <div>
+                    <div class="text-sm font-semibold text-[var(--color-text-primary)]">Claudesque Universal Suite</div>
+                    <div class="text-xs text-[var(--color-text-tertiary)]">Version v0.0.0.1.0</div>
+                  </div>
+                </div>
+                <p class="text-xs text-[var(--color-text-secondary)] leading-relaxed mb-3">
+                  Free browser-based office suite featuring Word Processor, Impress Slides, Sheet Spreadsheets, PDF Annotation, and HTML Studio.
                 </p>
-                <div class="text-xs font-semibold text-gray-400">Omega System ID: OMS-9021-A938-CC21</div>
+                <div class="text-[11px] text-[var(--color-text-tertiary)]">
+                  Repository: <code class="px-1 py-0.5 rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)]">git@github.com:Tommypain/claudesque-universal-suite.git</code>
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. SHORTCUTS TAB -->
+            <div class="settings-section hidden" id="settings-shortcuts">
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Keyboard Shortcuts</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Quick reference for common suite commands.</p>
+
+              <div class="divide-y divide-[var(--color-border-secondary)] border border-[var(--color-border-secondary)] rounded-lg overflow-hidden">
+                <div class="flex items-center justify-between p-3 bg-[var(--color-background-secondary)]">
+                  <span class="text-xs text-[var(--color-text-primary)]">Save Document</span>
+                  <kbd class="px-2 py-1 text-[11px] font-mono rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)] shadow-sm">Ctrl + S</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-[var(--color-background-secondary)]">
+                  <span class="text-xs text-[var(--color-text-primary)]">Open File</span>
+                  <kbd class="px-2 py-1 text-[11px] font-mono rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)] shadow-sm">Ctrl + O</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-[var(--color-background-secondary)]">
+                  <span class="text-xs text-[var(--color-text-primary)]">Undo Last Action</span>
+                  <kbd class="px-2 py-1 text-[11px] font-mono rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)] shadow-sm">Ctrl + Z</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-[var(--color-background-secondary)]">
+                  <span class="text-xs text-[var(--color-text-primary)]">Redo Last Action</span>
+                  <kbd class="px-2 py-1 text-[11px] font-mono rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)] shadow-sm">Ctrl + Y</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-[var(--color-background-secondary)]">
+                  <span class="text-xs text-[var(--color-text-primary)]">Print / Export PDF</span>
+                  <kbd class="px-2 py-1 text-[11px] font-mono rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)] shadow-sm">Ctrl + P</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-[var(--color-background-secondary)]">
+                  <span class="text-xs text-[var(--color-text-primary)]">Find & Replace</span>
+                  <kbd class="px-2 py-1 text-[11px] font-mono rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)] shadow-sm">Ctrl + F</kbd>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-[var(--color-background-secondary)]">
+                  <span class="text-xs text-[var(--color-text-primary)]">Close Modals / Settings</span>
+                  <kbd class="px-2 py-1 text-[11px] font-mono rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)] shadow-sm">Esc</kbd>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7. PERFORMANCE TAB -->
+            <div class="settings-section hidden" id="settings-performance">
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Performance</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Rendering engines and cache management.</p>
+
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Hardware Acceleration</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Utilize WebGL GPU rasterization for canvas rendering</div>
+                  </div>
+                  <label class="claude-toggle">
+                    <input type="checkbox" checked />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">Document In-Memory Cache</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Retain compiled DOM nodes and formula ASTs in memory</div>
+                  </div>
+                  <label class="claude-toggle">
+                    <input type="checkbox" checked />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-medium text-[var(--color-text-primary)]">High-DPI 2x Supersampling</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Render vector elements at double resolution on Retina screens</div>
+                  </div>
+                  <label class="claude-toggle">
+                    <input type="checkbox" checked />
+                    <span class="claude-toggle-slider"></span>
+                  </label>
+                </div>
               </div>
             </div>
 

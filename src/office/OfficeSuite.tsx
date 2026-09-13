@@ -110,8 +110,17 @@ export default function OfficeSuite() {
     document.documentElement.classList.add("omega-host");
 
     // StrictMode re-invokes effects on the SAME DOM node; if we've already
-    // injected and the markup is still present, do nothing.
-    if (booted && container.childElementCount > 0) return;
+    // injected and the markup is still present, sync backstage on HMR and return.
+    if (booted && container.childElementCount > 0) {
+      const oldBackstage = container.querySelector("#view-backstage");
+      const temp = document.createElement("div");
+      temp.innerHTML = markup;
+      const newBackstage = temp.querySelector("#view-backstage");
+      if (oldBackstage && newBackstage) {
+        oldBackstage.replaceWith(newBackstage);
+      }
+      return;
+    }
     booted = true;
 
     // Inject the markup ONCE, imperatively — React will not reconcile it.
