@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StudioRouteImport } from './routes/studio'
 import { Route as LibertyDocsRouteImport } from './routes/liberty-docs'
 import { Route as LibertyRouteImport } from './routes/liberty'
 import { Route as IndexRouteImport } from './routes/index'
 
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibertyDocsRoute = LibertyDocsRouteImport.update({
   id: '/liberty-docs',
   path: '/liberty-docs',
@@ -33,34 +39,45 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/liberty': typeof LibertyRoute
   '/liberty-docs': typeof LibertyDocsRoute
+  '/studio': typeof StudioRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/liberty': typeof LibertyRoute
   '/liberty-docs': typeof LibertyDocsRoute
+  '/studio': typeof StudioRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/liberty': typeof LibertyRoute
   '/liberty-docs': typeof LibertyDocsRoute
+  '/studio': typeof StudioRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/liberty' | '/liberty-docs'
+  fullPaths: '/' | '/liberty' | '/liberty-docs' | '/studio'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/liberty' | '/liberty-docs'
-  id: '__root__' | '/' | '/liberty' | '/liberty-docs'
+  to: '/' | '/liberty' | '/liberty-docs' | '/studio'
+  id: '__root__' | '/' | '/liberty' | '/liberty-docs' | '/studio'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibertyRoute: typeof LibertyRoute
   LibertyDocsRoute: typeof LibertyDocsRoute
+  StudioRoute: typeof StudioRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/liberty-docs': {
       id: '/liberty-docs'
       path: '/liberty-docs'
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibertyRoute: LibertyRoute,
   LibertyDocsRoute: LibertyDocsRoute,
+  StudioRoute: StudioRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
