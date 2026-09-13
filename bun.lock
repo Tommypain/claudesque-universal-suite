@@ -6,6 +6,11 @@
       "name": "tanstack_start_ts",
       "dependencies": {
         "@hookform/resolvers": "^5.2.2",
+        "@liberty/design-system": "file:packages/design-system",
+        "@liberty/icons": "file:packages/icons",
+        "@liberty/shared-hooks": "file:packages/shared-hooks",
+        "@liberty/themes": "file:packages/themes",
+        "@liberty/ui": "file:packages/ui",
         "@radix-ui/react-accordion": "^1.2.12",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-aspect-ratio": "^1.1.8",
@@ -73,10 +78,173 @@
         "eslint-plugin-react-refresh": "^0.4.20",
         "globals": "^15.15.0",
         "nitro": "3.0.260603-beta",
+        "pnpm": "^11.9.0",
         "prettier": "^3.7.3",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.56.1",
         "vite": "^7.3.1",
+      },
+    },
+    "apps/liberty-design": {
+      "name": "@liberty/design-app",
+      "version": "1.0.0",
+      "dependencies": {
+        "@liberty/design-system": "file:../../packages/design-system",
+        "@liberty/icons": "file:../../packages/icons",
+        "@liberty/shared-hooks": "file:../../packages/shared-hooks",
+        "@liberty/themes": "file:../../packages/themes",
+        "@liberty/ui": "file:../../packages/ui",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "@vitejs/plugin-react": "^5.0.4",
+        "typescript": "^5.8.3",
+        "vite": "^7.3.1",
+      },
+    },
+    "apps/liberty-docs": {
+      "name": "@liberty/docs-app",
+      "version": "1.0.0",
+      "dependencies": {
+        "@liberty/design-system": "file:../../packages/design-system",
+        "@liberty/icons": "file:../../packages/icons",
+        "@liberty/shared-hooks": "file:../../packages/shared-hooks",
+        "@liberty/themes": "file:../../packages/themes",
+        "@liberty/ui": "file:../../packages/ui",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "@vitejs/plugin-react": "^5.0.4",
+        "typescript": "^5.8.3",
+        "vite": "^7.3.1",
+      },
+    },
+    "apps/liberty-hub": {
+      "name": "@liberty/hub-app",
+      "version": "1.0.0",
+      "dependencies": {
+        "@liberty/design-system": "file:../../packages/design-system",
+        "@liberty/icons": "file:../../packages/icons",
+        "@liberty/shared-hooks": "file:../../packages/shared-hooks",
+        "@liberty/themes": "file:../../packages/themes",
+        "@liberty/ui": "file:../../packages/ui",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "@vitejs/plugin-react": "^5.0.4",
+        "typescript": "^5.8.3",
+        "vite": "^7.3.1",
+      },
+    },
+    "apps/liberty-impress": {
+      "name": "@liberty/impress-app",
+      "version": "1.0.0",
+      "dependencies": {
+        "@liberty/design-system": "file:../../packages/design-system",
+        "@liberty/icons": "file:../../packages/icons",
+        "@liberty/shared-hooks": "file:../../packages/shared-hooks",
+        "@liberty/themes": "file:../../packages/themes",
+        "@liberty/ui": "file:../../packages/ui",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "@vitejs/plugin-react": "^5.0.4",
+        "typescript": "^5.8.3",
+        "vite": "^7.3.1",
+      },
+    },
+    "apps/liberty-sheets": {
+      "name": "@liberty/sheets-app",
+      "version": "1.0.0",
+      "dependencies": {
+        "@liberty/design-system": "file:../../packages/design-system",
+        "@liberty/icons": "file:../../packages/icons",
+        "@liberty/shared-hooks": "file:../../packages/shared-hooks",
+        "@liberty/themes": "file:../../packages/themes",
+        "@liberty/ui": "file:../../packages/ui",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "@vitejs/plugin-react": "^5.0.4",
+        "typescript": "^5.8.3",
+        "vite": "^7.3.1",
+      },
+    },
+    "apps/liberty-voice": {
+      "name": "@liberty/voice-app",
+      "version": "1.0.0",
+      "dependencies": {
+        "@liberty/design-system": "file:../../packages/design-system",
+        "@liberty/icons": "file:../../packages/icons",
+        "@liberty/shared-hooks": "file:../../packages/shared-hooks",
+        "@liberty/themes": "file:../../packages/themes",
+        "@liberty/ui": "file:../../packages/ui",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "@vitejs/plugin-react": "^5.0.4",
+        "typescript": "^5.8.3",
+        "vite": "^7.3.1",
+      },
+    },
+    "packages/design-system": {
+      "name": "@liberty/design-system",
+      "version": "1.0.0",
+      "dependencies": {
+        "react": "^19.2.0",
+      },
+    },
+    "packages/icons": {
+      "name": "@liberty/icons",
+      "version": "1.0.0",
+      "dependencies": {
+        "lucide-react": "^0.575.0",
+        "react": "^19.2.0",
+      },
+    },
+    "packages/plugin-sdk": {
+      "name": "@liberty/plugin-sdk",
+      "version": "2.0.4",
+    },
+    "packages/shared-hooks": {
+      "name": "@liberty/shared-hooks",
+      "version": "1.0.0",
+      "dependencies": {
+        "react": "^19.2.0",
+        "zustand": "^5.0.14",
+      },
+    },
+    "packages/themes": {
+      "name": "@liberty/themes",
+      "version": "1.0.0",
+    },
+    "packages/ui": {
+      "name": "@liberty/ui",
+      "version": "1.0.0",
+      "dependencies": {
+        "@liberty/icons": "file:../icons",
+        "@liberty/shared-hooks": "file:../shared-hooks",
+        "@liberty/themes": "file:../themes",
+        "lucide-react": "^0.575.0",
+        "react": "^19.2.0",
       },
     },
   },
@@ -234,6 +402,30 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
+
+    "@liberty/design-app": ["@liberty/design-app@workspace:apps/liberty-design"],
+
+    "@liberty/design-system": ["@liberty/design-system@workspace:packages/design-system"],
+
+    "@liberty/docs-app": ["@liberty/docs-app@workspace:apps/liberty-docs"],
+
+    "@liberty/hub-app": ["@liberty/hub-app@workspace:apps/liberty-hub"],
+
+    "@liberty/icons": ["@liberty/icons@workspace:packages/icons"],
+
+    "@liberty/impress-app": ["@liberty/impress-app@workspace:apps/liberty-impress"],
+
+    "@liberty/plugin-sdk": ["@liberty/plugin-sdk@workspace:packages/plugin-sdk"],
+
+    "@liberty/shared-hooks": ["@liberty/shared-hooks@workspace:packages/shared-hooks"],
+
+    "@liberty/sheets-app": ["@liberty/sheets-app@workspace:apps/liberty-sheets"],
+
+    "@liberty/themes": ["@liberty/themes@workspace:packages/themes"],
+
+    "@liberty/ui": ["@liberty/ui@workspace:packages/ui"],
+
+    "@liberty/voice-app": ["@liberty/voice-app@workspace:apps/liberty-voice"],
 
     "@lovable.dev/vite-plugin-dev-server-bridge": ["@lovable.dev/vite-plugin-dev-server-bridge@1.0.2", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@lovable.dev/vite-plugin-dev-server-bridge/-/vite-plugin-dev-server-bridge-1.0.2.tgz", { "peerDependencies": { "vite": ">=5.0.0 <9.0.0" } }, "sha512-1c4XLFkpS614VxPyq+IX0us52vm5JWxdO1NfG2L1FjH0asKvHNu5//6wpnKHWmx60Y4HR1gcLaIiLACXIdeFyg=="],
 
@@ -984,6 +1176,8 @@
     "pify": ["pify@2.3.0", "", {}, "sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog=="],
 
     "pirates": ["pirates@4.0.7", "", {}, "sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA=="],
+
+    "pnpm": ["pnpm@11.26.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/pnpm/-/pnpm-11.26.0.tgz", { "bin": { "pn": "bin/pnpm.mjs", "pnpm": "bin/pnpm.mjs", "pnpx": "bin/pnpx.mjs", "pnx": "bin/pnpx.mjs" } }, "sha512-/A4r+JC5+YNhHxq2jAY3vOkUOQZTaZ+DwaeLAF7SXyyB53kgyP2O7i7PC1iyjNywCoTZf2m898VrLzRHECOGZA=="],
 
     "postcss": ["postcss@8.5.10", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-pMMHxBOZKFU6HgAZ4eyGnwXF/EvPGGqUr0MnZ5+99485wwW41kW91A4LOGxSHhgugZmSChL5AlElNdwlNgcnLQ=="],
 
