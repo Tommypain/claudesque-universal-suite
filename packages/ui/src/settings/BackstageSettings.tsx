@@ -44,6 +44,12 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
   const setTheme = useAppStore((s: any) => s.setTheme);
   const themeStyle = useAppStore((s: any) => s.themeStyle);
   const setThemeStyle = useAppStore((s: any) => s.setThemeStyle);
+  const mode = useAppStore((s: any) => s.mode || "normal");
+  const setMode = useAppStore((s: any) => s.setMode);
+  const taste = useAppStore((s: any) => s.taste || "default");
+  const setTaste = useAppStore((s: any) => s.setTaste);
+  const colorScheme = useAppStore((s: any) => s.colorScheme || s.theme || "system");
+  const setColorScheme = useAppStore((s: any) => s.setColorScheme || s.setTheme);
   const colors = useAppStore((s: any) => s.colors);
   const setColor = useAppStore((s: any) => s.setColor);
   const resetColor = useAppStore((s: any) => s.resetColor);
@@ -128,38 +134,58 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
     { id: "performance", label: "Performance", icon: <SlidersIcon size={16} /> },
   ] as const;
 
-  const themeOptions = [
+  const modeOptions = [
     {
-      id: "default",
-      name: "Default Theme (Liberty Classic)",
-      desc: "Warm ivory parchment, subtle borders, and classic capsule controls.",
-      preview: ["#fbfbfa", "#f3f3ee", "#1a1a1a", "#1d4ed8"],
+      id: "normal" as const,
+      name: "Normal (Default)",
+      desc: "Clean solid capsule surfaces, high contrast, standard Liberty foundation.",
+      badge: "Foundation",
     },
     {
-      id: "liquid-glass",
+      id: "liquid-glass" as const,
       name: "macOS Liquid Glass",
-      desc: "Apple-inspired translucent surfaces, saturated backdrop blur, and depth.",
-      preview: ["#edd8fc", "#e0e7ff", "#1e1b4b", "#7c3aed"],
+      desc: "Translucent acrylic blur, ambient depth, specular borders, macOS fluid styling.",
+      badge: "macOS Acrylic",
+    },
+  ];
+
+  const tasteOptions = [
+    {
+      id: "default" as const,
+      name: "Liberty Amber",
+      desc: "Warm amber & classic capsule accent",
+      light: "#d97706",
+      dark: "#f59e0b",
     },
     {
-      id: "coastal-warmth",
-      name: "Coastal Warmth",
-      desc: "Terracotta (#AD7556) & Chambray (#7A9CB3) with warm Sandstone and Muslin.",
-      preview: ["#F1EFE6", "#DCCFB8", "#AD7556", "#7A9CB3"],
+      id: "ocean" as const,
+      name: "Ocean Sky",
+      desc: "Nautical & deep azure sky blue",
+      light: "#0284c7",
+      dark: "#38bdf8",
     },
     {
-      id: "driftwood-slate",
-      name: "Driftwood & Slate",
-      desc: "Pearl Shell (#EDE7E0) & Slate Pebble (#5E6C74) with Weathered Driftwood.",
-      preview: ["#EDE7E0", "#C9BCAD", "#8F8476", "#5E6C74"],
+      id: "forest" as const,
+      name: "Forest Emerald",
+      desc: "Botanical & vibrant emerald green",
+      light: "#15803d",
+      dark: "#4ade80",
     },
     {
-      id: "sage-botanical",
-      name: "Sage Botanical",
-      desc: "Plaster (#F2EFE2) & Eucalyptus (#98AA9D) with Moss (#697C70) and Mist.",
-      preview: ["#F2EFE2", "#B3C9D6", "#98AA9D", "#697C70"],
+      id: "rose" as const,
+      name: "Rose Carmine",
+      desc: "Carmine & punchy rose crimson",
+      light: "#e11d48",
+      dark: "#fb7185",
     },
-  ] as const;
+    {
+      id: "graphite" as const,
+      name: "Graphite Pebble",
+      desc: "Charcoal & architectural slate pebble",
+      light: "#475569",
+      dark: "#94a3b8",
+    },
+  ];
 
   const appList: { id: AppId; label: string }[] = [
     { id: "write", label: "Docs (.docx)" },
@@ -393,24 +419,24 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                     <div className="claude-segmented-control">
                       <button
                         type="button"
-                        className={`claude-segmented-btn ${theme === "system" ? "active" : ""}`}
-                        onClick={() => setTheme("system")}
+                        className={`claude-segmented-btn ${colorScheme === "system" ? "active" : ""}`}
+                        onClick={() => setColorScheme("system")}
                         title="System appearance"
                       >
                         <MonitorIcon size={15} />
                       </button>
                       <button
                         type="button"
-                        className={`claude-segmented-btn ${theme === "light" ? "active" : ""}`}
-                        onClick={() => setTheme("light")}
+                        className={`claude-segmented-btn ${colorScheme === "light" ? "active" : ""}`}
+                        onClick={() => setColorScheme("light")}
                         title="Light mode"
                       >
                         <SunIcon size={15} />
                       </button>
                       <button
                         type="button"
-                        className={`claude-segmented-btn ${theme === "dark" ? "active" : ""}`}
-                        onClick={() => setTheme("dark")}
+                        className={`claude-segmented-btn ${colorScheme === "dark" ? "active" : ""}`}
+                        onClick={() => setColorScheme("dark")}
                         title="Dark mode"
                       >
                         <MoonIcon size={15} />
@@ -491,24 +517,34 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
             {/* 2. APPEARANCE & THEMES TAB */}
             {activeTab === "appearance" && (
               <div>
-                <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>
-                  Appearance & Themes
+                <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "4px" }}>
+                  Appearance System
                 </h2>
                 <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "20px" }}>
-                  Choose your visual design system and customize application signature accent colors.
+                  Three-layer visual control: Mode (foundation vs glass), Taste (accent palette), and Scheme.
                 </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
-                  {themeOptions.map((opt) => {
-                    const isSelected = (themeStyle || "default") === opt.id;
-                    return (
-                      <div
-                        key={opt.id}
-                        className={`settings-theme-card ${isSelected ? "active" : ""}`}
-                        onClick={() => setThemeStyle(opt.id)}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "3px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {/* LAYER 1: VISUAL MODE */}
+                <div style={{ marginBottom: "22px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                      1. Visual Mode
+                    </span>
+                    <span style={{ fontSize: "11px", color: "var(--color-text-muted)" }}>
+                      Foundation vs macOS Acrylic
+                    </span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    {modeOptions.map((opt) => {
+                      const isSelected = mode === opt.id;
+                      return (
+                        <div
+                          key={opt.id}
+                          className={`settings-theme-card ${isSelected ? "active" : ""}`}
+                          onClick={() => setMode(opt.id)}
+                          style={{ cursor: "pointer", padding: "12px" }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
                             <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--color-text-primary)" }}>
                               {opt.name}
                             </span>
@@ -518,7 +554,7 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                                   fontSize: "10px",
                                   padding: "1px 6px",
                                   borderRadius: "10px",
-                                  background: "var(--color-accent, #1d4ed8)",
+                                  background: "var(--accent, #d97706)",
                                   color: "#ffffff",
                                   fontWeight: 600,
                                   display: "flex",
@@ -530,27 +566,199 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                               </span>
                             )}
                           </div>
-                          <div style={{ display: "flex", gap: "4px" }}>
-                            {opt.preview.map((c, i) => (
-                              <div
-                                key={i}
-                                style={{
-                                  width: 14,
-                                  height: 14,
-                                  borderRadius: "50%",
-                                  background: c,
-                                  border: "1px solid rgba(0,0,0,0.15)",
-                                }}
-                              />
-                            ))}
-                          </div>
+                          <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)", display: "block", lineHeight: 1.35 }}>
+                            {opt.desc}
+                          </span>
                         </div>
-                        <span style={{ fontSize: "11.5px", color: "var(--color-text-secondary)", display: "block", lineHeight: 1.35 }}>
-                          {opt.desc}
-                        </span>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* LAYER 2: TASTE (COLOR ACCENT) */}
+                <div style={{ marginBottom: "22px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                      2. Taste (Accent Palette)
+                    </span>
+                    <span style={{ fontSize: "11px", color: "var(--color-text-muted)" }}>
+                      Dual swatches show Light / Dark counterparts
+                    </span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                    {tasteOptions.map((t) => {
+                      const isSelected = taste === t.id;
+                      return (
+                        <div
+                          key={t.id}
+                          className={`settings-theme-card ${isSelected ? "active" : ""}`}
+                          onClick={() => setTaste(t.id)}
+                          style={{ cursor: "pointer", padding: "10px 12px" }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                                <span
+                                  style={{
+                                    width: "12px",
+                                    height: "12px",
+                                    borderRadius: "50%",
+                                    background: t.light,
+                                    display: "inline-block",
+                                    boxShadow: "0 0 0 1px rgba(0,0,0,0.15)",
+                                  }}
+                                  title="Light counterpart"
+                                />
+                                <span
+                                  style={{
+                                    width: "12px",
+                                    height: "12px",
+                                    borderRadius: "50%",
+                                    background: t.dark,
+                                    display: "inline-block",
+                                    boxShadow: "0 0 0 1px rgba(0,0,0,0.25)",
+                                  }}
+                                  title="Dark counterpart"
+                                />
+                              </div>
+                              <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--color-text-primary)" }}>
+                                {t.name}
+                              </span>
+                            </div>
+                            {isSelected && (
+                              <span
+                                style={{
+                                  fontSize: "10px",
+                                  padding: "1px 6px",
+                                  borderRadius: "10px",
+                                  background: "var(--accent, #d97706)",
+                                  color: "#ffffff",
+                                  fontWeight: 600,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "3px",
+                                }}
+                              >
+                                <CheckIcon size={10} /> Active
+                              </span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: "11px", color: "var(--color-text-secondary)", display: "block" }}>
+                            {t.desc}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* LAYER 3: COLOR SCHEME */}
+                <div style={{ marginBottom: "22px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>
+                      3. Color Scheme
+                    </span>
+                    <div className="claude-segmented-control">
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${colorScheme === "system" ? "active" : ""}`}
+                        onClick={() => setColorScheme("system")}
+                        title="Follow OS settings"
+                      >
+                        <MonitorIcon size={14} /> System
+                      </button>
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${colorScheme === "light" ? "active" : ""}`}
+                        onClick={() => setColorScheme("light")}
+                        title="Light mode"
+                      >
+                        <SunIcon size={14} /> Light
+                      </button>
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${colorScheme === "dark" ? "active" : ""}`}
+                        onClick={() => setColorScheme("dark")}
+                        title="Dark mode"
+                      >
+                        <MoonIcon size={14} /> Dark
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* LAYER 4: LIVE PREVIEW WIDGET */}
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    borderRadius: "10px",
+                    border: "1px solid var(--border-color, rgba(0,0,0,0.1))",
+                    background: "var(--surface-elevated, var(--surface, rgba(255,255,255,0.7)))",
+                    marginBottom: "22px",
+                    backdropFilter: mode === "liquid-glass" ? "blur(20px)" : "none",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary, var(--color-text-primary))" }}>
+                      Interactive Live Test & Preview
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                        background: "var(--accent-soft, rgba(217,119,6,0.15))",
+                        color: "var(--accent, #d97706)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {mode} • {taste} • {colorScheme}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        border: "none",
+                        background: "var(--accent, #d97706)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Primary Button
+                    </button>
+                    <button
+                      type="button"
+                      style={{
+                        padding: "5px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border-color, #ccc)",
+                        background: "var(--surface, #fff)",
+                        color: "var(--text-primary, #333)",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Secondary Button
+                    </button>
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        padding: "3px 8px",
+                        borderRadius: "4px",
+                        border: "1px solid var(--accent, #d97706)",
+                        color: "var(--accent, #d97706)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      Sample Badge
+                    </span>
+                  </div>
                 </div>
 
                 <div style={{ borderTop: "1px solid var(--color-border-secondary)", paddingTop: "18px" }}>

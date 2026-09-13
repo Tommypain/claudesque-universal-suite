@@ -651,75 +651,185 @@ App: ${state.activeApp.toUpperCase()}`,
     });
   });
 
-  // ── Persistent Suite Styling & Theme Synchronization ────────
+  // ══════════════════════════════════════════════════════════════
+  // LIBERTY STUDIO — GLOBAL APPEARANCE ARCHITECTURE & STATE
+  // Mode (Normal / Liquid Glass) + Taste (5 Personalities) + Scheme (Light/Dark/System)
+  // ══════════════════════════════════════════════════════════════
+
+  const LibertyAppearance = {
+    get() {
+      let appearance = { mode: 'normal', taste: 'default', colorScheme: 'system' };
+      try {
+        const raw = localStorage.getItem('liberty-appearance');
+        if (raw) {
+          appearance = { ...appearance, ...JSON.parse(raw) };
+        } else {
+          const legacyLayout = localStorage.getItem('suite-layout-style');
+          if (legacyLayout === 'liquid-glass') appearance.mode = 'liquid-glass';
+
+          const legacyTheme = localStorage.getItem('suite-theme-id');
+          if (['default', 'ocean', 'forest', 'rose', 'graphite'].includes(legacyTheme)) {
+            appearance.taste = legacyTheme;
+          } else if (legacyTheme === 'coastal-warmth') {
+            appearance.taste = 'default';
+          } else if (legacyTheme === 'driftwood-slate') {
+            appearance.taste = 'graphite';
+          } else if (legacyTheme === 'sage-botanical') {
+            appearance.taste = 'forest';
+          }
+
+          const legacyScheme = localStorage.getItem('octopus-theme-mode');
+          if (legacyScheme) appearance.colorScheme = legacyScheme;
+        }
+      } catch (e) {
+        console.warn('Error loading appearance:', e);
+      }
+      return appearance;
+    },
+
+    set(updates) {
+      const current = this.get();
+      const next = { ...current, ...updates };
+      localStorage.setItem('liberty-appearance', JSON.stringify(next));
+
+      // Synchronize legacy keys so any legacy code stays in sync
+      localStorage.setItem('suite-layout-style', next.mode === 'liquid-glass' ? 'liquid-glass' : 'basic');
+      localStorage.setItem('suite-theme-id', next.taste);
+      localStorage.setItem('octopus-theme-mode', next.colorScheme);
+
+      this.apply(next);
+      return next;
+    },
+
+    apply(stateObj) {
+      const cur = stateObj || this.get();
+      const { mode, taste, colorScheme } = cur;
+
+      // 1. Light / Dark Scheme
+      let isDark = colorScheme === 'dark';
+      if (colorScheme === 'system') {
+        isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+      state.darkMode = isDark;
+      document.body.classList.toggle('dark', isDark);
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-mode', mode);
+      document.documentElement.setAttribute('data-taste', taste);
+
+      // 2. Mode (Normal / Liquid Glass)
+      document.body.classList.remove('mode-normal', 'mode-liquid-glass', 'layout-basic', 'layout-liquid-glass', 'layout-modern', 'layout-classic');
+      if (mode === 'liquid-glass') {
+        document.body.classList.add('mode-liquid-glass', 'layout-liquid-glass');
+      } else {
+        document.body.classList.add('mode-normal', 'layout-basic');
+      }
+
+      // 3. Taste (Default, Ocean, Forest, Rose, Graphite)
+      const allTastes = ['default', 'ocean', 'forest', 'rose', 'graphite'];
+      allTastes.forEach(t => document.body.classList.remove('taste-' + t));
+      document.body.classList.remove('theme-coastal-warmth', 'theme-driftwood-slate', 'theme-sage-botanical');
+      document.body.classList.add('taste-' + taste);
+
+      // Semantic token bridge: make sure --color-accent mirrors the active taste
+      document.documentElement.style.setProperty('--color-accent', 'var(--accent)');
+
+      // 4. Motion
+      const motion = localStorage.getItem('claude-motion-mode') || 'system';
+      document.documentElement.classList.toggle('reduce-motion', motion === 'reduced');
+
+      // 5. Fonts
+      const savedFont = localStorage.getItem('suite-font-family');
+      if (savedFont) document.body.style.fontFamily = savedFont;
+
+      const savedSize = localStorage.getItem('suite-font-size');
+      if (savedSize) document.documentElement.style.setProperty('--doc-font-size', savedSize);
+
+      const savedLineHeight = localStorage.getItem('suite-line-height');
+      if (savedLineHeight) document.documentElement.style.setProperty('--doc-line-height', savedLineHeight);
+
+      // 6. Active App marker on body
+      ['word', 'impress', 'sheet', 'pdf', 'html', 'converter', 'design'].forEach(app => {
+        document.body.classList.toggle('app-' + app, state.activeApp === app);
+      });
+
+      this.updateControls(cur, isDark);
+      if (typeof updateLivePreview === 'function') updateLivePreview();
+    },
+
+    updateControls(cur, isDark) {
+      const { mode, taste, colorScheme } = cur;
+
+      // Mode cards
+      document.querySelectorAll('.claude-layout-card').forEach(card => {
+        const cMode = card.getAttribute('data-layout');
+        const isThis = (mode === 'liquid-glass' && cMode === 'liquid-glass') ||
+                       (mode === 'normal' && (cMode === 'normal' || cMode === 'basic'));
+        card.classList.toggle('active', isThis);
+        let badge = card.querySelector('.layout-active-badge');
+        if (isThis && !badge) {
+          const topRow = card.querySelector('.flex.items-center.justify-between');
+          if (topRow) {
+            const b = document.createElement('span');
+            b.className = 'layout-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
+            b.innerText = 'Active';
+            topRow.appendChild(b);
+          }
+        } else if (!isThis && badge) {
+          badge.remove();
+        }
+      });
+
+      // Taste cards
+      document.querySelectorAll('.claude-taste-card').forEach(card => {
+        const cTaste = card.getAttribute('data-taste');
+        const isThis = (cTaste === taste);
+        card.classList.toggle('active', isThis);
+        let badge = card.querySelector('.taste-active-badge');
+        if (isThis && !badge) {
+          const topRow = card.querySelector('.flex.items-center.justify-between');
+          if (topRow) {
+            const b = document.createElement('span');
+            b.className = 'taste-active-badge text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-medium';
+            b.innerText = 'Active';
+            topRow.appendChild(b);
+          }
+        } else if (!isThis && badge) {
+          badge.remove();
+        }
+      });
+
+      // Scheme buttons
+      document.querySelectorAll('#claude-appearance-segmented .claude-segmented-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-theme') === colorScheme);
+      });
+    }
+  };
+  window.LibertyAppearance = LibertyAppearance;
+
   function syncBodyClasses() {
-    // 1. Layout: normal (basic) or liquid-glass
-    const savedLayout = localStorage.getItem('suite-layout-style') || 'basic';
-    const layoutClass = savedLayout === 'liquid-glass' ? 'layout-liquid-glass' : 'layout-basic';
-    document.body.classList.remove('layout-basic', 'layout-liquid-glass', 'layout-modern', 'layout-classic');
-    document.body.classList.add(layoutClass);
-
-    // 2. Theme palette
-    const savedTheme = localStorage.getItem('suite-theme-id') || 'default';
-    document.body.classList.remove('theme-coastal-warmth', 'theme-driftwood-slate', 'theme-sage-botanical');
-    if (savedTheme === 'coastal-warmth') document.body.classList.add('theme-coastal-warmth');
-    else if (savedTheme === 'driftwood-slate') document.body.classList.add('theme-driftwood-slate');
-    else if (savedTheme === 'sage-botanical') document.body.classList.add('theme-sage-botanical');
-
-    // 3. Theme mode (light / dark / system)
-    const mode = localStorage.getItem('octopus-theme-mode') || 'system';
-    let isDark = mode === 'dark';
-    if (mode === 'system') {
-      isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    state.darkMode = isDark;
-    document.body.classList.toggle('dark', isDark);
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-
-    // 4. Motion
-    const motion = localStorage.getItem('claude-motion-mode') || 'system';
-    document.documentElement.classList.toggle('reduce-motion', motion === 'reduced');
-
-    // 5. Font
-    const savedFont = localStorage.getItem('suite-font-family');
-    if (savedFont) {
-      document.body.style.fontFamily = savedFont;
-    }
-
-    // 6. Font size & line height
-    const savedSize = localStorage.getItem('suite-font-size');
-    if (savedSize) {
-      document.documentElement.style.setProperty('--doc-font-size', savedSize);
-    }
-    const savedLineHeight = localStorage.getItem('suite-line-height');
-    if (savedLineHeight) {
-      document.documentElement.style.setProperty('--doc-line-height', savedLineHeight);
-    }
-
-    // 7. Active app marker
-    ['word', 'impress', 'sheet', 'pdf'].forEach(app => {
-      document.body.classList.toggle('app-' + app, state.activeApp === app);
-    });
+    LibertyAppearance.apply();
   }
   window.syncBodyClasses = syncBodyClasses;
 
   function switchAppMode(appName) {
     state.activeApp = appName;
 
-    document.querySelectorAll('.app-sidebar .app-icon-btn').forEach(b => b.classList.remove('active'));
-    const targetBtn = document.querySelector(`.app-sidebar .app-icon-btn[data-app="${appName}"]`);
-    if (targetBtn) targetBtn.classList.add('active');
+    document.querySelectorAll('.app-sidebar .app-icon-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-app') === appName);
+    });
 
-    // Ensure all persistent theme & layout classes are synced and preserved across app switches!
-    syncBodyClasses();
-    applyActiveAccent(appName);
+    // ── Global Appearance State is strictly preserved across all apps ──
+    LibertyAppearance.apply();
 
     document.querySelectorAll('.workspace-view').forEach(view => view.classList.remove('active'));
-    document.getElementById('status-document-info').innerText = appName.toUpperCase() + " Workspace Active";
+    const statusInfo = document.getElementById('status-document-info');
+    if (statusInfo) statusInfo.innerText = appName.toUpperCase() + " Workspace Active";
 
     // ── Hide all context-specific tabs ──────────────────────────────
-    document.getElementById('tab-formulas').style.display  = 'none';
-    document.getElementById('tab-slideshow').style.display = 'none';
+    const tabFormulas = document.getElementById('tab-formulas');
+    if (tabFormulas) tabFormulas.style.display = 'none';
+    const tabSlideshow = document.getElementById('tab-slideshow');
+    if (tabSlideshow) tabSlideshow.style.display = 'none';
     document.querySelectorAll('.sheet-tab').forEach(t => t.style.display = 'none');
 
     // ── Hide all sheet-only ribbon groups in Home tab ───────────────
@@ -737,33 +847,42 @@ App: ${state.activeApp.toUpperCase()}`,
     });
 
     if (appName === 'word') {
-      document.getElementById('view-word').classList.add('active');
+      const v = document.getElementById('view-word');
+      if (v) v.classList.add('active');
       renderWordPages();
       switchRibbonTab('home');
 
     } else if (appName === 'impress') {
-      document.getElementById('view-impress').classList.add('active');
-      document.getElementById('tab-slideshow').style.display = 'block';
+      const v = document.getElementById('view-impress');
+      if (v) v.classList.add('active');
+      if (tabSlideshow) tabSlideshow.style.display = 'block';
       renderSlideList();
       switchRibbonTab('slideshow');
 
     } else if (appName === 'sheet') {
-      document.getElementById('view-sheet').classList.add('active');
-
-      // Show sheet-specific Home groups
+      const v = document.getElementById('view-sheet');
+      if (v) v.classList.add('active');
       document.querySelectorAll('.sheet-only').forEach(el => el.style.display = '');
-
-      // Show sheet context tabs
       document.querySelectorAll('.sheet-tab').forEach(t => t.style.display = 'block');
-
       renderSheetTabs();
       initializeSpreadsheet();
       switchRibbonTab('home');
 
     } else if (appName === 'pdf') {
-      document.getElementById('view-pdf').classList.add('active');
+      const v = document.getElementById('view-pdf');
+      if (v) v.classList.add('active');
       renderPdfPages();
       switchRibbonTab('draw');
+
+    } else if (appName === 'html') {
+      const v = document.getElementById('view-html');
+      if (v) v.classList.add('active');
+      switchRibbonTab('home');
+
+    } else if (appName === 'converter') {
+      const v = document.getElementById('view-converter');
+      if (v) v.classList.add('active');
+      switchRibbonTab('home');
     }
   }
 
@@ -782,10 +901,10 @@ App: ${state.activeApp.toUpperCase()}`,
   });
 
   function updateLivePreview() {
-    const layout = localStorage.getItem('suite-layout-style') || 'basic';
+    const cur = LibertyAppearance.get();
     const badge = document.getElementById('preview-active-layout-badge');
     if (badge) {
-      badge.innerText = layout === 'liquid-glass' ? 'Liquid Glass Layout Active' : 'Normal Layout Active';
+      badge.innerText = `${cur.mode.toUpperCase()} · ${cur.taste.toUpperCase()} · ${(cur.colorScheme || 'SYSTEM').toUpperCase()}`;
     }
     const font = localStorage.getItem('suite-font-family') || 'system-ui, sans-serif';
     const size = localStorage.getItem('suite-font-size') || '14px';
@@ -800,51 +919,7 @@ App: ${state.activeApp.toUpperCase()}`,
   window.updateLivePreview = updateLivePreview;
 
   function initSettingsUI() {
-    // 1. Layout cards
-    const savedLayout = localStorage.getItem('suite-layout-style') || 'basic';
-    document.querySelectorAll('.claude-layout-card').forEach(card => {
-      const cardLayout = card.getAttribute('data-layout');
-      const isThis = (savedLayout === 'liquid-glass' && cardLayout === 'liquid-glass') ||
-                     (savedLayout === 'basic' && (cardLayout === 'normal' || cardLayout === 'basic'));
-      card.classList.toggle('active', isThis);
-      let badge = card.querySelector('.layout-active-badge');
-      if (isThis && !badge) {
-        const topRow = card.querySelector('.flex.items-center.justify-between');
-        if (topRow) {
-          const b = document.createElement('span');
-          b.className = 'layout-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
-          b.innerText = 'Active';
-          topRow.appendChild(b);
-        }
-      } else if (!isThis && badge) {
-        badge.remove();
-      }
-    });
-
-    // 2. Theme cards
-    const savedTheme = localStorage.getItem('suite-theme-id') || 'default';
-    document.querySelectorAll('.claude-theme-card').forEach(card => {
-      const isThis = card.getAttribute('data-theme-id') === savedTheme;
-      card.classList.toggle('active', isThis);
-      let badge = card.querySelector('.theme-active-badge');
-      if (isThis && !badge) {
-        const topRow = card.querySelector('.flex.items-center.justify-between');
-        if (topRow) {
-          const b = document.createElement('span');
-          b.className = 'theme-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
-          b.innerText = 'Active';
-          topRow.appendChild(b);
-        }
-      } else if (!isThis && badge) {
-        badge.remove();
-      }
-    });
-
-    // 3. Theme mode
-    const mode = localStorage.getItem('octopus-theme-mode') || 'system';
-    document.querySelectorAll('#claude-appearance-segmented .claude-segmented-btn').forEach(b => {
-      b.classList.toggle('active', b.getAttribute('data-theme') === mode);
-    });
+    LibertyAppearance.updateControls(LibertyAppearance.get(), state.darkMode);
 
     // 4. Motion mode
     const motion = localStorage.getItem('claude-motion-mode') || 'system';
@@ -914,58 +989,29 @@ App: ${state.activeApp.toUpperCase()}`,
   }
   window.filterClaudeSettings = filterClaudeSettings;
 
+  function selectSuiteMode(mode) {
+    LibertyAppearance.set({ mode: mode === 'liquid-glass' ? 'liquid-glass' : 'normal' });
+    showToast(`Mode switched to ${mode === 'liquid-glass' ? 'Liquid Glass (Apple macOS)' : 'Normal (Classic Solid)'}`, 1800);
+  }
+  window.selectSuiteMode = selectSuiteMode;
+
+  function selectSuiteTaste(taste) {
+    LibertyAppearance.set({ taste });
+    showToast(`Taste switched to ${taste.toUpperCase()}`, 1800);
+  }
+  window.selectSuiteTaste = selectSuiteTaste;
+
   function selectSuiteLayoutStyle(style) {
-    const val = (style === 'liquid-glass') ? 'liquid-glass' : 'basic';
-    localStorage.setItem('suite-layout-style', val);
-
-    document.querySelectorAll('.claude-layout-card').forEach(card => {
-      const cardLayout = card.getAttribute('data-layout');
-      const isThis = (val === 'liquid-glass' && cardLayout === 'liquid-glass') ||
-                     (val === 'basic' && (cardLayout === 'normal' || cardLayout === 'basic'));
-      card.classList.toggle('active', isThis);
-      let badge = card.querySelector('.layout-active-badge');
-      if (isThis && !badge) {
-        const topRow = card.querySelector('.flex.items-center.justify-between');
-        if (topRow) {
-          const b = document.createElement('span');
-          b.className = 'layout-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
-          b.innerText = 'Active';
-          topRow.appendChild(b);
-        }
-      } else if (!isThis && badge) {
-        badge.remove();
-      }
-    });
-
-    syncBodyClasses();
-    updateLivePreview();
-    showToast(`Interface switched to ${val === 'liquid-glass' ? 'Liquid Glass (macOS Style)' : 'Normal (Classic Capsule)'}`, 2000);
+    selectSuiteMode(style === 'liquid-glass' ? 'liquid-glass' : 'normal');
   }
   window.selectSuiteLayoutStyle = selectSuiteLayoutStyle;
 
   function selectSuiteTheme(themeId) {
-    localStorage.setItem('suite-theme-id', themeId);
-
-    document.querySelectorAll('.claude-theme-card').forEach(card => {
-      const isThis = card.getAttribute('data-theme-id') === themeId;
-      card.classList.toggle('active', isThis);
-      let badge = card.querySelector('.theme-active-badge');
-      if (isThis && !badge) {
-        const topRow = card.querySelector('.flex.items-center.justify-between');
-        if (topRow) {
-          const b = document.createElement('span');
-          b.className = 'theme-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
-          b.innerText = 'Active';
-          topRow.appendChild(b);
-        }
-      } else if (!isThis && badge) {
-        badge.remove();
-      }
-    });
-
-    syncBodyClasses();
-    updateLivePreview();
-    showToast(`Theme switched to ${themeId.replace('-', ' ').toUpperCase()}`, 2000);
+    let mapped = themeId;
+    if (themeId === 'coastal-warmth') mapped = 'default';
+    else if (themeId === 'driftwood-slate') mapped = 'graphite';
+    else if (themeId === 'sage-botanical') mapped = 'forest';
+    selectSuiteTaste(mapped);
   }
   window.selectSuiteTheme = selectSuiteTheme;
 
@@ -2526,38 +2572,35 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
 
   // ── Theme mode (light / dark / system) ──────────────────────
   function applyTheme(mode) {
-    let dark = mode === 'dark';
-    if (mode === 'system') {
-      dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (typeof LibertyAppearance !== 'undefined') {
+      LibertyAppearance.set({ colorScheme: mode });
     }
-    state.darkMode = dark;
-    document.body.classList.toggle('dark', dark);
-    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
     const icon = document.querySelector('#dark-mode-toggle i');
-    if (icon) icon.className = dark ? 'ti ti-sun' : 'ti ti-moon';
-    document.querySelectorAll('#theme-selector .theme-opt, #claude-appearance-segmented .claude-segmented-btn').forEach(b => {
-      b.classList.toggle('active', b.getAttribute('data-theme') === mode);
-    });
+    if (icon) icon.className = state.darkMode ? 'ti ti-sun' : 'ti ti-moon';
     if (state.activeApp === 'sheet' && typeof evaluateSpreadsheet === 'function') evaluateSpreadsheet();
   }
 
   function setThemeMode(mode) {
-    localStorage.setItem('octopus-theme-mode', mode);
-    applyTheme(mode);
+    if (typeof LibertyAppearance !== 'undefined') {
+      LibertyAppearance.set({ colorScheme: mode });
+    }
+    showToast(`Color scheme set to ${mode.toUpperCase()}`, 1500);
+    if (state.activeApp === 'sheet' && typeof evaluateSpreadsheet === 'function') evaluateSpreadsheet();
   }
   window.setThemeMode = setThemeMode;
 
   // React to OS theme changes when in "system" mode
   if (window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (localStorage.getItem('octopus-theme-mode') === 'system') applyTheme('system');
+      if (typeof LibertyAppearance !== 'undefined' && LibertyAppearance.get().colorScheme === 'system') {
+        LibertyAppearance.apply();
+      }
     });
   }
 
   // ── Initialize on load ──────────────────────────────────────
-  syncBodyClasses();
+  LibertyAppearance.apply();
   loadAccentColors();
-  applyTheme(localStorage.getItem('octopus-theme-mode') || (state.darkMode ? 'dark' : 'light'));
 
   // ── Startup boot (runs LAST so every const above is initialized) ──
   const restored = loadFromLocalStorage();

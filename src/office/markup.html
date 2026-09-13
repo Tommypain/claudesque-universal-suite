@@ -47,26 +47,38 @@
 <div class="app-container">
   <!-- القائمة الجانبية للتطبيقات الأربعة الأساسية -->
   <div class="app-sidebar">
-    <div class="sidebar-brand" title="Octopus Studio">🐙</div>
+    <div class="sidebar-brand" title="Liberty Studio">🐙</div>
     
-    <button class="app-icon-btn active" data-app="word" title="Word Processor">
+    <button id="btn-app-word" class="app-icon-btn active" data-app="word" title="Documents (Word)">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M14 3v4a1 1 0 0 0 1 1h4M5 7V3a2 2 0 0 1 2-2h7l5 5v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3M9 9h1M9 13h6M9 17h6"/></svg>
-      <span>Word</span>
+      <span>Docs</span>
     </button>
     
-    <button class="app-icon-btn" data-app="impress" title="Impress Presentation">
+    <button id="btn-app-impress" class="app-icon-btn" data-app="impress" title="Presentations (PowerPoint / Impress)">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M3 3h18v13H3zM8 21h8M12 16v5"/></svg>
-      <span>Impress</span>
+      <span>Slides</span>
     </button>
     
-    <button class="app-icon-btn" data-app="sheet" title="Sheet Spreadsheet">
+    <button id="btn-app-sheet" class="app-icon-btn" data-app="sheet" title="Spreadsheets (Sheet)">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M10 3v18"/></svg>
-      <span>Sheet</span>
+      <span>Sheets</span>
     </button>
     
-    <button class="app-icon-btn" data-app="pdf" title="PDF Annotation & Sign">
+    <button id="btn-app-pdf" class="app-icon-btn" data-app="pdf" title="PDF Annotation & Sign">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M14 3v4a1 1 0 0 0 1 1h4M5 7V3a2 2 0 0 1 2-2h7l5 5v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3M9 13h6M9 17h3"/></svg>
-      <span>PDF Edit</span>
+      <span>PDF</span>
+    </button>
+
+    <div style="height:1px;margin:4px 8px;background:var(--color-border-secondary);opacity:0.35;"></div>
+
+    <button id="btn-app-html" class="app-icon-btn" data-app="html" title="HTML Studio — Visual & Code Document Authoring">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      <span>HTML</span>
+    </button>
+
+    <button id="btn-app-converter" class="app-icon-btn" data-app="converter" title="Universal Document Converter">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <span>Convert</span>
     </button>
   </div>
 
@@ -1239,110 +1251,140 @@
               </div>
             </div>
 
-            <!-- 2. APPEARANCE TAB (Separated: Normal / Liquid Glass, Themes, Text/Fonts, Live Test) -->
+            <!-- 2. APPEARANCE TAB (Three-Layer Visual Control: Mode, Taste, Color Scheme) -->
             <div class="settings-section hidden" id="settings-appearance">
-              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Appearance & Interface Style</h2>
-              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Customize interface layouts, color themes, document typography, and preview changes live.</p>
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Appearance</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Three-layer visual system: Mode, Taste, and Light/Dark Behavior. Changes persist across all apps.</p>
 
-              <!-- Section A: Interface Layout (Normal vs Liquid Glass) -->
+              <!-- Layer 1: Mode (Normal / Liquid Glass) -->
               <div class="mb-6">
                 <div class="flex items-center justify-between mb-2.5">
-                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">Interface Layout Style (نمط الواجهة)</div>
-                  <span class="text-[11px] text-[var(--color-text-tertiary)]">Persists across all suite apps</span>
+                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">1. Mode (Rendering Presentation)</div>
+                  <span class="text-[11px] text-[var(--color-text-tertiary)]">Global Studio Shell</span>
                 </div>
                 <div class="grid grid-cols-2 gap-3" id="layout-styles-grid">
                   <!-- Normal (Default Capsule) -->
-                  <div class="claude-layout-card active cursor-pointer p-3.5 rounded-xl border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-layout="normal" onclick="selectSuiteLayoutStyle('normal')">
+                  <div class="claude-layout-card active cursor-pointer p-3.5 rounded-xl border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--accent)]" data-layout="normal" onclick="selectSuiteMode('normal')">
                     <div class="flex items-center justify-between mb-1.5">
                       <span class="text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Normal (Classic Capsule)
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Normal
                       </span>
                       <span class="layout-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium">Active</span>
                     </div>
                     <p class="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed">
-                      Solid warm ivory surfaces, high-contrast crisp borders, and classic capsule button chips.
+                      Standard Liberty Studio visual foundation. Crisp borders, solid surfaces, and classic capsule button chips.
                     </p>
                   </div>
 
                   <!-- Liquid Glass (Apple macOS Style) -->
-                  <div class="claude-layout-card cursor-pointer p-3.5 rounded-xl border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-layout="liquid-glass" onclick="selectSuiteLayoutStyle('liquid-glass')">
+                  <div class="claude-layout-card cursor-pointer p-3.5 rounded-xl border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--accent)]" data-layout="liquid-glass" onclick="selectSuiteMode('liquid-glass')">
                     <div class="flex items-center justify-between mb-1.5">
                       <span class="text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span> Liquid Glass (Apple macOS)
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span> Liquid Glass
                       </span>
                     </div>
                     <p class="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed">
-                      Translucent acrylic glassmorphism, 32px saturated blur, specular glowing micro-borders.
+                      macOS-inspired translucent presentation layer. 24px saturated blur, specular highlights, and elevated depth.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <!-- Section B: Color Themes & Palettes (الثيمات والألوان) -->
+              <!-- Layer 2: Taste (Color Personality) -->
               <div class="mb-6 pt-5 border-t border-[var(--color-border-secondary)]">
                 <div class="flex items-center justify-between mb-2.5">
-                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">Color Theme Palettes (الثيمات اللونية)</div>
-                  <div class="claude-segmented-control" id="claude-appearance-segmented">
-                    <button type="button" class="claude-segmented-btn" data-theme="system" onclick="setThemeMode('system')">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg> System
-                    </button>
-                    <button type="button" class="claude-segmented-btn" data-theme="light" onclick="setThemeMode('light')">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg> Light
-                    </button>
-                    <button type="button" class="claude-segmented-btn" data-theme="dark" onclick="setThemeMode('dark')">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg> Dark
-                    </button>
+                  <div>
+                    <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">2. Taste (Color Personality)</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Each taste features tailored Light and Dark counterpart tokens</div>
                   </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3" id="theme-presets-grid">
-                  <div class="claude-theme-card active cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="default" onclick="selectSuiteTheme('default')">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Default (Liberty Classic)</span>
-                      <span class="theme-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium">Active</span>
+                <div class="grid grid-cols-3 gap-2.5" id="taste-presets-grid">
+                  <!-- Default Taste -->
+                  <div class="claude-taste-card active cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--accent)]" data-taste="default" onclick="selectSuiteTaste('default')">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Default</span>
+                      <span class="taste-active-badge text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-medium">Active</span>
                     </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2">Warm ivory paper with refined graphite typography.</p>
-                    <div class="flex gap-1.5">
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #fafaf9;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #2563eb;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #16a34a;"></div>
-                    </div>
-                  </div>
-
-                  <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="coastal-warmth" onclick="selectSuiteTheme('coastal-warmth')">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Coastal Warmth</span>
-                    </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2">Muslin parchment canvas, terracotta tones, chambray accents.</p>
-                    <div class="flex gap-1.5">
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #fdfbf7;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #c2410c;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #3b82f6;"></div>
+                    <p class="text-[10px] text-[var(--color-text-tertiary)] mb-2">Liberty Classic Warm Amber</p>
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-3.5 h-3.5 rounded-full border border-black/15 shadow-sm" style="background:#d97706;" title="Light Counterpart: #d97706"></div>
+                      <span class="text-[9px] text-[var(--color-text-tertiary)]">/</span>
+                      <div class="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style="background:#f59e0b;" title="Dark Counterpart: #f59e0b"></div>
                     </div>
                   </div>
 
-                  <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="driftwood-slate" onclick="selectSuiteTheme('driftwood-slate')">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Driftwood & Slate</span>
+                  <!-- Ocean Taste -->
+                  <div class="claude-taste-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--accent)]" data-taste="ocean" onclick="selectSuiteTaste('ocean')">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Ocean</span>
                     </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2">Pearl Shell surfaces, Slate Pebble accents, Coastal Sand cards.</p>
-                    <div class="flex gap-1.5">
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #f4f4f3;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #475569;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #d97706;"></div>
+                    <p class="text-[10px] text-[var(--color-text-tertiary)] mb-2">Clean Nautical & Sky Blue</p>
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-3.5 h-3.5 rounded-full border border-black/15 shadow-sm" style="background:#0284c7;" title="Light Counterpart: #0284c7"></div>
+                      <span class="text-[9px] text-[var(--color-text-tertiary)]">/</span>
+                      <div class="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style="background:#38bdf8;" title="Dark Counterpart: #38bdf8"></div>
                     </div>
                   </div>
 
-                  <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="sage-botanical" onclick="selectSuiteTheme('sage-botanical')">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Sage Botanical</span>
+                  <!-- Forest Taste -->
+                  <div class="claude-taste-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--accent)]" data-taste="forest" onclick="selectSuiteTaste('forest')">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Forest</span>
                     </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2">Plaster surfaces with eucalyptus accents and botanical moss highlights.</p>
-                    <div class="flex gap-1.5">
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #f2f5f3;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #059669;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #10b981;"></div>
+                    <p class="text-[10px] text-[var(--color-text-tertiary)] mb-2">Emerald & Botanical Moss</p>
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-3.5 h-3.5 rounded-full border border-black/15 shadow-sm" style="background:#15803d;" title="Light Counterpart: #15803d"></div>
+                      <span class="text-[9px] text-[var(--color-text-tertiary)]">/</span>
+                      <div class="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style="background:#4ade80;" title="Dark Counterpart: #4ade80"></div>
                     </div>
+                  </div>
+
+                  <!-- Rose Taste -->
+                  <div class="claude-taste-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--accent)]" data-taste="rose" onclick="selectSuiteTaste('rose')">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Rose</span>
+                    </div>
+                    <p class="text-[10px] text-[var(--color-text-tertiary)] mb-2">Carmine & Vivid Crimson</p>
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-3.5 h-3.5 rounded-full border border-black/15 shadow-sm" style="background:#e11d48;" title="Light Counterpart: #e11d48"></div>
+                      <span class="text-[9px] text-[var(--color-text-tertiary)]">/</span>
+                      <div class="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style="background:#fb7185;" title="Dark Counterpart: #fb7185"></div>
+                    </div>
+                  </div>
+
+                  <!-- Graphite Taste -->
+                  <div class="claude-taste-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--accent)]" data-taste="graphite" onclick="selectSuiteTaste('graphite')">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">Graphite</span>
+                    </div>
+                    <p class="text-[10px] text-[var(--color-text-tertiary)] mb-2">Charcoal & Slate Pebble</p>
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-3.5 h-3.5 rounded-full border border-black/15 shadow-sm" style="background:#475569;" title="Light Counterpart: #475569"></div>
+                      <span class="text-[9px] text-[var(--color-text-tertiary)]">/</span>
+                      <div class="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style="background:#94a3b8;" title="Dark Counterpart: #94a3b8"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Layer 3: Color Scheme (Light / Dark Behavior) -->
+              <div class="mb-6 pt-5 border-t border-[var(--color-border-secondary)]">
+                <div class="flex items-center justify-between mb-2.5">
+                  <div>
+                    <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">3. Color Scheme (Behavior)</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Select how light and dark counterparts are applied</div>
+                  </div>
+                  <div class="claude-segmented-control" id="claude-appearance-segmented">
+                    <button id="btn-scheme-system" type="button" class="claude-segmented-btn" data-theme="system" onclick="setThemeMode('system')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg> System
+                    </button>
+                    <button id="btn-scheme-light" type="button" class="claude-segmented-btn" data-theme="light" onclick="setThemeMode('light')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg> Light
+                    </button>
+                    <button id="btn-scheme-dark" type="button" class="claude-segmented-btn" data-theme="dark" onclick="setThemeMode('dark')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg> Dark
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1721,6 +1763,80 @@
             <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">PDF Pages</div>
           </div>
           <div class="pdf-document-scroll" id="pdf-scroll-container"></div>
+        </div>
+      </div>
+
+      <!-- 5. واجهة استوديو إتش تي إم إل (HTML Studio View) -->
+      <div class="workspace-view" id="view-html">
+        <div style="display:flex;height:100%;width:100%;">
+          <div class="html-studio-pages" style="width:200px;border-right:1px solid var(--color-border-secondary);padding:14px;background:var(--color-background-secondary);overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--color-text-tertiary);letter-spacing:0.05em;">HTML Pages (A4)</div>
+            <div class="btn primary" style="font-size:11px;padding:5px 8px;text-align:center;justify-content:center;display:flex;gap:4px;cursor:pointer;">+ New A4 Page</div>
+            <div style="margin-top:8px;padding:8px;border:1px solid var(--color-border-secondary);border-radius:6px;background:var(--color-background-primary);font-size:12px;font-weight:600;color:var(--color-text-primary);box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+              📄 Page 1 — Document
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;background:var(--color-background-tertiary);overflow:auto;align-items:center;padding:24px;">
+            <div style="width:100%;max-width:794px;min-height:1123px;background:var(--surface);box-shadow:0 8px 30px rgba(0,0,0,0.08);border-radius:2px;padding:48px;border:1px solid var(--border-color);color:var(--text-primary);">
+              <h1 style="font-size:28px;font-weight:800;margin-bottom:12px;letter-spacing:-0.02em;">HTML Studio Document</h1>
+              <p style="font-size:14px;line-height:1.6;color:var(--text-secondary);margin-bottom:20px;">
+                Visual page-based physical HTML authoring environment. Supports A4 layout, CSS typography, live physical canvas, and seamless styling inside the Liberty Studio shell.
+              </p>
+              <div style="padding:16px;background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;font-family:monospace;font-size:12px;color:var(--text-primary);">
+                &lt;section class="hero-page"&gt;<br>
+                &nbsp;&nbsp;&lt;h1&gt;Physical Page Architecture&lt;/h1&gt;<br>
+                &nbsp;&nbsp;&lt;p&gt;Living document within Liberty Studio.&lt;/p&gt;<br>
+                &lt;/section&gt;
+              </div>
+            </div>
+          </div>
+          <div class="html-studio-props" style="width:240px;border-left:1px solid var(--color-border-secondary);padding:14px;background:var(--color-background-secondary);overflow-y:auto;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--color-text-tertiary);letter-spacing:0.05em;margin-bottom:12px;">Document Properties</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
+              <div>
+                <label style="display:block;font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">Page Size</label>
+                <select class="claude-select" style="width:100%;">
+                  <option selected>A4 Portrait (210 × 297 mm)</option>
+                  <option>A4 Landscape (297 × 210 mm)</option>
+                  <option>16:9 Presentation Canvas</option>
+                  <option>Custom Dimension</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">Margins</label>
+                <select class="claude-select" style="width:100%;">
+                  <option selected>Normal (20mm)</option>
+                  <option>Narrow (10mm)</option>
+                  <option>Book / Gutter (25mm)</option>
+                  <option>Zero Margins</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. واجهة محول الملفات العام (Universal Converter View) -->
+      <div class="workspace-view" id="view-converter">
+        <div style="padding:48px 24px;max-width:760px;margin:0 auto;text-align:center;">
+          <h2 style="font-size:24px;font-weight:700;color:var(--color-text-primary);margin-bottom:8px;">
+            Universal Document Converter
+          </h2>
+          <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:28px;">
+            Interchange documents seamlessly between Word (.docx), Presentation slides (.pptx), Spreadsheets (.xlsx), PDF, and HTML Studio formats.
+          </p>
+          <div style="border:2px dashed var(--color-border-secondary);border-radius:12px;padding:48px 24px;background:var(--color-background-primary);">
+            <p style="font-weight:600;margin-bottom:16px;color:var(--color-text-primary);">
+              Select an application workspace to import or convert into:
+            </p>
+            <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+              <button class="btn" style="padding:8px 16px;" onclick="switchAppMode('word')">Open in Docs (.docx)</button>
+              <button class="btn" style="padding:8px 16px;" onclick="switchAppMode('impress')">Open in Slides (.pptx)</button>
+              <button class="btn" style="padding:8px 16px;" onclick="switchAppMode('sheet')">Open in Sheets (.xlsx)</button>
+              <button class="btn" style="padding:8px 16px;" onclick="switchAppMode('html')">Open in HTML Studio (.html)</button>
+              <button class="btn" style="padding:8px 16px;" onclick="switchAppMode('pdf')">Open in PDF Viewer (.pdf)</button>
+            </div>
+          </div>
         </div>
       </div>
 

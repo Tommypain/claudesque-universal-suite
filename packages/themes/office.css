@@ -1,23 +1,50 @@
+    /* ══════════════════════════════════════════════════════════════
+       LIBERTY STUDIO — THREE-LAYER APPEARANCE ARCHITECTURE
+       Layer 1: Mode (Normal / Liquid Glass)
+       Layer 2: Taste (Default, Ocean, Forest, Rose, Graphite) with Light/Dark Counterparts
+       Layer 3: Color Scheme (Light / Dark)
+       ══════════════════════════════════════════════════════════════ */
+
     :root {
-      --color-background-primary: #ffffff;
-      --color-background-secondary: #fbfbfa;
+      /* Semantic Color Tokens (Default Taste - Light Counterpart) */
+      --accent: #d97706;
+      --accent-hover: #b45309;
+      --accent-active: #92400e;
+      --accent-soft: rgba(217, 119, 6, 0.12);
+      --focus: rgba(217, 119, 6, 0.35);
+      --selection: rgba(217, 119, 6, 0.2);
+
+      /* Semantic Surfaces & Typography */
+      --surface: #ffffff;
+      --surface-elevated: #fbfbfa;
+      --surface-glass: #ffffff;
+      --text-primary: #1a1a1a;
+      --text-secondary: #4a4a4a;
+      --text-muted: #7a7a7a;
+      --border-color: #e2e2da;
+
+      --color-background-primary: var(--surface);
+      --color-background-secondary: var(--surface-elevated);
       --color-background-tertiary: #f3f3ee;
       --color-background-active: #eaeae4;
       --color-border-primary: #666666;
       --color-border-secondary: #aaaaaa;
-      --color-border-tertiary: #e2e2da;
-      --color-text-primary: #1a1a1a;
-      --color-text-secondary: #4a4a4a;
-      --color-text-tertiary: #7a7a7a;
+      --color-border-tertiary: var(--border-color);
+      --color-text-primary: var(--text-primary);
+      --color-text-secondary: var(--text-secondary);
+      --color-text-tertiary: var(--text-muted);
 
-      /* ── Octopus Studio app accent colors ── */
-      --color-write: #1d4ed8;   /* Octopus Write   — Blue   */
-      --color-sheet: #15803d;   /* Octopus Sheet   — Green  */
-      --color-present: #b45309;  /* Octopus Present — Amber  */
-      --color-pdf: #7c3aed;     /* Octopus PDF     — Purple */
-      --color-accent: var(--color-write);
+      /* App Identity Colors */
+      --color-write: #1d4ed8;
+      --color-sheet: #15803d;
+      --color-present: #b45309;
+      --color-pdf: #7c3aed;
+      --color-html: #0284c7;
+      --color-converter: #6366f1;
+      --color-design: #0891b2;
+      --color-accent: var(--accent);
       
-      /* نمط الكبسولات المنفصلة الرائعة المستوحى من التصميم المطلوب */
+      /* Capsule Button Tokens */
       --color-button-bg: #eaeae4;
       --color-button-border: #e2e2da;
       --color-button-text: #1a1a1a;
@@ -26,22 +53,151 @@
       --transition-speed: 0.15s;
     }
 
-    /* مصفوفة ألوان الوضع الداكن الاحترافي */
-    body.dark {
-      --color-background-primary: #181818;
-      --color-background-secondary: #1f1f1f;
+    /* ── Layer 3: Dark Mode Semantic Counterparts ── */
+    body.dark,
+    html[data-theme="dark"] {
+      --surface: #181818;
+      --surface-elevated: #1f1f1f;
+      --surface-glass: #181818;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border-color: #2e2e2e;
+
+      --color-background-primary: var(--surface);
+      --color-background-secondary: var(--surface-elevated);
       --color-background-tertiary: #121212;
       --color-background-active: #2d2d30;
       --color-border-primary: #aaaaaa;
       --color-border-secondary: #474747;
-      --color-border-tertiary: #2e2e2e;
-      --color-text-primary: #f3f4f6;
-      --color-text-secondary: #9ca3af;
-      --color-text-tertiary: #6b7280;
+      --color-border-tertiary: var(--border-color);
+      --color-text-primary: var(--text-primary);
+      --color-text-secondary: var(--text-secondary);
+      --color-text-tertiary: var(--text-muted);
       
       --color-button-bg: #2d2d30;
       --color-button-border: #474747;
       --color-button-text: #f3f4f6;
+    }
+
+    /* ── Layer 2: TASTE — Color Personality (Light & Dark Counterparts) ── */
+
+    /* 1. Taste: Default (Liberty Classic Amber) */
+    body.taste-default {
+      --accent: #d97706;
+      --accent-hover: #b45309;
+      --accent-active: #92400e;
+      --accent-soft: rgba(217, 119, 6, 0.12);
+      --focus: rgba(217, 119, 6, 0.35);
+      --selection: rgba(217, 119, 6, 0.2);
+    }
+    body.taste-default.dark,
+    body.dark.taste-default,
+    html[data-theme="dark"] body.taste-default {
+      --accent: #f59e0b;
+      --accent-hover: #fbbf24;
+      --accent-active: #d97706;
+      --accent-soft: rgba(245, 158, 11, 0.2);
+      --focus: rgba(245, 158, 11, 0.45);
+      --selection: rgba(245, 158, 11, 0.25);
+    }
+
+    /* 2. Taste: Ocean (Sky & Ocean Blue) */
+    body.taste-ocean {
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --accent-active: #075985;
+      --accent-soft: rgba(2, 132, 199, 0.12);
+      --focus: rgba(2, 132, 199, 0.35);
+      --selection: rgba(2, 132, 199, 0.2);
+    }
+    body.taste-ocean.dark,
+    body.dark.taste-ocean,
+    html[data-theme="dark"] body.taste-ocean {
+      --accent: #38bdf8;
+      --accent-hover: #7dd3fc;
+      --accent-active: #0284c7;
+      --accent-soft: rgba(56, 189, 248, 0.2);
+      --focus: rgba(56, 189, 248, 0.45);
+      --selection: rgba(56, 189, 248, 0.25);
+    }
+
+    /* 3. Taste: Forest (Botanical & Emerald Green) */
+    body.taste-forest {
+      --accent: #15803d;
+      --accent-hover: #166534;
+      --accent-active: #14532d;
+      --accent-soft: rgba(21, 128, 61, 0.12);
+      --focus: rgba(21, 128, 61, 0.35);
+      --selection: rgba(21, 128, 61, 0.2);
+    }
+    body.taste-forest.dark,
+    body.dark.taste-forest,
+    html[data-theme="dark"] body.taste-forest {
+      --accent: #4ade80;
+      --accent-hover: #86efac;
+      --accent-active: #22c55e;
+      --accent-soft: rgba(74, 222, 128, 0.2);
+      --focus: rgba(74, 222, 128, 0.45);
+      --selection: rgba(74, 222, 128, 0.25);
+    }
+
+    /* 4. Taste: Rose (Carmine & Vibrant Crimson) */
+    body.taste-rose {
+      --accent: #e11d48;
+      --accent-hover: #be123c;
+      --accent-active: #9f1239;
+      --accent-soft: rgba(225, 29, 72, 0.12);
+      --focus: rgba(225, 29, 72, 0.35);
+      --selection: rgba(225, 29, 72, 0.2);
+    }
+    body.taste-rose.dark,
+    body.dark.taste-rose,
+    html[data-theme="dark"] body.taste-rose {
+      --accent: #fb7185;
+      --accent-hover: #fda4af;
+      --accent-active: #f43f5e;
+      --accent-soft: rgba(251, 113, 133, 0.2);
+      --focus: rgba(251, 113, 133, 0.45);
+      --selection: rgba(251, 113, 133, 0.25);
+    }
+
+    /* 5. Taste: Graphite (Charcoal & Cool Slate) */
+    body.taste-graphite {
+      --accent: #475569;
+      --accent-hover: #334155;
+      --accent-active: #1e293b;
+      --accent-soft: rgba(71, 85, 105, 0.12);
+      --focus: rgba(71, 85, 105, 0.35);
+      --selection: rgba(71, 85, 105, 0.2);
+    }
+    body.taste-graphite.dark,
+    body.dark.taste-graphite,
+    html[data-theme="dark"] body.taste-graphite {
+      --accent: #94a3b8;
+      --accent-hover: #cbd5e1;
+      --accent-active: #64748b;
+      --accent-soft: rgba(148, 163, 184, 0.2);
+      --focus: rgba(148, 163, 184, 0.45);
+      --selection: rgba(148, 163, 184, 0.25);
+    }
+
+    /* ── Layer 1: MODE (Normal vs Liquid Glass) ── */
+    body.mode-normal,
+    body.layout-basic {
+      --surface-glass: var(--surface);
+    }
+    body.mode-liquid-glass,
+    body.layout-liquid-glass {
+      --surface-glass: rgba(255, 255, 255, 0.45);
+      --surface: rgba(255, 255, 255, 0.55);
+      --surface-elevated: rgba(255, 255, 255, 0.7);
+    }
+    body.mode-liquid-glass.dark,
+    body.layout-liquid-glass.dark {
+      --surface-glass: rgba(18, 18, 24, 0.65);
+      --surface: rgba(20, 20, 28, 0.75);
+      --surface-elevated: rgba(30, 30, 42, 0.85);
     }
 
     /* النمط الافتراضي (Basic Capsule Style) المطلوب بالصور */
@@ -1480,25 +1636,38 @@
       transition: all 0.15s ease;
     }
     .claude-theme-card:hover {
-      border-color: var(--color-accent, #1d4ed8);
+      border-color: var(--accent);
       transform: translateY(-1px);
     }
     .claude-theme-card.active {
-      border-color: var(--color-accent, #1d4ed8);
-      box-shadow: 0 0 0 1px var(--color-accent, #1d4ed8);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
     }
 
     .claude-layout-card {
       transition: all 0.15s ease;
     }
     .claude-layout-card:hover {
-      border-color: var(--color-accent, #1d4ed8);
+      border-color: var(--accent);
       transform: translateY(-1px);
     }
     .claude-layout-card.active {
-      border-color: var(--color-accent, #1d4ed8);
-      box-shadow: 0 0 0 1px var(--color-accent, #1d4ed8);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1.5px var(--accent);
       background: var(--color-background-primary);
+    }
+
+    .claude-taste-card {
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .claude-taste-card:hover {
+      border-color: var(--accent) !important;
+      transform: translateY(-1px);
+    }
+    .claude-taste-card.active {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 1.5px var(--accent) !important;
+      background: var(--color-background-primary) !important;
     }
 
     body.layout-liquid-glass #claude-live-test-box {

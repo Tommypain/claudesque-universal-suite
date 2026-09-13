@@ -14,24 +14,28 @@ function hexToRgb(hex: string): string {
   return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
 }
 
-/** Applies theme (light/dark/system) and the active-app accent to :root. */
+/** Applies three-layer appearance (mode, taste, colorScheme) and active-app accent to DOM. */
 export function useTheme() {
+  const mode = useAppStore((s) => s.mode);
+  const taste = useAppStore((s) => s.taste);
+  const colorScheme = useAppStore((s) => s.colorScheme);
   const theme = useAppStore((s) => s.theme);
   const themeStyle = useAppStore((s) => s.themeStyle);
   const activeApp = useAppStore((s) => s.activeApp);
   const colors = useAppStore((s) => s.colors);
 
-  // Theme Mode (light / dark / system)
+  // 1. Theme Color Scheme (light / dark / system)
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
+    const scheme = colorScheme || theme || "system";
     const apply = () => {
       const resolved =
-        theme === "system"
+        scheme === "system"
           ? window.matchMedia("(prefers-color-scheme: dark)").matches
             ? "dark"
             : "light"
-          : theme;
+          : scheme;
       root.setAttribute("data-theme", resolved);
       if (resolved === "dark") {
         body.classList.add("dark");
@@ -40,38 +44,51 @@ export function useTheme() {
       }
     };
     apply();
-    if (theme === "system") {
+    if (scheme === "system") {
       const mq = window.matchMedia("(prefers-color-scheme: dark)");
       mq.addEventListener("change", apply);
       return () => mq.removeEventListener("change", apply);
     }
-  }, [theme]);
+  }, [colorScheme, theme]);
 
-  // Theme Style (Default, Liquid Glass, Coastal Warmth, Driftwood Slate, Sage Botanical)
+  // 2. Visual Mode (Normal vs Liquid Glass)
   useEffect(() => {
     const body = document.body;
     body.classList.remove(
+      "mode-normal",
+      "mode-liquid-glass",
+      "layout-basic",
+      "layout-liquid-glass",
       "theme-default",
-      "theme-liquid-glass",
+      "theme-liquid-glass"
+    );
+
+    const activeMode = mode || (themeStyle === "liquid-glass" ? "liquid-glass" : "normal");
+    if (activeMode === "liquid-glass") {
+      body.classList.add("mode-liquid-glass", "layout-liquid-glass", "theme-liquid-glass");
+    } else {
+      body.classList.add("mode-normal", "layout-basic", "theme-default");
+    }
+  }, [mode, themeStyle]);
+
+  // 3. Taste (Default, Ocean, Forest, Rose, Graphite)
+  useEffect(() => {
+    const body = document.body;
+    const tasteClasses = [
+      "taste-default",
+      "taste-ocean",
+      "taste-forest",
+      "taste-rose",
+      "taste-graphite",
       "theme-coastal-warmth",
       "theme-driftwood-slate",
       "theme-sage-botanical",
-      "layout-basic",
-      "layout-liquid-glass"
-    );
+    ];
+    body.classList.remove(...tasteClasses);
 
-    if (themeStyle === "liquid-glass") {
-      body.classList.add("theme-liquid-glass", "layout-liquid-glass");
-    } else if (themeStyle === "coastal-warmth") {
-      body.classList.add("theme-coastal-warmth", "layout-basic");
-    } else if (themeStyle === "driftwood-slate") {
-      body.classList.add("theme-driftwood-slate", "layout-basic");
-    } else if (themeStyle === "sage-botanical") {
-      body.classList.add("theme-sage-botanical", "layout-basic");
-    } else {
-      body.classList.add("theme-default", "layout-basic");
-    }
-  }, [themeStyle]);
+    const activeTaste = taste || "default";
+    body.classList.add(`taste-${activeTaste}`);
+  }, [taste]);
 
   // Accent per active app + custom colors
   useEffect(() => {
