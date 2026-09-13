@@ -13,5 +13,5 @@ export { LibertyPdfApp } from "./apps/LibertyPdfApp";
 export { LibertyChatApp } from "./apps/LibertyChatApp";
 export { LibertyFileDialog } from "./shell/LibertyFileDialog";
 export { LibertyDesignApp } from "./apps/LibertyDesignApp";
-export { LibertyVoiceApp } from "./apps/LibertyVoiceApp";
+export { LibertyHtmlApp } from "./apps/LibertyHtmlApp";
 

@@ -1,14 +1,16 @@
-import { useAppStore, type AppId } from "../../store/useAppStore";
-import { FileText, Presentation, Grid3x3, FileType2, MessageSquare } from "lucide-react";
+import { useAppStore, type AppId } from "@liberty/shared-hooks";
+import { WordIcon, ImpressIcon, SheetIcon, PdfIcon, DesignIcon, HtmlIcon, ConverterIcon } from "@liberty/icons";
 
 interface AppSidebarProps {
-  activeApp: AppId | "chat";
-  onChangeApp: (app: AppId | "chat") => void;
+  activeApp: AppId;
+  onChangeApp: (app: AppId) => void;
 }
 
 /**
  * AppSidebar — left sidebar app switcher matching OfficeSuite's HTML
  * and CSS class names (`.app-sidebar` and `.app-icon-btn`).
+ * Exactly 7 native sibling applications in the Liberty Studio ecosystem:
+ * Documents, Presentations, Spreadsheets, PDF, Converter, Design, HTML Studio.
  */
 export function AppSidebar({ activeApp, onChangeApp }: AppSidebarProps) {
   return (
@@ -18,28 +20,28 @@ export function AppSidebar({ activeApp, onChangeApp }: AppSidebarProps) {
       <button 
         className={`app-icon-btn ${activeApp === "write" ? "active" : ""}`}
         onClick={() => onChangeApp("write")} 
-        title="Word Processor"
+        title="Documents (Word)"
       >
-        <FileText size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
-        <span>Word</span>
+        <WordIcon size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
+        <span>Docs</span>
       </button>
       
       <button 
         className={`app-icon-btn ${activeApp === "present" ? "active" : ""}`}
         onClick={() => onChangeApp("present")} 
-        title="Impress Presentation"
+        title="Presentations (Impress)"
       >
-        <Presentation size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
-        <span>Impress</span>
+        <ImpressIcon size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
+        <span>Slides</span>
       </button>
       
       <button 
         className={`app-icon-btn ${activeApp === "sheet" ? "active" : ""}`}
         onClick={() => onChangeApp("sheet")} 
-        title="Sheet Spreadsheet"
+        title="Spreadsheets (Sheet)"
       >
-        <Grid3x3 size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
-        <span>Sheet</span>
+        <SheetIcon size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
+        <span>Sheets</span>
       </button>
       
       <button 
@@ -47,20 +49,40 @@ export function AppSidebar({ activeApp, onChangeApp }: AppSidebarProps) {
         onClick={() => onChangeApp("pdf")} 
         title="PDF Annotation & Sign"
       >
-        <FileType2 size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
-        <span>PDF Edit</span>
+        <PdfIcon size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
+        <span>PDF</span>
       </button>
 
-      <div style={{ flex: 1 }} />
-      <div style={{ height: 1, margin: "4px 12px", background: "var(--color-border-tertiary)" }} />
+      <button 
+        className={`app-icon-btn ${activeApp === "converter" ? "active" : ""}`}
+        onClick={() => onChangeApp("converter")} 
+        title="Universal File Converter"
+      >
+        <ConverterIcon size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
+        <span>Convert</span>
+      </button>
 
       <button 
-        className={`app-icon-btn ${activeApp === "chat" ? "active" : ""}`}
-        onClick={() => onChangeApp("chat")} 
-        title="Liberty AI Chat"
+        className={`app-icon-btn ${activeApp === "design" ? "active" : ""}`}
+        onClick={() => onChangeApp("design")} 
+        title="Vector Design Studio"
       >
-        <MessageSquare size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
-        <span>Chat</span>
+        <DesignIcon size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }} />
+        <span>Design</span>
+      </button>
+
+      <div style={{ height: 1, margin: "6px 12px", background: "var(--color-border-tertiary)" }} />
+
+      <button 
+        className={`app-icon-btn ${activeApp === "html" ? "active" : ""}`}
+        onClick={() => onChangeApp("html")} 
+        title="HTML Studio — Visual & Code Document Authoring"
+        style={{
+          border: activeApp === "html" ? "1px solid var(--app-html, #0284c7)" : undefined,
+        }}
+      >
+        <HtmlIcon size={14} style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0, color: "var(--app-html, #0284c7)" }} />
+        <span style={{ fontWeight: 600 }}>HTML</span>
       </button>
     </div>
   );

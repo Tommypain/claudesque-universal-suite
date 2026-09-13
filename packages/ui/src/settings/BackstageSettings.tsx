@@ -16,20 +16,45 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
   const [activeSection, setActiveSection] = useState<SettingsSection>("general");
   const theme = useAppStore((s: any) => s.theme);
   const setTheme = useAppStore((s: any) => s.setTheme);
+  const themeStyle = useAppStore((s: any) => s.themeStyle);
+  const setThemeStyle = useAppStore((s: any) => s.setThemeStyle);
   const colors = useAppStore((s: any) => s.colors);
   const setColor = useAppStore((s: any) => s.setColor);
   const resetColor = useAppStore((s: any) => s.resetColor);
   const resetAllColors = useAppStore((s: any) => s.resetAllColors);
 
-  // Layout style (basic vs liquid-glass)
-  const [layoutStyle, setLayoutStyle] = useState<"basic" | "liquid-glass">("basic");
-
-  const handleLayoutStyleChange = (style: "basic" | "liquid-glass") => {
-    setLayoutStyle(style);
-    const body = document.body;
-    body.classList.remove("layout-basic", "layout-liquid-glass");
-    body.classList.add(`layout-${style}`);
-  };
+  const themeOptions = [
+    {
+      id: "default",
+      name: "Default Theme (Liberty Classic)",
+      desc: "Warm ivory parchment, subtle borders, and classic capsule controls.",
+      preview: ["#fbfbfa", "#f3f3ee", "#1a1a1a", "#1d4ed8"],
+    },
+    {
+      id: "liquid-glass",
+      name: "macOS Liquid Glass",
+      desc: "Apple-inspired translucent surfaces, saturated backdrop blur, and depth.",
+      preview: ["#edd8fc", "#e0e7ff", "#1e1b4b", "#7c3aed"],
+    },
+    {
+      id: "coastal-warmth",
+      name: "Coastal Warmth",
+      desc: "Terracotta (#AD7556) & Chambray (#7A9CB3) with warm Sandstone and Muslin.",
+      preview: ["#F1EFE6", "#DCCFB8", "#AD7556", "#7A9CB3"],
+    },
+    {
+      id: "driftwood-slate",
+      name: "Driftwood & Slate",
+      desc: "Pearl Shell (#EDE7E0) & Slate Pebble (#5E6C74) with Weathered Driftwood.",
+      preview: ["#EDE7E0", "#C9BCAD", "#8F8476", "#5E6C74"],
+    },
+    {
+      id: "sage-botanical",
+      name: "Sage Botanical",
+      desc: "Plaster (#F2EFE2) & Eucalyptus (#98AA9D) with Moss (#697C70) and Mist.",
+      preview: ["#F2EFE2", "#B3C9D6", "#98AA9D", "#697C70"],
+    },
+  ] as const;
 
   const sections = [
     { id: "general", label: "General Preferences" },
@@ -77,23 +102,36 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
               </h3>
               
               <div className="mb-8">
-                <h4 className="text-sm font-semibold mb-2">User Interface Layout Style</h4>
-                <p className="text-xs text-gray-500 mb-4">Choose the presentation structure of your suite workspace toolbar and buttons.</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div
-                    className={`border p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 ${layoutStyle === "basic" ? "border-blue-600 bg-blue-50/10" : "border-gray-300 dark:border-neutral-700"}`}
-                    onClick={() => handleLayoutStyleChange("basic")}
-                  >
-                    <span className="font-bold text-xs block mb-1">Basic Style (Default Capsule)</span>
-                    <span className="text-[10px] text-gray-500">The beautiful rounded floating chip pattern seen in original design guidelines.</span>
-                  </div>
-                  <div
-                    className={`border p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 ${layoutStyle === "liquid-glass" ? "border-purple-600 bg-purple-50/10" : "border-gray-300 dark:border-neutral-700"}`}
-                    onClick={() => handleLayoutStyleChange("liquid-glass")}
-                  >
-                    <span className="font-bold text-xs block mb-1 text-purple-600">Liquid Glass Layout (Apple macOS Style)</span>
-                    <span className="text-[10px] text-gray-500">Glassmorphism effects, saturated blurs, glowing boundaries inspired by Apple's design language.</span>
-                  </div>
+                <h4 className="text-sm font-semibold mb-2">Workspace Theme Style</h4>
+                <p className="text-xs text-gray-500 mb-4">Select the design system aesthetic and token palette for your workspace.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {themeOptions.map((opt) => {
+                    const isSelected = (themeStyle || "default") === opt.id;
+                    return (
+                      <div
+                        key={opt.id}
+                        className={`border p-3.5 rounded-lg cursor-pointer transition-all ${
+                          isSelected
+                            ? "border-blue-600 bg-blue-50/10 ring-1 ring-blue-600 shadow-sm"
+                            : "border-gray-200 dark:border-neutral-700 hover:border-gray-400 dark:hover:border-neutral-500"
+                        }`}
+                        onClick={() => setThemeStyle(opt.id)}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-bold text-xs block text-[var(--color-text-primary)]">{opt.name}</span>
+                          <div className="flex gap-1 items-center">
+                            {opt.preview.map((c, i) => (
+                              <div
+                                key={i}
+                                style={{ width: 12, height: 12, borderRadius: "50%", background: c, border: "1px solid rgba(0,0,0,0.15)" }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-[11px] text-gray-500 block leading-tight">{opt.desc}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -125,16 +163,16 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                 <h4 className="text-sm font-semibold mb-2">App Accent Colors</h4>
                 <p className="text-xs text-gray-500 mb-4">Customize the accent colors for each core workspace application.</p>
                 <div className="flex flex-col gap-3 max-w-md">
-                  {(["write", "sheet", "present", "pdf"] as AppId[]).map((app) => (
+                  {(["write", "present", "sheet", "pdf", "converter", "design", "html"] as AppId[]).map((app) => (
                     <div key={app} className="flex items-center justify-between border-b border-gray-100 dark:border-neutral-800 pb-2">
                       <div className="flex items-center gap-3">
                         <input
                           type="color"
-                          value={colors[app]}
+                          value={colors[app] || "#1d4ed8"}
                           onChange={(e) => setColor(app, e.target.value)}
                           style={{ width: 32, height: 32, border: "none", borderRadius: 4, cursor: "pointer" }}
                         />
-                        <span className="text-xs font-semibold uppercase">{app} App</span>
+                        <span className="text-xs font-semibold uppercase">{app === "write" ? "Docs" : app === "present" ? "Slides" : app} App</span>
                       </div>
                       <button
                         className="px-2 py-1 text-xs border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 cursor-pointer"

@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import "../office/office.css";
 import "../office/host.css";
 import { useAppStore, useDocumentStore, useTheme, useKeyboard, useFileManager, type AppId } from "@liberty/shared-hooks";
-import { AppShell, AppSidebar, StatusBar, BackstageSettings } from "@liberty/ui";
+import { AppShell, AppSidebar, StatusBar, BackstageSettings, LibertyDesignApp } from "@liberty/ui";
 import { LibertyWriteApp } from "./apps/LibertyWriteApp";
 import { LibertySheetApp } from "./apps/LibertySheetApp";
 import { LibertyImpressApp } from "./apps/LibertyImpressApp";
 import { LibertyPdfApp } from "./apps/LibertyPdfApp";
-import { LibertyChatApp } from "./apps/LibertyChatApp";
+import { LibertyHtmlApp } from "./apps/LibertyHtmlApp";
 import { LibertyFileDialog } from "./shell/LibertyFileDialog";
 
 /**
@@ -26,7 +26,8 @@ export default function LibertyStudio() {
   const [sheetTab, setSheetTab] = useState("sheet-home");
   const [impressTab, setImpressTab] = useState("impress-home");
   const [pdfTab, setPdfTab] = useState("pdf-home");
-  const [chatTab, setChatTab] = useState("chat-home");
+  const [htmlTab, setHtmlTab] = useState("home");
+  const [designTab, setDesignTab] = useState("design-draw");
 
   useTheme();
 
@@ -37,11 +38,14 @@ export default function LibertyStudio() {
       body.classList.add("layout-basic");
     }
     // Also make sure correct app classes are added to body for coloring
-    body.classList.remove("app-word", "app-sheet", "app-impress", "app-pdf", "app-chat");
+    body.classList.remove("app-word", "app-sheet", "app-impress", "app-pdf", "app-design", "app-html", "app-converter");
     if (activeApp === "write") body.classList.add("app-word");
     else if (activeApp === "sheet") body.classList.add("app-sheet");
     else if (activeApp === "present") body.classList.add("app-impress");
     else if (activeApp === "pdf") body.classList.add("app-pdf");
+    else if (activeApp === "design") body.classList.add("app-design");
+    else if (activeApp === "html") body.classList.add("app-html");
+    else if (activeApp === "converter") body.classList.add("app-converter");
   }, [activeApp]);
 
   useKeyboard({
@@ -52,6 +56,7 @@ export default function LibertyStudio() {
       d.setFileName("Untitled");
       if (activeApp === "write") d.setWriteHtml("");
       if (activeApp === "sheet") d.setSheet({});
+      if (activeApp === "html") d.setHtmlDoc("");
       d.setDirty(false);
     },
   });
@@ -98,15 +103,59 @@ export default function LibertyStudio() {
             onRedo={() => {}}
           />
         );
-      case "chat":
+      case "design":
         return (
-          <LibertyChatApp
-            activeTab={chatTab}
-            setActiveTab={setChatTab}
+          <LibertyDesignApp
+            activeTab={designTab}
+            setActiveTab={setDesignTab}
             onSave={save}
             onUndo={() => {}}
             onRedo={() => {}}
           />
+        );
+      case "html":
+        return (
+          <LibertyHtmlApp
+            activeTab={htmlTab}
+            setActiveTab={setHtmlTab}
+            onSave={save}
+            onUndo={() => {}}
+            onRedo={() => {}}
+          />
+        );
+      case "converter":
+        return (
+          <div style={{ padding: "48px 24px", maxWidth: "760px", margin: "0 auto", textAlign: "center" }}>
+            <h2 style={{ fontSize: "24px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "8px" }}>
+              Universal Document Converter
+            </h2>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "14px", marginBottom: "28px" }}>
+              Interchange files between Word, Presentation slides, Spreadsheets, PDF, and HTML Studio formats.
+            </p>
+            <div
+              style={{
+                border: "2px dashed var(--color-border-secondary)",
+                borderRadius: "12px",
+                padding: "48px 24px",
+                background: "var(--color-background-primary)",
+              }}
+            >
+              <p style={{ fontWeight: 600, marginBottom: "16px", color: "var(--color-text-primary)" }}>
+                Select an application workspace to import or convert into:
+              </p>
+              <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
+                <button className="btn" style={{ padding: "8px 16px" }} onClick={() => setActiveApp("write")}>
+                  Open in Docs (.docx)
+                </button>
+                <button className="btn" style={{ padding: "8px 16px" }} onClick={() => setActiveApp("html")}>
+                  Open in HTML Studio (.html)
+                </button>
+                <button className="btn" style={{ padding: "8px 16px" }} onClick={() => setActiveApp("pdf")}>
+                  Open in PDF Viewer (.pdf)
+                </button>
+              </div>
+            </div>
+          </div>
         );
       default:
         return null;
@@ -119,16 +168,7 @@ export default function LibertyStudio() {
         sidebar={
           <AppSidebar
             activeApp={activeApp}
-            onChangeApp={(app) => {
-              if (app === "chat") {
-                setActiveApp("write"); // fallback app ID in store, show chat layout
-                // We'll update the store's active app directly if store gets extended,
-                // but for now let's update local activeApp or trigger state change.
-                useAppStore.setState({ activeApp: "write" }); // keep store write active, but let's change app ID
-              }
-              // Map Present to present, sheet to sheet, pdf to pdf, write to write
-              setActiveApp(app as AppId);
-            }}
+            onChangeApp={(app) => setActiveApp(app)}
           />
         }
         ribbon={null} // Ribbon is rendered inside each app component to keep tab bindings self-contained

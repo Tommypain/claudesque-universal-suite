@@ -1,14 +1,17 @@
 import { create } from "zustand";
 
-export type AppId = "write" | "sheet" | "present" | "pdf" | "design";
+export type AppId = "write" | "sheet" | "present" | "pdf" | "converter" | "design" | "html";
 export type ThemeMode = "light" | "dark" | "system";
+export type ThemeStyle = "default" | "liquid-glass" | "coastal-warmth" | "driftwood-slate" | "sage-botanical";
 
 export interface AppColors {
   write: string;
   sheet: string;
   present: string;
   pdf: string;
+  converter: string;
   design: string;
+  html: string;
 }
 
 export const DEFAULT_COLORS: AppColors = {
@@ -16,7 +19,9 @@ export const DEFAULT_COLORS: AppColors = {
   sheet: "#15803d",
   present: "#b45309",
   pdf: "#7c3aed",
+  converter: "#6366f1",
   design: "#0891b2",
+  html: "#0284c7",
 };
 
 export interface Toast {
@@ -27,11 +32,13 @@ export interface Toast {
 interface AppState {
   activeApp: AppId;
   theme: ThemeMode;
+  themeStyle: ThemeStyle;
   colors: AppColors;
   settingsOpen: boolean;
   toasts: Toast[];
   setActiveApp: (a: AppId) => void;
   setTheme: (t: ThemeMode) => void;
+  setThemeStyle: (s: ThemeStyle) => void;
   setColor: (a: AppId, c: string) => void;
   resetColor: (a: AppId) => void;
   resetAllColors: () => void;
@@ -56,6 +63,11 @@ function loadTheme(): ThemeMode {
   return (localStorage.getItem("octopus-theme") as ThemeMode) || "system";
 }
 
+function loadThemeStyle(): ThemeStyle {
+  if (typeof localStorage === "undefined") return "default";
+  return (localStorage.getItem("liberty-theme-style") as ThemeStyle) || "default";
+}
+
 function persist(colors: AppColors) {
   try {
     localStorage.setItem("octopus-colors", JSON.stringify(colors));
@@ -69,6 +81,7 @@ let toastId = 0;
 export const useAppStore = create<AppState>((set, get) => ({
   activeApp: "write",
   theme: loadTheme(),
+  themeStyle: loadThemeStyle(),
   colors: loadColors(),
   settingsOpen: false,
   toasts: [],
@@ -80,6 +93,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       /* ignore */
     }
     set({ theme: t });
+  },
+  setThemeStyle: (s) => {
+    try {
+      localStorage.setItem("liberty-theme-style", s);
+    } catch {
+      /* ignore */
+    }
+    set({ themeStyle: s });
   },
   setColor: (a, c) => {
     const colors = { ...get().colors, [a]: c };

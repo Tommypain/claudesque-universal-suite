@@ -46,26 +46,256 @@
 
     /* النمط الافتراضي (Basic Capsule Style) المطلوب بالصور */
     body.layout-basic .btn, 
+    body.theme-default .btn, 
     body.layout-basic .fsel, 
+    body.theme-default .fsel, 
     body.layout-basic .fnum, 
-    body.layout-basic .splt {
+    body.theme-default .fnum, 
+    body.layout-basic .splt,
+    body.theme-default .splt {
       background-color: var(--color-button-bg) !important;
       border: 0.5px solid var(--color-button-border) !important;
       color: var(--color-button-text) !important;
       border-radius: 6px !important;
       box-shadow: 0 1px 2px rgba(0,0,0,0.02);
     }
-    body.layout-basic .btn:hover {
+    body.layout-basic .btn:hover,
+    body.theme-default .btn:hover {
       background-color: var(--color-background-active) !important;
       transform: translateY(-1px);
     }
 
     /* النمط الفاخر والجديد كلياً المقتبس من Apple macOS & iPhone 17 */
-    body.layout-liquid-glass {
+    body.layout-liquid-glass,
+    body.theme-liquid-glass {
       background: linear-gradient(135deg, #f5f3ff 0%, #edd8fc 50%, #e0e7ff 100%) !important;
     }
-    body.layout-liquid-glass.dark {
+    body.layout-liquid-glass.dark,
+    body.theme-liquid-glass.dark {
       background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%) !important;
+    }
+
+    body.layout-liquid-glass .app-sidebar,
+    body.theme-liquid-glass .app-sidebar,
+    body.layout-liquid-glass .ribbon-system,
+    body.theme-liquid-glass .ribbon-system,
+    body.layout-liquid-glass .status-bar,
+    body.theme-liquid-glass .status-bar,
+    body.layout-liquid-glass .word-nav-sidebar,
+    body.theme-liquid-glass .word-nav-sidebar,
+    body.layout-liquid-glass .impress-sidebar,
+    body.theme-liquid-glass .impress-sidebar,
+    body.layout-liquid-glass .pdf-sidebar,
+    body.theme-liquid-glass .pdf-sidebar,
+    body.theme-liquid-glass .html-studio-pages,
+    body.theme-liquid-glass .html-studio-props {
+      background: rgba(255, 255, 255, 0.45) !important;
+      backdrop-filter: blur(24px) saturate(210%) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(210%) !important;
+      border-right: 1px solid rgba(255, 255, 255, 0.4) !important;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 8px 32px 0 rgba(31, 38, 135, 0.06) !important;
+    }
+
+    body.layout-liquid-glass.dark .app-sidebar,
+    body.theme-liquid-glass.dark .app-sidebar,
+    body.layout-liquid-glass.dark .ribbon-system,
+    body.theme-liquid-glass.dark .ribbon-system,
+    body.layout-liquid-glass.dark .status-bar,
+    body.theme-liquid-glass.dark .status-bar,
+    body.layout-liquid-glass.dark .word-nav-sidebar,
+    body.theme-liquid-glass.dark .word-nav-sidebar,
+    body.layout-liquid-glass.dark .impress-sidebar,
+    body.theme-liquid-glass.dark .impress-sidebar,
+    body.layout-liquid-glass.dark .pdf-sidebar,
+    body.theme-liquid-glass.dark .pdf-sidebar,
+    body.theme-liquid-glass.dark .html-studio-pages,
+    body.theme-liquid-glass.dark .html-studio-props {
+      background: rgba(18, 18, 24, 0.65) !important;
+      backdrop-filter: blur(24px) saturate(190%) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+      border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 40px 0 rgba(0, 0, 0, 0.3) !important;
+    }
+
+    body.layout-liquid-glass .btn,
+    body.theme-liquid-glass .btn,
+    body.layout-liquid-glass .fsel,
+    body.theme-liquid-glass .fsel,
+    body.layout-liquid-glass .fnum,
+    body.theme-liquid-glass .fnum,
+    body.layout-liquid-glass .splt,
+    body.theme-liquid-glass .splt {
+      background: rgba(255, 255, 255, 0.4) !important;
+      border: 1px solid rgba(255, 255, 255, 0.5) !important;
+      backdrop-filter: blur(8px) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255,255,255,0.6) !important;
+      color: #1e293b !important;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    body.layout-liquid-glass.dark .btn,
+    body.theme-liquid-glass.dark .btn,
+    body.layout-liquid-glass.dark .fsel,
+    body.theme-liquid-glass.dark .fsel,
+    body.layout-liquid-glass.dark .fnum,
+    body.theme-liquid-glass.dark .fnum,
+    body.layout-liquid-glass.dark .splt,
+    body.theme-liquid-glass.dark .splt {
+      background: rgba(255, 255, 255, 0.08) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 10px rgba(0,0,0,0.2) !important;
+      color: #f1f5f9 !important;
+    }
+
+    /* ── Theme 3: Coastal Warmth (Terracotta & Chambray) ── */
+    body.theme-coastal-warmth {
+      --color-background-primary: #fcfbf9;
+      --color-background-secondary: #f1efe6;
+      --color-background-tertiary: #dccfb8;
+      --color-background-active: #ad7556;
+      --color-border-primary: #53443d;
+      --color-border-secondary: #7a9cb3;
+      --color-border-tertiary: #dccfb8;
+      --color-text-primary: #53443d;
+      --color-text-secondary: #7a9cb3;
+      --color-text-tertiary: #8f8476;
+      --color-accent: #ad7556;
+      --color-button-bg: #f1efe6;
+      --color-button-border: #dccfb8;
+      --color-button-text: #53443d;
+      background-color: #f6f4ee !important;
+    }
+    body.theme-coastal-warmth.dark {
+      --color-background-primary: #2d2624;
+      --color-background-secondary: #3b322f;
+      --color-background-tertiary: #53443d;
+      --color-background-active: #ad7556;
+      --color-border-primary: #dccfb8;
+      --color-border-secondary: #7a9cb3;
+      --color-border-tertiary: #53443d;
+      --color-text-primary: #f1efe6;
+      --color-text-secondary: #dccfb8;
+      --color-text-tertiary: #7a9cb3;
+      --color-accent: #ad7556;
+      --color-button-bg: #3b322f;
+      --color-button-border: #53443d;
+      --color-button-text: #f1efe6;
+      background-color: #241e1c !important;
+    }
+    body.theme-coastal-warmth .btn,
+    body.theme-coastal-warmth .fsel,
+    body.theme-coastal-warmth .fnum,
+    body.theme-coastal-warmth .splt {
+      background-color: var(--color-button-bg) !important;
+      border: 1px solid var(--color-button-border) !important;
+      color: var(--color-button-text) !important;
+      border-radius: 6px !important;
+    }
+    body.theme-coastal-warmth .btn:hover {
+      border-color: #ad7556 !important;
+      color: #ad7556 !important;
+      transform: translateY(-1px);
+    }
+
+    /* ── Theme 4: Driftwood & Slate (Pearl Shell & Slate Pebble) ── */
+    body.theme-driftwood-slate {
+      --color-background-primary: #faf9f8;
+      --color-background-secondary: #ede7e0;
+      --color-background-tertiary: #c9bcad;
+      --color-background-active: #cbd5db;
+      --color-border-primary: #5e6c74;
+      --color-border-secondary: #8f8476;
+      --color-border-tertiary: #c9bcad;
+      --color-text-primary: #2e3438;
+      --color-text-secondary: #5e6c74;
+      --color-text-tertiary: #8f8476;
+      --color-accent: #5e6c74;
+      --color-button-bg: #ede7e0;
+      --color-button-border: #c9bcad;
+      --color-button-text: #2e3438;
+      background-color: #f2eee9 !important;
+    }
+    body.theme-driftwood-slate.dark {
+      --color-background-primary: #22272b;
+      --color-background-secondary: #2c3338;
+      --color-background-tertiary: #3e484f;
+      --color-background-active: #5e6c74;
+      --color-border-primary: #cbd5db;
+      --color-border-secondary: #8f8476;
+      --color-border-tertiary: #3e484f;
+      --color-text-primary: #ede7e0;
+      --color-text-secondary: #cbd5db;
+      --color-text-tertiary: #8f8476;
+      --color-accent: #cbd5db;
+      --color-button-bg: #2c3338;
+      --color-button-border: #3e484f;
+      --color-button-text: #ede7e0;
+      background-color: #1a1e21 !important;
+    }
+    body.theme-driftwood-slate .btn,
+    body.theme-driftwood-slate .fsel,
+    body.theme-driftwood-slate .fnum,
+    body.theme-driftwood-slate .splt {
+      background-color: var(--color-button-bg) !important;
+      border: 1px solid var(--color-button-border) !important;
+      color: var(--color-button-text) !important;
+      border-radius: 6px !important;
+    }
+    body.theme-driftwood-slate .btn:hover {
+      border-color: #5e6c74 !important;
+      color: #5e6c74 !important;
+      transform: translateY(-1px);
+    }
+
+    /* ── Theme 5: Sage Botanical (Eucalyptus & Moss) ── */
+    body.theme-sage-botanical {
+      --color-background-primary: #fbfbf9;
+      --color-background-secondary: #f2efe2;
+      --color-background-tertiary: #e3e8e1;
+      --color-background-active: #98aa9d;
+      --color-border-primary: #2d3536;
+      --color-border-secondary: #697c70;
+      --color-border-tertiary: #b3c9d6;
+      --color-text-primary: #2d3536;
+      --color-text-secondary: #697c70;
+      --color-text-tertiary: #98aa9d;
+      --color-accent: #697c70;
+      --color-button-bg: #f2efe2;
+      --color-button-border: #b3c9d6;
+      --color-button-text: #2d3536;
+      background-color: #edf0ea !important;
+    }
+    body.theme-sage-botanical.dark {
+      --color-background-primary: #1b2121;
+      --color-background-secondary: #232b2c;
+      --color-background-tertiary: #2d3536;
+      --color-background-active: #697c70;
+      --color-border-primary: #f2efe2;
+      --color-border-secondary: #98aa9d;
+      --color-border-tertiary: #3a4546;
+      --color-text-primary: #f2efe2;
+      --color-text-secondary: #b3c9d6;
+      --color-text-tertiary: #98aa9d;
+      --color-accent: #98aa9d;
+      --color-button-bg: #232b2c;
+      --color-button-border: #3a4546;
+      --color-button-text: #f2efe2;
+      background-color: #151a1a !important;
+    }
+    body.theme-sage-botanical .btn,
+    body.theme-sage-botanical .fsel,
+    body.theme-sage-botanical .fnum,
+    body.theme-sage-botanical .splt {
+      background-color: var(--color-button-bg) !important;
+      border: 1px solid var(--color-button-border) !important;
+      color: var(--color-button-text) !important;
+      border-radius: 6px !important;
+    }
+    body.theme-sage-botanical .btn:hover {
+      border-color: #697c70 !important;
+      color: #697c70 !important;
+      transform: translateY(-1px);
     }
 
     body.layout-liquid-glass .app-sidebar,
