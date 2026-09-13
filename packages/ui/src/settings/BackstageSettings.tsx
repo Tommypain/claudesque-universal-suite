@@ -50,6 +50,8 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
   const setTaste = useAppStore((s: any) => s.setTaste);
   const colorScheme = useAppStore((s: any) => s.colorScheme || s.theme || "system");
   const setColorScheme = useAppStore((s: any) => s.setColorScheme || s.setTheme);
+  const thumbnailSize = useAppStore((s: any) => s.thumbnailSize || "normal");
+  const setThumbnailSize = useAppStore((s: any) => s.setThumbnailSize);
   const colors = useAppStore((s: any) => s.colors);
   const setColor = useAppStore((s: any) => s.setColor);
   const resetColor = useAppStore((s: any) => s.resetColor);
@@ -687,7 +689,47 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                   </div>
                 </div>
 
-                {/* LAYER 4: LIVE PREVIEW WIDGET */}
+                {/* LAYER 4: THUMBNAIL SIZE */}
+                <div style={{ marginBottom: "22px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <div>
+                      <span style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)", display: "block" }}>
+                        4. Thumbnail Size
+                      </span>
+                      <span style={{ fontSize: "11px", color: "var(--color-text-muted)", display: "block", marginTop: "2px" }}>
+                        Scale pages & slides (Normal, Medium, Compact Small)
+                      </span>
+                    </div>
+                    <div className="claude-segmented-control">
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${thumbnailSize === "normal" ? "active" : ""}`}
+                        onClick={() => setThumbnailSize("normal")}
+                        title="Normal balanced size"
+                      >
+                        Normal
+                      </button>
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${thumbnailSize === "medium" ? "active" : ""}`}
+                        onClick={() => setThumbnailSize("medium")}
+                        title="Medium size"
+                      >
+                        Medium
+                      </button>
+                      <button
+                        type="button"
+                        className={`claude-segmented-btn ${thumbnailSize === "small" ? "active" : ""}`}
+                        onClick={() => setThumbnailSize("small")}
+                        title="Compact small size"
+                      >
+                        Small
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* LAYER 5: LIVE PREVIEW WIDGET */}
                 <div
                   style={{
                     padding: "14px 16px",
@@ -712,7 +754,7 @@ export function BackstageSettings({ onClose }: BackstageSettingsProps) {
                         fontWeight: 600,
                       }}
                     >
-                      {mode} • {taste} • {colorScheme}
+                      {mode} • {taste} • {colorScheme} • {thumbnailSize}
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>

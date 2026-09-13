@@ -1020,25 +1020,33 @@
 
     .word-page-thumb {
       width: 100%;
-      aspect-ratio: 1/1.4;
-      border: 0.5px solid var(--color-border-secondary);
-      background-color: var(--color-background-primary);
-      border-radius: 6px;
+      aspect-ratio: 1 / 1.414;
+      border: 1px solid var(--border-color, var(--color-border-secondary));
+      background-color: var(--surface-elevated, var(--color-background-primary, #ffffff));
+      border-radius: var(--thumb-radius, 6px);
       position: relative;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
-      color: var(--color-text-secondary);
-      transition: all 0.15s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      font-size: var(--thumb-font-size, 11px);
+      color: var(--text-secondary, var(--color-text-secondary));
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+      animation: thumbSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .word-page-thumb:hover {
+      border-color: var(--accent-hover, var(--accent, #d97706));
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
     }
 
     .word-page-thumb.active {
-      border: 2px solid #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      border: 2px solid var(--accent, #d97706) !important;
+      box-shadow: 0 0 0 3px var(--accent-soft, rgba(217, 119, 6, 0.2)), 0 4px 10px rgba(0,0,0,0.1) !important;
     }
 
     .word-pages-stream {
@@ -1207,24 +1215,33 @@
 
     .slide-thumbnail {
       width: 100%;
-      aspect-ratio: 16/9;
-      border: 0.5px solid var(--color-border-secondary);
-      background-color: var(--color-background-primary);
-      border-radius: 6px;
+      aspect-ratio: 16 / 9;
+      border: 1px solid var(--border-color, var(--color-border-secondary));
+      background-color: var(--surface-elevated, var(--color-background-primary, #ffffff));
+      border-radius: var(--thumb-radius, 6px);
       position: relative;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
-      color: var(--color-text-secondary);
-      transition: all 0.15s ease;
+      font-size: var(--thumb-font-size, 11px);
+      color: var(--text-secondary, var(--color-text-secondary));
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+      animation: thumbSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .slide-thumbnail:hover {
+      border-color: var(--accent-hover, var(--accent, #d97706));
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
     }
 
     .slide-thumbnail.active {
-      border: 2px solid #ea580c;
-      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+      border: 2px solid var(--accent, #d97706) !important;
+      box-shadow: 0 0 0 3px var(--accent-soft, rgba(217, 119, 6, 0.2)), 0 4px 10px rgba(0,0,0,0.1) !important;
     }
 
     .impress-main-view {
@@ -1429,25 +1446,33 @@
 
     .pdf-page-thumb {
       width: 100%;
-      aspect-ratio: 1/1.4;
-      border: 0.5px solid var(--color-border-secondary);
-      background-color: var(--color-background-primary);
-      border-radius: 6px;
+      aspect-ratio: 1 / 1.414;
+      border: 1px solid var(--border-color, var(--color-border-secondary));
+      background-color: var(--surface-elevated, var(--color-background-primary, #ffffff));
+      border-radius: var(--thumb-radius, 6px);
       position: relative;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
-      color: var(--color-text-secondary);
-      transition: all 0.15s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      font-size: var(--thumb-font-size, 11px);
+      color: var(--text-secondary, var(--color-text-secondary));
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+      animation: thumbSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .pdf-page-thumb:hover {
+      border-color: var(--accent-hover, var(--accent, #d97706));
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
     }
 
     .pdf-page-thumb.active {
-      border: 2px solid #dc2626;
-      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+      border: 2px solid var(--accent, #d97706) !important;
+      box-shadow: 0 0 0 3px var(--accent-soft, rgba(217, 119, 6, 0.2)), 0 4px 10px rgba(0,0,0,0.1) !important;
     }
 
     .pdf-document-scroll {
@@ -2196,41 +2221,160 @@
     .wrb-track { background: #e8e8e2; }
     body.dark .wrb-track { background: #252525; }
 
-    /* Nav sidebar page thumbnails */
-    .word-nav-sidebar {
-      width: 160px !important;
-      min-width: 160px;
-      background: #d0d0cc;
-      padding: 12px 8px;
+    /* ── Unified Liberty Thumbnail System ─────────────────── */
+    :root {
+      --thumb-rail-width: 170px;
+      --thumb-gap: 10px;
+      --thumb-radius: 6px;
+      --thumb-font-size: 11px;
+      --thumb-badge-size: 9.5px;
     }
-    body.dark .word-nav-sidebar { background: #161616; }
 
-    .word-page-thumb {
+    body.thumb-size-normal {
+      --thumb-rail-width: 170px;
+      --thumb-gap: 10px;
+      --thumb-radius: 6px;
+      --thumb-font-size: 11px;
+      --thumb-badge-size: 9.5px;
+    }
+
+    body.thumb-size-medium {
+      --thumb-rail-width: 135px;
+      --thumb-gap: 8px;
+      --thumb-radius: 5px;
+      --thumb-font-size: 10px;
+      --thumb-badge-size: 8.5px;
+    }
+
+    body.thumb-size-small {
+      --thumb-rail-width: 100px;
+      --thumb-gap: 6px;
+      --thumb-radius: 4px;
+      --thumb-font-size: 9px;
+      --thumb-badge-size: 7.5px;
+    }
+
+    .word-nav-sidebar,
+    .impress-sidebar,
+    .pdf-sidebar,
+    #word-pages-nav,
+    #impress-slides-sidebar,
+    #pdf-pages-nav {
+      width: var(--thumb-rail-width) !important;
+      min-width: var(--thumb-rail-width) !important;
+      gap: var(--thumb-gap) !important;
+      transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .liberty-thumb {
       width: 100%;
-      aspect-ratio: 1 / 1.414;
-      background: #fff;
-      border: 1.5px solid #bbb;
-      border-radius: 2px;
-      margin-bottom: 10px;
+      border: 1px solid var(--border-color, var(--color-border-secondary));
+      background-color: var(--surface-elevated, var(--color-background-primary, #ffffff));
+      border-radius: var(--thumb-radius, 6px);
+      position: relative;
       cursor: pointer;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
-      padding: 6px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.12);
-      transition: border-color .15s, box-shadow .15s;
-      position: relative;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--thumb-font-size, 11px);
+      color: var(--text-secondary, var(--color-text-secondary));
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+      user-select: none;
+      animation: thumbSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
-    body.dark .word-page-thumb { background: #2a2a2a; border-color: #444; }
 
-    .word-page-thumb:hover {
-      border-color: #2563eb88;
-      box-shadow: 0 2px 8px rgba(37,99,235,.2);
+    .liberty-thumb:hover {
+      border-color: var(--accent-hover, var(--accent, #d97706));
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
     }
 
-    .word-page-thumb.active {
-      border-color: #2563eb !important;
-      box-shadow: 0 0 0 2px #2563eb33, 0 2px 8px rgba(37,99,235,.25) !important;
+    .liberty-thumb.active,
+    .liberty-thumb[data-active="true"] {
+      border: 2px solid var(--accent, #d97706) !important;
+      box-shadow: 0 0 0 3px var(--accent-soft, rgba(217, 119, 6, 0.2)), 0 4px 10px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Thumbnail Size Control in Sidebar Heads */
+    .liberty-thumb-size-control {
+      display: inline-flex;
+      align-items: center;
+      background: var(--surface, var(--color-background-primary));
+      border: 1px solid var(--border-color, var(--color-border-secondary));
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .liberty-thumb-size-control button {
+      padding: 1px 6px;
+      font-size: 9px;
+      font-weight: 600;
+      line-height: 1.3;
+      border: none;
+      background: transparent;
+      color: var(--text-muted, #888);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .liberty-thumb-size-control button:hover {
+      color: var(--text-primary, #111);
+      background: var(--surface-elevated, rgba(0,0,0,0.04));
+    }
+
+    .liberty-thumb-size-control button.active {
+      color: #ffffff;
+      background: var(--accent, #d97706);
+    }
+
+    /* Badge and Label inside thumbnails */
+    .liberty-thumb-badge {
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      font-size: var(--thumb-badge-size, 9.5px);
+      font-weight: 700;
+      color: var(--text-muted, var(--color-text-tertiary));
+      background: var(--surface, rgba(255,255,255,0.8));
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 0.5px solid var(--border-color, rgba(0,0,0,0.1));
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Liquid Glass Mode for all thumbnails */
+    body.mode-liquid-glass .liberty-thumb,
+    body.mode-liquid-glass .word-page-thumb,
+    body.mode-liquid-glass .slide-thumbnail,
+    body.mode-liquid-glass .pdf-page-thumb {
+      background: var(--surface-glass, rgba(255, 255, 255, 0.65));
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.35));
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.6);
+    }
+
+    body.mode-liquid-glass.dark .liberty-thumb,
+    body.mode-liquid-glass.dark .word-page-thumb,
+    body.mode-liquid-glass.dark .slide-thumbnail,
+    body.mode-liquid-glass.dark .pdf-page-thumb {
+      background: var(--surface-glass, rgba(30, 30, 32, 0.65));
+      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.1);
+    }
+
+    body.mode-liquid-glass .liberty-thumb.active,
+    body.mode-liquid-glass .word-page-thumb.active,
+    body.mode-liquid-glass .slide-thumbnail.active,
+    body.mode-liquid-glass .pdf-page-thumb.active {
+      border: 2px solid var(--accent, #d97706) !important;
+      box-shadow: 0 0 0 3px var(--accent-soft, rgba(217, 119, 6, 0.3)), 0 6px 16px rgba(0, 0, 0, 0.12) !important;
     }
 
     .wpt-num {

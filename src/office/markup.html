@@ -1389,6 +1389,21 @@
                 </div>
               </div>
 
+              <!-- Layer 4: Thumbnail Size (حجم مصغرات الصفحات) -->
+              <div class="mb-6 pt-5 border-t border-[var(--color-border-secondary)]">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">4. Thumbnail Size (حجم المصغرات)</div>
+                    <div class="text-[11px] text-[var(--color-text-tertiary)]">Page and slide thumbnail scaling (Normal, Medium, Compact Small)</div>
+                  </div>
+                  <div class="claude-segmented-control" id="claude-thumb-size-segmented">
+                    <button id="btn-thumbsize-normal" type="button" class="claude-segmented-btn active" onclick="LibertyThumbnailSystem.setSize('normal')">Normal</button>
+                    <button id="btn-thumbsize-medium" type="button" class="claude-segmented-btn" onclick="LibertyThumbnailSystem.setSize('medium')">Medium</button>
+                    <button id="btn-thumbsize-small" type="button" class="claude-segmented-btn" onclick="LibertyThumbnailSystem.setSize('small')">Small</button>
+                  </div>
+                </div>
+              </div>
+
               <!-- Section C: Text & Typography (التكست والخطوط) -->
               <div class="mb-6 pt-5 border-t border-[var(--color-border-secondary)]">
                 <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] mb-3">Text & Typography (التكست والخطوط)</div>
@@ -1719,8 +1734,16 @@
       <!-- 1. واجهة معالج النصوص (Word Processor View) -->
       <div class="workspace-view active" id="view-word">
         <div class="word-workspace-container">
-          <div class="word-nav-sidebar" id="word-pages-nav">
-            <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Pages Outline</div>
+          <div class="flex flex-col h-full border-r border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]" style="width:var(--thumb-rail-width);min-width:var(--thumb-rail-width);flex-shrink:0;">
+            <div class="flex items-center justify-between p-2 border-b border-[var(--color-border-secondary)]">
+              <span class="text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Pages</span>
+              <div class="liberty-thumb-size-control">
+                <button type="button" data-size="normal" onclick="LibertyThumbnailSystem.setSize('normal')" title="Normal size">L</button>
+                <button type="button" data-size="medium" onclick="LibertyThumbnailSystem.setSize('medium')" title="Medium size">M</button>
+                <button type="button" data-size="small" onclick="LibertyThumbnailSystem.setSize('small')" title="Compact size">S</button>
+              </div>
+            </div>
+            <div class="word-nav-sidebar flex-1 overflow-y-auto p-2" id="word-pages-nav"></div>
           </div>
           <div class="word-pages-stream" id="word-pages-container"></div>
         </div>
@@ -1729,7 +1752,17 @@
       <!-- 2. واجهة برنامج العروض (Impress View) -->
       <div class="workspace-view" id="view-impress">
         <div class="impress-canvas">
-          <div class="impress-sidebar" id="impress-slides-sidebar"></div>
+          <div class="flex flex-col h-full border-r border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]" style="width:var(--thumb-rail-width);min-width:var(--thumb-rail-width);flex-shrink:0;">
+            <div class="flex items-center justify-between p-2 border-b border-[var(--color-border-secondary)]">
+              <span class="text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Slides</span>
+              <div class="liberty-thumb-size-control">
+                <button type="button" data-size="normal" onclick="LibertyThumbnailSystem.setSize('normal')" title="Normal size">L</button>
+                <button type="button" data-size="medium" onclick="LibertyThumbnailSystem.setSize('medium')" title="Medium size">M</button>
+                <button type="button" data-size="small" onclick="LibertyThumbnailSystem.setSize('small')" title="Compact size">S</button>
+              </div>
+            </div>
+            <div class="impress-sidebar flex-1 overflow-y-auto p-2" id="impress-slides-sidebar"></div>
+          </div>
           <div class="impress-main-view">
             <div class="impress-slide-stage" id="impress-slide-stage">
               <div class="impress-slide" id="impress-slide-viewport"></div>
@@ -1759,8 +1792,16 @@
       <!-- 4. واجهة معدل ملفات الـ PDF (PDF Editor View) -->
       <div class="workspace-view" id="view-pdf">
         <div class="pdf-canvas-view">
-          <div class="pdf-sidebar" id="pdf-pages-nav">
-            <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">PDF Pages</div>
+          <div class="flex flex-col h-full border-r border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)]" style="width:var(--thumb-rail-width);min-width:var(--thumb-rail-width);flex-shrink:0;">
+            <div class="flex items-center justify-between p-2 border-b border-[var(--color-border-secondary)]">
+              <span class="text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">PDF Pages</span>
+              <div class="liberty-thumb-size-control">
+                <button type="button" data-size="normal" onclick="LibertyThumbnailSystem.setSize('normal')" title="Normal size">L</button>
+                <button type="button" data-size="medium" onclick="LibertyThumbnailSystem.setSize('medium')" title="Medium size">M</button>
+                <button type="button" data-size="small" onclick="LibertyThumbnailSystem.setSize('small')" title="Compact size">S</button>
+              </div>
+            </div>
+            <div class="pdf-sidebar flex-1 overflow-y-auto p-2" id="pdf-pages-nav"></div>
           </div>
           <div class="pdf-document-scroll" id="pdf-scroll-container"></div>
         </div>

@@ -7,6 +7,7 @@ export type ThemeStyle = "default" | "liquid-glass" | "coastal-warmth" | "driftw
 export type AppearanceMode = "normal" | "liquid-glass";
 export type AppearanceTaste = "default" | "ocean" | "forest" | "rose" | "graphite";
 export type AppearanceScheme = "system" | "light" | "dark";
+export type ThumbnailSize = "normal" | "medium" | "small";
 
 export interface AppearanceState {
   mode: AppearanceMode;
@@ -47,6 +48,7 @@ interface AppState {
   mode: AppearanceMode;
   taste: AppearanceTaste;
   colorScheme: AppearanceScheme;
+  thumbnailSize: ThumbnailSize;
   colors: AppColors;
   settingsOpen: boolean;
   toasts: Toast[];
@@ -67,6 +69,7 @@ interface AppState {
   setMode: (m: AppearanceMode) => void;
   setTaste: (t: AppearanceTaste) => void;
   setColorScheme: (s: AppearanceScheme) => void;
+  setThumbnailSize: (s: ThumbnailSize) => void;
   setColor: (a: AppId, c: string) => void;
   resetColor: (a: AppId) => void;
   resetAllColors: () => void;
@@ -138,6 +141,24 @@ function persist(colors: AppColors) {
   }
 }
 
+function loadThumbnailSize(): ThumbnailSize {
+  if (typeof localStorage === "undefined") return "normal";
+  try {
+    const s = localStorage.getItem("liberty-thumbnail-size");
+    if (s === "small" || s === "medium" || s === "normal") return s;
+  } catch {}
+  return "normal";
+}
+
+function persistThumbnailSize(size: ThumbnailSize) {
+  try {
+    localStorage.setItem("liberty-thumbnail-size", size);
+    if (typeof window !== "undefined" && (window as any).LibertyThumbnailSystem?.setSize) {
+      (window as any).LibertyThumbnailSystem.setSize(size);
+    }
+  } catch {}
+}
+
 let toastId = 0;
 const initialAppearance = loadAppearance();
 
@@ -148,6 +169,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   mode: initialAppearance.mode,
   taste: initialAppearance.taste,
   colorScheme: initialAppearance.colorScheme,
+  thumbnailSize: loadThumbnailSize(),
   colors: loadColors(),
   settingsOpen: false,
   toasts: [],
@@ -189,6 +211,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     const next = { ...loadAppearance(), colorScheme: s };
     persistAppearance(next);
     set({ colorScheme: s, theme: s });
+  },
+  setThumbnailSize: (s) => {
+    persistThumbnailSize(s);
+    set({ thumbnailSize: s });
   },
   setColor: (a, c) => {
     const colors = { ...get().colors, [a]: c };

@@ -325,10 +325,10 @@ App: ${state.activeApp.toUpperCase()}`,
 
       wrapper.appendChild(pageEl);
       container.appendChild(wrapper);
-
-      // Build nav thumb
-      buildPageThumbnail(navOutline, idx, cr.innerText);
     });
+
+    // Unified & Virtualized thumbnails
+    LibertyThumbnailSystem.renderWordThumbnails();
 
     updateWordStats();
     initWordRuler();
@@ -806,8 +806,215 @@ App: ${state.activeApp.toUpperCase()}`,
   };
   window.LibertyAppearance = LibertyAppearance;
 
+  // ── Unified Liberty Thumbnail System & Viewport Virtualization Engine ──
+  const LibertyThumbnailSystem = {
+    cache: new Map(),
+
+    getSize() {
+      const s = localStorage.getItem('liberty-thumbnail-size');
+      return (s === 'small' || s === 'medium' || s === 'normal') ? s : 'normal';
+    },
+
+    setSize(newSize) {
+      const valid = (newSize === 'small' || newSize === 'medium') ? newSize : 'normal';
+      localStorage.setItem('liberty-thumbnail-size', valid);
+      this.applySize(valid);
+      this.refreshActiveRails();
+    },
+
+    applySize(sizeOverride) {
+      const size = sizeOverride || this.getSize();
+      document.body.classList.remove('thumb-size-normal', 'thumb-size-medium', 'thumb-size-small');
+      document.body.classList.add('thumb-size-' + size);
+
+      // Update switcher controls in sidebar rails
+      document.querySelectorAll('.liberty-thumb-size-control').forEach(ctrl => {
+        ctrl.querySelectorAll('button[data-size]').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-size') === size);
+        });
+      });
+
+      // Update switcher in settings modal
+      document.querySelectorAll('#claude-thumb-size-segmented .claude-segmented-btn').forEach(btn => {
+        const id = btn.id;
+        btn.classList.toggle('active', id === 'btn-thumbsize-' + size);
+      });
+    },
+
+    refreshActiveRails() {
+      if (state.activeApp === 'word') {
+        this.renderWordThumbnails();
+      } else if (state.activeApp === 'impress') {
+        renderSlideList();
+      } else if (state.activeApp === 'pdf') {
+        this.renderPdfThumbnails();
+      }
+    },
+
+    // Viewport-based Virtualization Helper for massive page counts (50, 100, 500, 1000+)
+    virtualize(container, totalCount, itemBaseHeight, renderItemFn) {
+      if (!container) return;
+      const size = this.getSize();
+      let h = itemBaseHeight;
+      if (size === 'small') h = Math.round(itemBaseHeight * 0.62);
+      else if (size === 'medium') h = Math.round(itemBaseHeight * 0.82);
+
+      // If document is small (<= 25 items), render directly
+      if (totalCount <= 25) {
+        container.innerHTML = '';
+        container.onscroll = null;
+        for (let i = 0; i < totalCount; i++) {
+          const el = renderItemFn(i);
+          if (el) container.appendChild(el);
+        }
+        return;
+      }
+
+      // Large page count virtualization with natural scroll position
+      const updateViewport = () => {
+        const scrollTop = container.scrollTop;
+        const clientHeight = container.clientHeight || 600;
+
+        const startIndex = Math.max(0, Math.floor(scrollTop / h) - 4);
+        const endIndex = Math.min(totalCount - 1, Math.ceil((scrollTop + clientHeight) / h) + 4);
+
+        const topPadding = startIndex * h;
+        const bottomPadding = Math.max(0, (totalCount - 1 - endIndex) * h);
+
+        container.innerHTML = '';
+
+        if (topPadding > 0) {
+          const topSpacer = document.createElement('div');
+          topSpacer.className = 'virtual-thumb-spacer-top';
+          topSpacer.style.height = topPadding + 'px';
+          topSpacer.style.width = '100%';
+          topSpacer.style.flexShrink = '0';
+          topSpacer.style.pointerEvents = 'none';
+          container.appendChild(topSpacer);
+        }
+
+        for (let i = startIndex; i <= endIndex; i++) {
+          const el = renderItemFn(i);
+          if (el) container.appendChild(el);
+        }
+
+        if (bottomPadding > 0) {
+          const bottomSpacer = document.createElement('div');
+          bottomSpacer.className = 'virtual-thumb-spacer-bottom';
+          bottomSpacer.style.height = bottomPadding + 'px';
+          bottomSpacer.style.width = '100%';
+          bottomSpacer.style.flexShrink = '0';
+          bottomSpacer.style.pointerEvents = 'none';
+          container.appendChild(bottomSpacer);
+        }
+      };
+
+      updateViewport();
+
+      let isTicking = false;
+      container.onscroll = () => {
+        if (!isTicking) {
+          requestAnimationFrame(() => {
+            updateViewport();
+            isTicking = false;
+          });
+          isTicking = true;
+        }
+      };
+    },
+
+    renderWordThumbnails() {
+      const navOutline = document.getElementById('word-pages-nav');
+      if (!navOutline) return;
+      const count = (state.wordPages && state.wordPages.length) || 1;
+
+      this.virtualize(navOutline, count, 180, (idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'liberty-thumb word-page-thumb' + (idx === state.activeWordPageIndex ? ' active' : '');
+        thumb.id = 'word-thumb-' + idx;
+        thumb.setAttribute('data-index', idx);
+        thumb.setAttribute('role', 'button');
+        thumb.setAttribute('tabindex', '0');
+
+        const badge = document.createElement('div');
+        badge.className = 'liberty-thumb-badge';
+        badge.textContent = idx + 1;
+        thumb.appendChild(badge);
+
+        const preview = document.createElement('div');
+        preview.className = 'wpt-preview';
+        const pageData = state.wordPages[idx];
+        const rawContent = (pageData && pageData.content) ? pageData.content.replace(/<[^>]*>/g, ' ') : '';
+        preview.textContent = rawContent.slice(0, 180) || 'Empty page';
+        thumb.appendChild(preview);
+
+        const num = document.createElement('div');
+        num.className = 'wpt-num';
+        num.textContent = 'Page ' + (idx + 1);
+        thumb.appendChild(num);
+
+        thumb.addEventListener('click', () => {
+          state.activeWordPageIndex = idx;
+          const block = document.getElementById('word-page-block-' + idx);
+          if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.querySelectorAll('.word-page-thumb').forEach(t => t.classList.remove('active'));
+          thumb.classList.add('active');
+        });
+
+        return thumb;
+      });
+    },
+
+    renderPdfThumbnails() {
+      const nav = document.getElementById('pdf-pages-nav');
+      if (!nav) return;
+      const count = (state.pdfPages && state.pdfPages.length) || 1;
+
+      this.virtualize(nav, count, 180, (idx) => {
+        const th = document.createElement('div');
+        th.className = 'liberty-thumb pdf-page-thumb' + (idx === state.activePdfPageIndex ? ' active' : '');
+        th.id = 'pdf-thumb-' + idx;
+        th.setAttribute('data-index', idx);
+        th.setAttribute('role', 'button');
+        th.setAttribute('tabindex', '0');
+
+        const badge = document.createElement('div');
+        badge.className = 'liberty-thumb-badge';
+        badge.textContent = idx + 1;
+        th.appendChild(badge);
+
+        const preview = document.createElement('div');
+        preview.className = 'wpt-preview';
+        const pg = state.pdfPages[idx];
+        let text = '';
+        if (pg) {
+          text = pg.title ? (pg.title + (pg.subtitle ? ' - ' + pg.subtitle : '')) : (pg.content ? pg.content.replace(/<[^>]*>/g, ' ') : '');
+        }
+        preview.textContent = text.slice(0, 180) || 'PDF Page ' + (idx + 1);
+        th.appendChild(preview);
+
+        const num = document.createElement('div');
+        num.className = 'wpt-num';
+        num.textContent = 'Page ' + (idx + 1);
+        th.appendChild(num);
+
+        th.addEventListener('click', () => {
+          state.activePdfPageIndex = idx;
+          document.querySelectorAll('.pdf-page-thumb').forEach(t => t.classList.remove('active'));
+          th.classList.add('active');
+          const el = document.getElementById('pdf-page-' + idx);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        return th;
+      });
+    }
+  };
+  window.LibertyThumbnailSystem = LibertyThumbnailSystem;
+
   function syncBodyClasses() {
     LibertyAppearance.apply();
+    LibertyThumbnailSystem.applySize();
   }
   window.syncBodyClasses = syncBodyClasses;
 
@@ -818,8 +1025,9 @@ App: ${state.activeApp.toUpperCase()}`,
       b.classList.toggle('active', b.getAttribute('data-app') === appName);
     });
 
-    // ── Global Appearance State is strictly preserved across all apps ──
+    // ── Global Appearance & Thumbnail Size is strictly preserved across all apps ──
     LibertyAppearance.apply();
+    LibertyThumbnailSystem.applySize();
 
     document.querySelectorAll('.workspace-view').forEach(view => view.classList.remove('active'));
     const statusInfo = document.getElementById('status-document-info');
@@ -940,6 +1148,9 @@ App: ${state.activeApp.toUpperCase()}`,
     const lh = localStorage.getItem('suite-line-height') || '1.6';
     const lhSelect = document.getElementById('settings-line-height');
     if (lhSelect) lhSelect.value = lh;
+
+    // 7. Thumbnail Size
+    LibertyThumbnailSystem.applySize();
 
     updateLivePreview();
   }
@@ -1959,23 +2170,68 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   function renderSlideList() {
     const sb = document.getElementById('impress-slides-sidebar');
     if (!sb) return;
-    sb.innerHTML = '';
-    state.slides.forEach((s, i) => {
+    const slidesCount = (state.slides && state.slides.length) || 1;
+
+    LibertyThumbnailSystem.virtualize(sb, slidesCount, 120, (i) => {
+      const s = state.slides[i];
+      if (!s) return null;
       ensureSlideTexts(s);
       const t = document.createElement('div');
-      t.className = 'slide-thumbnail' + (s.id === state.activeSlideId ? ' active' : '');
+      t.className = 'liberty-thumb slide-thumbnail' + (s.id === state.activeSlideId ? ' active' : '');
+      t.id = 'slide-thumb-' + s.id;
+      t.setAttribute('data-slide-id', s.id);
+      t.setAttribute('data-index', i);
+      t.setAttribute('draggable', 'true');
       t.style.background = s.bg || '#fff';
-      t.innerHTML = '<div style="position:absolute;inset:0;overflow:hidden;border-radius:inherit;"></div>' +
-        '<div style="position:absolute;top:4px;left:6px;font-size:9px;font-weight:700;color:var(--color-text-tertiary);z-index:999;">' + (i + 1) + '</div>';
-      renderSlideMiniature(t.firstChild, s);
-      t.addEventListener('click', () => { state.activeSlideId = s.id; renderSlideList(); });
-      sb.appendChild(t);
+      t.innerHTML = '<div class="liberty-thumb-frame" style="position:absolute;inset:0;overflow:hidden;border-radius:inherit;"></div>' +
+        '<div class="liberty-thumb-badge">' + (i + 1) + '</div>';
+      renderSlideMiniature(t.querySelector('.liberty-thumb-frame'), s);
+      
+      t.addEventListener('click', () => {
+        state.activeSlideId = s.id;
+        document.querySelectorAll('.slide-thumbnail').forEach(el => el.classList.remove('active'));
+        t.classList.add('active');
+        renderActiveSlide();
+      });
+
+      // Drag & Reorder interaction
+      t.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', i);
+        t.style.opacity = '0.5';
+      });
+      t.addEventListener('dragend', () => {
+        t.style.opacity = '1';
+        document.querySelectorAll('.slide-thumbnail').forEach(el => el.classList.remove('drag-over'));
+      });
+      t.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        t.classList.add('drag-over');
+      });
+      t.addEventListener('dragleave', () => {
+        t.classList.remove('drag-over');
+      });
+      t.addEventListener('drop', (e) => {
+        e.preventDefault();
+        t.classList.remove('drag-over');
+        const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+        const toIdx = i;
+        if (!isNaN(fromIdx) && fromIdx !== toIdx && state.slides[fromIdx]) {
+          const moved = state.slides.splice(fromIdx, 1)[0];
+          state.slides.splice(toIdx, 0, moved);
+          renderSlideList();
+        }
+      });
+
+      return t;
     });
+
     const add = document.createElement('div');
-    add.className = 'slide-thumbnail';
+    add.className = 'liberty-thumb slide-thumbnail';
     add.style.borderStyle = 'dashed';
-    add.style.fontSize = '24px';
+    add.style.minHeight = '50px';
+    add.style.fontSize = '22px';
     add.textContent = '+';
+    add.title = 'Add New Slide';
     add.addEventListener('click', addNewSlide);
     sb.appendChild(add);
     renderActiveSlide();
@@ -2270,19 +2526,14 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
 
   // ── PDF actions ────────────────────────────────────────────────
   function renderPdfPages() {
-    const nav = document.getElementById('pdf-pages-nav');
     const scroll = document.getElementById('pdf-scroll-container');
     if (!scroll) return;
-    if (nav) nav.innerHTML = '<div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">PDF Pages</div>';
     scroll.innerHTML = '';
+
+    // Render sidebar thumbnails via unified LibertyThumbnailSystem
+    LibertyThumbnailSystem.renderPdfThumbnails();
+
     state.pdfPages.forEach((pg, i) => {
-      if (nav) {
-        const th = document.createElement('div');
-        th.className = 'pdf-page-thumb' + (i === state.activePdfPageIndex ? ' active' : '');
-        th.textContent = (i + 1);
-        th.addEventListener('click', () => { state.activePdfPageIndex = i; renderPdfPages(); const el = document.getElementById('pdf-page-' + i); if (el) el.scrollIntoView({ behavior: 'smooth' }); });
-        nav.appendChild(th);
-      }
       const cont = document.createElement('div');
       cont.className = 'pdf-page-container';
       cont.id = 'pdf-page-' + i;
