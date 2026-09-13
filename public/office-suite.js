@@ -651,13 +651,67 @@ App: ${state.activeApp.toUpperCase()}`,
     });
   });
 
-  function switchAppMode(appName) {
-    document.querySelectorAll('.app-sidebar .app-icon-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.app-sidebar .app-icon-btn[data-app="${appName}"]`).classList.add('active');
+  // ── Persistent Suite Styling & Theme Synchronization ────────
+  function syncBodyClasses() {
+    // 1. Layout: normal (basic) or liquid-glass
+    const savedLayout = localStorage.getItem('suite-layout-style') || 'basic';
+    const layoutClass = savedLayout === 'liquid-glass' ? 'layout-liquid-glass' : 'layout-basic';
+    document.body.classList.remove('layout-basic', 'layout-liquid-glass', 'layout-modern', 'layout-classic');
+    document.body.classList.add(layoutClass);
 
-    const currentLayoutClass = Array.from(document.body.classList).find(cls => cls.startsWith('layout-')) || 'layout-basic';
-    document.body.className = `${currentLayoutClass} app-${appName} ${state.darkMode ? 'dark' : ''}`;
+    // 2. Theme palette
+    const savedTheme = localStorage.getItem('suite-theme-id') || 'default';
+    document.body.classList.remove('theme-coastal-warmth', 'theme-driftwood-slate', 'theme-sage-botanical');
+    if (savedTheme === 'coastal-warmth') document.body.classList.add('theme-coastal-warmth');
+    else if (savedTheme === 'driftwood-slate') document.body.classList.add('theme-driftwood-slate');
+    else if (savedTheme === 'sage-botanical') document.body.classList.add('theme-sage-botanical');
+
+    // 3. Theme mode (light / dark / system)
+    const mode = localStorage.getItem('octopus-theme-mode') || 'system';
+    let isDark = mode === 'dark';
+    if (mode === 'system') {
+      isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    state.darkMode = isDark;
+    document.body.classList.toggle('dark', isDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+
+    // 4. Motion
+    const motion = localStorage.getItem('claude-motion-mode') || 'system';
+    document.documentElement.classList.toggle('reduce-motion', motion === 'reduced');
+
+    // 5. Font
+    const savedFont = localStorage.getItem('suite-font-family');
+    if (savedFont) {
+      document.body.style.fontFamily = savedFont;
+    }
+
+    // 6. Font size & line height
+    const savedSize = localStorage.getItem('suite-font-size');
+    if (savedSize) {
+      document.documentElement.style.setProperty('--doc-font-size', savedSize);
+    }
+    const savedLineHeight = localStorage.getItem('suite-line-height');
+    if (savedLineHeight) {
+      document.documentElement.style.setProperty('--doc-line-height', savedLineHeight);
+    }
+
+    // 7. Active app marker
+    ['word', 'impress', 'sheet', 'pdf'].forEach(app => {
+      document.body.classList.toggle('app-' + app, state.activeApp === app);
+    });
+  }
+  window.syncBodyClasses = syncBodyClasses;
+
+  function switchAppMode(appName) {
     state.activeApp = appName;
+
+    document.querySelectorAll('.app-sidebar .app-icon-btn').forEach(b => b.classList.remove('active'));
+    const targetBtn = document.querySelector(`.app-sidebar .app-icon-btn[data-app="${appName}"]`);
+    if (targetBtn) targetBtn.classList.add('active');
+
+    // Ensure all persistent theme & layout classes are synced and preserved across app switches!
+    syncBodyClasses();
     applyActiveAccent(appName);
 
     document.querySelectorAll('.workspace-view').forEach(view => view.classList.remove('active'));
@@ -718,7 +772,6 @@ App: ${state.activeApp.toUpperCase()}`,
     tab.addEventListener('click', () => {
       const targetTab = tab.getAttribute('data-tab');
       if (targetTab === 'file') {
-        // بدلاً من فتح الإعدادات عند الضغط على File، نقوم بفتح تبويب File كشريط أدوات تفاعلي
         closeBackstage();
         switchRibbonTab('file');
       } else {
@@ -728,9 +781,99 @@ App: ${state.activeApp.toUpperCase()}`,
     });
   });
 
+  function updateLivePreview() {
+    const layout = localStorage.getItem('suite-layout-style') || 'basic';
+    const badge = document.getElementById('preview-active-layout-badge');
+    if (badge) {
+      badge.innerText = layout === 'liquid-glass' ? 'Liquid Glass Layout Active' : 'Normal Layout Active';
+    }
+    const font = localStorage.getItem('suite-font-family') || 'system-ui, sans-serif';
+    const size = localStorage.getItem('suite-font-size') || '14px';
+    const lh = localStorage.getItem('suite-line-height') || '1.6';
+    const sample = document.getElementById('preview-text-sample');
+    if (sample) {
+      sample.style.fontFamily = font;
+      sample.style.fontSize = size;
+      sample.style.lineHeight = lh;
+    }
+  }
+  window.updateLivePreview = updateLivePreview;
+
+  function initSettingsUI() {
+    // 1. Layout cards
+    const savedLayout = localStorage.getItem('suite-layout-style') || 'basic';
+    document.querySelectorAll('.claude-layout-card').forEach(card => {
+      const cardLayout = card.getAttribute('data-layout');
+      const isThis = (savedLayout === 'liquid-glass' && cardLayout === 'liquid-glass') ||
+                     (savedLayout === 'basic' && (cardLayout === 'normal' || cardLayout === 'basic'));
+      card.classList.toggle('active', isThis);
+      let badge = card.querySelector('.layout-active-badge');
+      if (isThis && !badge) {
+        const topRow = card.querySelector('.flex.items-center.justify-between');
+        if (topRow) {
+          const b = document.createElement('span');
+          b.className = 'layout-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
+          b.innerText = 'Active';
+          topRow.appendChild(b);
+        }
+      } else if (!isThis && badge) {
+        badge.remove();
+      }
+    });
+
+    // 2. Theme cards
+    const savedTheme = localStorage.getItem('suite-theme-id') || 'default';
+    document.querySelectorAll('.claude-theme-card').forEach(card => {
+      const isThis = card.getAttribute('data-theme-id') === savedTheme;
+      card.classList.toggle('active', isThis);
+      let badge = card.querySelector('.theme-active-badge');
+      if (isThis && !badge) {
+        const topRow = card.querySelector('.flex.items-center.justify-between');
+        if (topRow) {
+          const b = document.createElement('span');
+          b.className = 'theme-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
+          b.innerText = 'Active';
+          topRow.appendChild(b);
+        }
+      } else if (!isThis && badge) {
+        badge.remove();
+      }
+    });
+
+    // 3. Theme mode
+    const mode = localStorage.getItem('octopus-theme-mode') || 'system';
+    document.querySelectorAll('#claude-appearance-segmented .claude-segmented-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-theme') === mode);
+    });
+
+    // 4. Motion mode
+    const motion = localStorage.getItem('claude-motion-mode') || 'system';
+    document.querySelectorAll('#claude-motion-segmented .claude-segmented-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-motion') === motion);
+    });
+
+    // 5. Font dropdowns
+    const font = localStorage.getItem('suite-font-family') || 'system-ui, sans-serif';
+    const fontSelect = document.getElementById('settings-workspace-font');
+    if (fontSelect) fontSelect.value = font;
+
+    // 6. Font size & line height
+    const size = localStorage.getItem('suite-font-size') || '14px';
+    const sizeSelect = document.getElementById('settings-font-size');
+    if (sizeSelect) sizeSelect.value = size;
+
+    const lh = localStorage.getItem('suite-line-height') || '1.6';
+    const lhSelect = document.getElementById('settings-line-height');
+    if (lhSelect) lhSelect.value = lh;
+
+    updateLivePreview();
+  }
+  window.initSettingsUI = initSettingsUI;
+
   function openBackstage() {
     const el = document.getElementById('view-backstage');
     if (!el) return;
+    initSettingsUI();
     el.classList.add('active');
     switchSettingsSection('general');
   }
@@ -751,6 +894,10 @@ App: ${state.activeApp.toUpperCase()}`,
     document.querySelectorAll('.settings-section').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('settings-' + sectionId);
     if (target) target.classList.remove('hidden');
+
+    if (sectionId === 'appearance') {
+      updateLivePreview();
+    }
   }
   window.switchSettingsSection = switchSettingsSection;
 
@@ -767,16 +914,21 @@ App: ${state.activeApp.toUpperCase()}`,
   }
   window.filterClaudeSettings = filterClaudeSettings;
 
-  function selectSuiteTheme(themeId) {
-    document.querySelectorAll('.claude-theme-card').forEach(card => {
-      const isThis = card.getAttribute('data-theme-id') === themeId;
+  function selectSuiteLayoutStyle(style) {
+    const val = (style === 'liquid-glass') ? 'liquid-glass' : 'basic';
+    localStorage.setItem('suite-layout-style', val);
+
+    document.querySelectorAll('.claude-layout-card').forEach(card => {
+      const cardLayout = card.getAttribute('data-layout');
+      const isThis = (val === 'liquid-glass' && cardLayout === 'liquid-glass') ||
+                     (val === 'basic' && (cardLayout === 'normal' || cardLayout === 'basic'));
       card.classList.toggle('active', isThis);
-      let badge = card.querySelector('.theme-active-badge');
+      let badge = card.querySelector('.layout-active-badge');
       if (isThis && !badge) {
         const topRow = card.querySelector('.flex.items-center.justify-between');
         if (topRow) {
           const b = document.createElement('span');
-          b.className = 'text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium theme-active-badge';
+          b.className = 'layout-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
           b.innerText = 'Active';
           topRow.appendChild(b);
         }
@@ -785,33 +937,67 @@ App: ${state.activeApp.toUpperCase()}`,
       }
     });
 
-    document.body.classList.remove('layout-basic', 'layout-liquid-glass', 'layout-modern', 'layout-classic', 'theme-coastal-warmth', 'theme-driftwood-slate', 'theme-sage-botanical');
-    if (themeId === 'liquid-glass') {
-      document.body.classList.add('layout-liquid-glass');
-    } else if (themeId === 'coastal-warmth') {
-      document.body.classList.add('theme-coastal-warmth');
-    } else if (themeId === 'driftwood-slate') {
-      document.body.classList.add('theme-driftwood-slate');
-    } else if (themeId === 'sage-botanical') {
-      document.body.classList.add('theme-sage-botanical');
-    } else {
-      document.body.classList.add('layout-basic');
-    }
-    localStorage.setItem('liberty-theme-id', themeId);
-    showToast(`Switched theme to ${themeId.replace('-', ' ').toUpperCase()}`, 2000);
+    syncBodyClasses();
+    updateLivePreview();
+    showToast(`Interface switched to ${val === 'liquid-glass' ? 'Liquid Glass (macOS Style)' : 'Normal (Classic Capsule)'}`, 2000);
+  }
+  window.selectSuiteLayoutStyle = selectSuiteLayoutStyle;
+
+  function selectSuiteTheme(themeId) {
+    localStorage.setItem('suite-theme-id', themeId);
+
+    document.querySelectorAll('.claude-theme-card').forEach(card => {
+      const isThis = card.getAttribute('data-theme-id') === themeId;
+      card.classList.toggle('active', isThis);
+      let badge = card.querySelector('.theme-active-badge');
+      if (isThis && !badge) {
+        const topRow = card.querySelector('.flex.items-center.justify-between');
+        if (topRow) {
+          const b = document.createElement('span');
+          b.className = 'theme-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium';
+          b.innerText = 'Active';
+          topRow.appendChild(b);
+        }
+      } else if (!isThis && badge) {
+        badge.remove();
+      }
+    });
+
+    syncBodyClasses();
+    updateLivePreview();
+    showToast(`Theme switched to ${themeId.replace('-', ' ').toUpperCase()}`, 2000);
   }
   window.selectSuiteTheme = selectSuiteTheme;
+
+  function setSuiteFont(fontFamily) {
+    localStorage.setItem('suite-font-family', fontFamily);
+    syncBodyClasses();
+    updateLivePreview();
+    showToast(`Font updated`, 1500);
+  }
+  window.setSuiteFont = setSuiteFont;
+
+  function setSuiteFontSize(fontSize) {
+    localStorage.setItem('suite-font-size', fontSize);
+    syncBodyClasses();
+    updateLivePreview();
+  }
+  window.setSuiteFontSize = setSuiteFontSize;
+
+  function setSuiteLineHeight(lineHeight) {
+    localStorage.setItem('suite-line-height', lineHeight);
+    syncBodyClasses();
+    updateLivePreview();
+  }
+  window.setSuiteLineHeight = setSuiteLineHeight;
 
   function setMotionMode(mode) {
     document.querySelectorAll('#claude-motion-segmented .claude-segmented-btn').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-motion') === mode);
     });
-    if (mode === 'reduced') {
-      document.documentElement.classList.add('reduce-motion');
-    } else {
-      document.documentElement.classList.remove('reduce-motion');
-    }
     localStorage.setItem('claude-motion-mode', mode);
+    syncBodyClasses();
+    showToast(`Motion set to ${mode.toUpperCase()}`, 1500);
   }
   window.setMotionMode = setMotionMode;
 
@@ -823,13 +1009,6 @@ App: ${state.activeApp.toUpperCase()}`,
       }
     }
   });
-
-  // تغيير مظهر الأزرار والـ Ribbon حسب النمط المختار (Basic Capsule, Liquid Glass, Modern, Classic)
-  function changeSuiteLayoutStyle(styleName) {
-    document.body.classList.remove('layout-basic', 'layout-liquid-glass', 'layout-modern', 'layout-classic');
-    document.body.classList.add('layout-' + styleName);
-    showDialog('Layout Updated', `Visual interface switched to ${styleName.toUpperCase()} layout.`, 'ti-layout-grid', 'success');
-  }
 
   function switchRibbonTab(tabName) {
     document.querySelectorAll('.tbar .tb').forEach(t => {
@@ -2376,6 +2555,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   }
 
   // ── Initialize on load ──────────────────────────────────────
+  syncBodyClasses();
   loadAccentColors();
   applyTheme(localStorage.getItem('octopus-theme-mode') || (state.darkMode ? 'dark' : 'light'));
 

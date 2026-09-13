@@ -1239,21 +1239,69 @@
               </div>
             </div>
 
-            <!-- 2. APPEARANCE TAB -->
+            <!-- 2. APPEARANCE TAB (Separated: Normal / Liquid Glass, Themes, Text/Fonts, Live Test) -->
             <div class="settings-section hidden" id="settings-appearance">
-              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Appearance</h2>
-              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Customize themes, palettes, and application accent highlights.</p>
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-1">Appearance & Interface Style</h2>
+              <p class="text-xs text-[var(--color-text-tertiary)] mb-6">Customize interface layouts, color themes, document typography, and preview changes live.</p>
 
-              <!-- Themes Grid -->
+              <!-- Section A: Interface Layout (Normal vs Liquid Glass) -->
               <div class="mb-6">
-                <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] mb-3">Theme Presets</div>
+                <div class="flex items-center justify-between mb-2.5">
+                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">Interface Layout Style (نمط الواجهة)</div>
+                  <span class="text-[11px] text-[var(--color-text-tertiary)]">Persists across all suite apps</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3" id="layout-styles-grid">
+                  <!-- Normal (Default Capsule) -->
+                  <div class="claude-layout-card active cursor-pointer p-3.5 rounded-xl border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-layout="normal" onclick="selectSuiteLayoutStyle('normal')">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Normal (Classic Capsule)
+                      </span>
+                      <span class="layout-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium">Active</span>
+                    </div>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed">
+                      Solid warm ivory surfaces, high-contrast crisp borders, and classic capsule button chips.
+                    </p>
+                  </div>
+
+                  <!-- Liquid Glass (Apple macOS Style) -->
+                  <div class="claude-layout-card cursor-pointer p-3.5 rounded-xl border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-layout="liquid-glass" onclick="selectSuiteLayoutStyle('liquid-glass')">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span> Liquid Glass (Apple macOS)
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed">
+                      Translucent acrylic glassmorphism, 32px saturated blur, specular glowing micro-borders.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section B: Color Themes & Palettes (الثيمات والألوان) -->
+              <div class="mb-6 pt-5 border-t border-[var(--color-border-secondary)]">
+                <div class="flex items-center justify-between mb-2.5">
+                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">Color Theme Palettes (الثيمات اللونية)</div>
+                  <div class="claude-segmented-control" id="claude-appearance-segmented">
+                    <button type="button" class="claude-segmented-btn" data-theme="system" onclick="setThemeMode('system')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg> System
+                    </button>
+                    <button type="button" class="claude-segmented-btn" data-theme="light" onclick="setThemeMode('light')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg> Light
+                    </button>
+                    <button type="button" class="claude-segmented-btn" data-theme="dark" onclick="setThemeMode('dark')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg> Dark
+                    </button>
+                  </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-3" id="theme-presets-grid">
                   <div class="claude-theme-card active cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="default" onclick="selectSuiteTheme('default')">
                     <div class="flex items-center justify-between mb-1.5">
                       <span class="text-xs font-semibold text-[var(--color-text-primary)]">Default (Liberty Classic)</span>
-                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium">Active</span>
+                      <span class="theme-active-badge text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium">Active</span>
                     </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Ivory surfaces with warm borders and classic capsule buttons.</p>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2">Warm ivory paper with refined graphite typography.</p>
                     <div class="flex gap-1.5">
                       <div class="w-4 h-4 rounded-full border border-black/10" style="background: #fafaf9;"></div>
                       <div class="w-4 h-4 rounded-full border border-black/10" style="background: #2563eb;"></div>
@@ -1261,23 +1309,11 @@
                     </div>
                   </div>
 
-                  <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="liquid-glass" onclick="selectSuiteTheme('liquid-glass')">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <span class="text-xs font-semibold text-[var(--color-text-primary)]">macOS Liquid Glass</span>
-                    </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Translucent acrylic materials, specular borders, saturated blur.</p>
-                    <div class="flex gap-1.5">
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: rgba(255,255,255,0.76);"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #007aff;"></div>
-                      <div class="w-4 h-4 rounded-full border border-black/10" style="background: #5856d6;"></div>
-                    </div>
-                  </div>
-
                   <div class="claude-theme-card cursor-pointer p-3 rounded-lg border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition hover:border-[var(--color-accent)]" data-theme-id="coastal-warmth" onclick="selectSuiteTheme('coastal-warmth')">
                     <div class="flex items-center justify-between mb-1.5">
                       <span class="text-xs font-semibold text-[var(--color-text-primary)]">Coastal Warmth</span>
                     </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Muslin parchment canvas, terracotta tones, chambray accents.</p>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2">Muslin parchment canvas, terracotta tones, chambray accents.</p>
                     <div class="flex gap-1.5">
                       <div class="w-4 h-4 rounded-full border border-black/10" style="background: #fdfbf7;"></div>
                       <div class="w-4 h-4 rounded-full border border-black/10" style="background: #c2410c;"></div>
@@ -1289,7 +1325,7 @@
                     <div class="flex items-center justify-between mb-1.5">
                       <span class="text-xs font-semibold text-[var(--color-text-primary)]">Driftwood & Slate</span>
                     </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Pearl Shell surfaces, Slate Pebble accents, Coastal Sand cards.</p>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2">Pearl Shell surfaces, Slate Pebble accents, Coastal Sand cards.</p>
                     <div class="flex gap-1.5">
                       <div class="w-4 h-4 rounded-full border border-black/10" style="background: #f4f4f3;"></div>
                       <div class="w-4 h-4 rounded-full border border-black/10" style="background: #475569;"></div>
@@ -1301,7 +1337,7 @@
                     <div class="flex items-center justify-between mb-1.5">
                       <span class="text-xs font-semibold text-[var(--color-text-primary)]">Sage Botanical</span>
                     </div>
-                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2.5">Plaster surfaces with eucalyptus accents and botanical moss highlights.</p>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)] mb-2">Plaster surfaces with eucalyptus accents and botanical moss highlights.</p>
                     <div class="flex gap-1.5">
                       <div class="w-4 h-4 rounded-full border border-black/10" style="background: #f2f5f3;"></div>
                       <div class="w-4 h-4 rounded-full border border-black/10" style="background: #059669;"></div>
@@ -1311,10 +1347,68 @@
                 </div>
               </div>
 
-              <!-- Accent Colors -->
-              <div class="pt-4 border-t border-[var(--color-border-secondary)]">
+              <!-- Section C: Text & Typography (التكست والخطوط) -->
+              <div class="mb-6 pt-5 border-t border-[var(--color-border-secondary)]">
+                <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] mb-3">Text & Typography (التكست والخطوط)</div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Font Family</label>
+                    <select class="claude-select w-full" id="settings-workspace-font" onchange="setSuiteFont(this.value)">
+                      <option value="system-ui, sans-serif" selected>System default</option>
+                      <option value="Georgia, serif">Georgia (Serif)</option>
+                      <option value="'JetBrains Mono', monospace">JetBrains Mono (Code)</option>
+                      <option value="'Inter', sans-serif">Inter (Modern)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Base Size</label>
+                    <select class="claude-select w-full" id="settings-font-size" onchange="setSuiteFontSize(this.value)">
+                      <option value="12px">12px (Compact)</option>
+                      <option value="14px" selected>14px (Standard)</option>
+                      <option value="16px">16px (Comfortable)</option>
+                      <option value="18px">18px (Large)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Line Height</label>
+                    <select class="claude-select w-full" id="settings-line-height" onchange="setSuiteLineHeight(this.value)">
+                      <option value="1.4">1.4 (Compact)</option>
+                      <option value="1.6" selected>1.6 (Normal)</option>
+                      <option value="1.8">1.8 (Relaxed)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section D: Live Test & Interactive Preview (التيست والمعاينة الحية المباشرة) -->
+              <div class="mb-6 pt-5 border-t border-[var(--color-border-secondary)]">
                 <div class="flex items-center justify-between mb-3">
-                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">Suite Accent Colors</div>
+                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M12 2v20"/></svg>
+                    Live Test & Preview Area (التيست والمعاينة الحية)
+                  </div>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--color-background-primary)] border border-[var(--color-border-secondary)] text-[var(--color-accent)] font-semibold" id="preview-active-layout-badge">
+                    Normal Layout Active
+                  </span>
+                </div>
+
+                <div class="p-4 rounded-xl border border-[var(--color-border-secondary)] bg-[var(--color-background-secondary)] transition-all" id="claude-live-test-box">
+                  <div class="text-xs text-[var(--color-text-secondary)] mb-3 leading-relaxed" id="preview-text-sample">
+                    The quick brown fox jumps over the lazy dog. هذه تجربة حيّة وتفاعلية لمظهر الواجهة والخط والألوان المحددة.
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2.5">
+                    <button type="button" class="btn" onclick="showToast('Sample Button Clicked! (الكبسولة الافتراضية)', 1800)">Capsule Button</button>
+                    <button type="button" class="btn primary" onclick="showToast('Primary Action Verified! (إجراء أساسي)', 1800)">Primary Action</button>
+                    <input type="text" class="claude-input" style="max-width: 180px; height: 30px; font-size: 12px;" placeholder="Test typing here..." value="Test input field" oninput="document.getElementById('preview-text-sample').innerText = this.value || 'The quick brown fox jumps over the lazy dog.'" />
+                    <button type="button" class="claude-segmented-btn active" style="height: 30px;">Segmented Active</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section E: App Accent Colors -->
+              <div class="pt-5 border-t border-[var(--color-border-secondary)]">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">Suite Accent Colors (ألوان التطبيقات)</div>
                   <button type="button" class="btn text-xs" onclick="resetAllAccentColors()">Reset all</button>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
