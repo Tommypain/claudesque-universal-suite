@@ -417,6 +417,46 @@ App: ${state.activeApp.toUpperCase()}`,
     if (t) t.classList.add('active');
   }
 
+  // Smart Table Row-by-Row Splitting (Word Engine): splits long tables across page boundaries
+  function splitOverflowingTable(table, clientH, contentEl) {
+    if (!table || !table.rows || table.rows.length <= 1) return null;
+    const rows = Array.from(table.rows);
+    const contentRect = contentEl ? contentEl.getBoundingClientRect() : null;
+    const tableTop = contentRect ? (table.getBoundingClientRect().top - contentRect.top) : table.offsetTop;
+
+    // If the entire table starts below or right at the boundary, move the whole table
+    if (tableTop >= clientH - 40) return null;
+
+    const headerRow = table.tHead ? table.tHead.rows[0] : (rows[0] && rows[0].querySelector('th') ? rows[0] : null);
+    const startIndex = headerRow ? 1 : 0;
+
+    let splitIndex = -1;
+    for (let i = startIndex; i < rows.length; i++) {
+      const r = rows[i];
+      const rBottom = contentRect ? (r.getBoundingClientRect().bottom - contentRect.top) : (tableTop + r.offsetTop + r.offsetHeight);
+      if (rBottom > clientH) {
+        splitIndex = i;
+        break;
+      }
+    }
+
+    if (splitIndex === -1 || splitIndex <= startIndex) return null;
+
+    // Clone table container & styles
+    const newTable = table.cloneNode(false);
+    if (headerRow) {
+      const thead = document.createElement('thead');
+      thead.appendChild(headerRow.cloneNode(true));
+      newTable.appendChild(thead);
+    }
+    const tbody = document.createElement('tbody');
+    for (let i = splitIndex; i < rows.length; i++) {
+      tbody.appendChild(rows[i]);
+    }
+    newTable.appendChild(tbody);
+    return newTable;
+  }
+
   // Strict Auto-pagination: overflow → new page ONLY when content genuinely exceeds printable 931px
   let pageOverflowTimer = null;
   function checkPageOverflow(contentEl, pageIdx) {
@@ -439,6 +479,15 @@ App: ${state.activeApp.toUpperCase()}`,
         const child = children[i];
         const bottom = child.offsetTop + child.offsetHeight;
         if (bottom > clientH) {
+          // Smart table splitting: if child is or contains a table, split row-by-row
+          const table = child.tagName === 'TABLE' ? child : (child.querySelector ? child.querySelector('table') : null);
+          if (table && table.rows && table.rows.length > 1) {
+            const newTable = splitOverflowingTable(table, clientH, contentEl);
+            if (newTable) {
+              overflowingNodes.unshift(newTable);
+              break; // Remaining rows now fit on current page
+            }
+          }
           overflowingNodes.unshift(child);
         } else {
           break;
