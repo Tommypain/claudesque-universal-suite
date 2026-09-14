@@ -447,6 +447,12 @@ App: ${state.activeApp.toUpperCase()}`,
 
       if (overflowingNodes.length === 0) return;
 
+      // Widow/Orphan Control: Prevent headings (H1-H6) from remaining orphaned at the bottom of the page
+      const lastRemaining = children[children.length - overflowingNodes.length - 1];
+      if (lastRemaining && (/^H[1-6]$/.test(lastRemaining.tagName) || (lastRemaining.classList && lastRemaining.classList.contains('heading')))) {
+        overflowingNodes.unshift(lastRemaining);
+      }
+
       const nextIdx = pageIdx + 1;
       let nextCr = document.querySelector('#word-editor-' + nextIdx + ' .doc-page-content');
 
