@@ -341,12 +341,46 @@ App: ${state.activeApp.toUpperCase()}`,
     });
   }
 
+  // ── Word: Header & Footer Architecture ────────────────────────
+  function createPageHeaderElement(idx) {
+    const hdr = document.createElement('div');
+    hdr.className = 'doc-page-header';
+    hdr.id = 'word-page-header-' + idx;
+    const title = (state.wordDocTitle && state.wordDocTitle !== 'Untitled Document') ? state.wordDocTitle : 'Liberty Docs Document';
+    hdr.innerHTML = `<span class="doc-header-title">${title}</span><span class="doc-header-meta" style="opacity:0.7;font-size:9.5px;letter-spacing:0.02em;">Liberty Suite</span>`;
+    return hdr;
+  }
+
+  function createPageFooterElement(idx, total) {
+    const ftr = document.createElement('div');
+    ftr.className = 'page-footer-num';
+    ftr.id = 'word-page-footer-' + idx;
+    ftr.textContent = 'Page ' + (idx + 1) + ' of ' + total;
+    return ftr;
+  }
+
+  function updateAllPageFooters() {
+    const total = (state.wordPages && state.wordPages.length) || 1;
+    const title = (state.wordDocTitle && state.wordDocTitle !== 'Untitled Document') ? state.wordDocTitle : 'Liberty Docs Document';
+    state.wordPages.forEach((_, idx) => {
+      const f = document.getElementById('word-page-footer-' + idx);
+      if (f) f.textContent = 'Page ' + (idx + 1) + ' of ' + total;
+      const h = document.getElementById('word-page-header-' + idx);
+      if (h) {
+        const titleEl = h.querySelector('.doc-header-title');
+        if (titleEl) titleEl.textContent = title;
+      }
+    });
+  }
+
   function renderWordPages() {
     const container = document.getElementById('word-pages-container');
     const navOutline = document.getElementById('word-pages-nav');
     if (!container) return;
     container.innerHTML = '';
     if (navOutline) navOutline.innerHTML = '';
+
+    const total = (state.wordPages && state.wordPages.length) || 1;
 
     state.wordPages.forEach((page, idx) => {
       const wrapper = document.createElement('div');
@@ -357,7 +391,10 @@ App: ${state.activeApp.toUpperCase()}`,
       pageEl.className = 'doc-page';
       pageEl.id = 'word-editor-' + idx;
 
-      // Content region — strict 931px A4 printable area (no expansion)
+      // 1. Fixed Header layer (outside 931px content)
+      pageEl.appendChild(createPageHeaderElement(idx));
+
+      // 2. Content region — strict 931px A4 printable area (no expansion)
       const cr = document.createElement('div');
       cr.className = 'doc-page-content';
       cr.contentEditable = 'true';
@@ -365,6 +402,9 @@ App: ${state.activeApp.toUpperCase()}`,
       cr.innerHTML = page.content || '<p><br></p>';
       cr.style.cssText = 'height:931px;max-height:931px;overflow:hidden;outline:none;box-sizing:border-box;';
       pageEl.appendChild(cr);
+
+      // 3. Fixed Footer layer (outside 931px content)
+      pageEl.appendChild(createPageFooterElement(idx, total));
 
       attachWordPageEvents(cr, idx);
 
@@ -521,6 +561,9 @@ App: ${state.activeApp.toUpperCase()}`,
         pageEl.className = 'doc-page';
         pageEl.id = 'word-editor-' + nextIdx;
 
+        // 1. Fixed Header layer (outside 931px content)
+        pageEl.appendChild(createPageHeaderElement(nextIdx));
+
         nextCr = document.createElement('div');
         nextCr.className = 'doc-page-content';
         nextCr.contentEditable = 'true';
@@ -531,9 +574,14 @@ App: ${state.activeApp.toUpperCase()}`,
         attachWordPageEvents(nextCr, nextIdx);
 
         pageEl.appendChild(nextCr);
+
+        // 3. Fixed Footer layer (outside 931px content)
+        pageEl.appendChild(createPageFooterElement(nextIdx, state.wordPages.length));
+
         wrapper.appendChild(pageEl);
         container.appendChild(wrapper);
 
+        updateAllPageFooters();
         LibertyThumbnailSystem.renderWordThumbnails();
       }
 
@@ -615,6 +663,7 @@ App: ${state.activeApp.toUpperCase()}`,
     });
     const el = document.getElementById('status-stats');
     if (el) el.textContent = 'Pages: ' + (state.activeWordPageIndex + 1) + ' of ' + state.wordPages.length + '  |  Words: ' + words;
+    updateAllPageFooters();
   }
 
   // ═══════════════════════════════════════════════════════════════
