@@ -2,6 +2,62 @@
   const colLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
   const maxRows = 20;
 
+  // Master Slides Architecture (Task 2.1)
+  const defaultSlideMasters = {
+    'title': {
+      id: 'title',
+      name: 'Title Slide',
+      bg: '#ffffff',
+      styles: {
+        title: { size: 54, weight: 800, color: '#1e293b', align: 'center', font: 'system-ui' },
+        subtitle: { size: 26, weight: 400, color: '#64748b', align: 'center', font: 'system-ui' }
+      },
+      placeholders: [
+        { role: 'title', xf: 0.10, yf: 0.34, wf: 0.80, hf: 0.20, defaultText: 'Click to add title' },
+        { role: 'subtitle', xf: 0.18, yf: 0.58, wf: 0.64, hf: 0.12, defaultText: 'Click to add subtitle' }
+      ],
+      shapes: []
+    },
+    'content': {
+      id: 'content',
+      name: 'Title & Content',
+      bg: '#ffffff',
+      styles: {
+        title: { size: 38, weight: 700, color: '#1e293b', align: 'left', font: 'system-ui' },
+        body: { size: 24, weight: 400, color: '#334155', align: 'left', font: 'system-ui' }
+      },
+      placeholders: [
+        { role: 'title', xf: 0.06, yf: 0.06, wf: 0.88, hf: 0.16, defaultText: 'Click to add title' },
+        { role: 'body', xf: 0.06, yf: 0.28, wf: 0.88, hf: 0.62, defaultText: 'Click to add text' }
+      ],
+      shapes: []
+    },
+    'two-column': {
+      id: 'two-column',
+      name: 'Two Columns',
+      bg: '#ffffff',
+      styles: {
+        title: { size: 36, weight: 700, color: '#1e293b', align: 'left', font: 'system-ui' },
+        col1: { size: 22, weight: 400, color: '#334155', align: 'left', font: 'system-ui' },
+        col2: { size: 22, weight: 400, color: '#334155', align: 'left', font: 'system-ui' }
+      },
+      placeholders: [
+        { role: 'title', xf: 0.06, yf: 0.06, wf: 0.88, hf: 0.14, defaultText: 'Click to add title' },
+        { role: 'col1', xf: 0.06, yf: 0.26, wf: 0.42, hf: 0.66, defaultText: 'Column 1' },
+        { role: 'col2', xf: 0.52, yf: 0.26, wf: 0.42, hf: 0.66, defaultText: 'Column 2' }
+      ],
+      shapes: []
+    },
+    'blank': {
+      id: 'blank',
+      name: 'Blank',
+      bg: '#ffffff',
+      styles: {},
+      placeholders: [],
+      shapes: []
+    }
+  };
+
   const state = {
     activeApp: 'word',
     activeTab: 'home',
@@ -20,10 +76,13 @@
     ],
     activeWordPageIndex: 0,
 
+    // Slide Masters (Task 2.1: Master Slides Architecture)
+    slideMasters: defaultSlideMasters,
+
     // شرائح العرض في تطبيق Impress
     slides: [
-      { id: 1, title: 'Click to add title', subtitle: 'Click to add subtitle', layout: 'Title', bg: '#ffffff', shapes: [] },
-      { id: 2, title: 'Click to add title', subtitle: 'Click to add text', layout: 'Content', bg: '#ffffff', shapes: [] }
+      { id: 1, masterId: 'title', title: 'Click to add title', subtitle: 'Click to add subtitle', layout: 'Title', bg: null, shapes: [] },
+      { id: 2, masterId: 'content', title: 'Click to add title', subtitle: 'Click to add text', layout: 'Content', bg: null, shapes: [] }
     ],
     activeSlideId: 1,
     slideshowActiveIndex: 0,
@@ -2215,16 +2274,19 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   }
   function renderSlideShapes(host, slide, opts) {
     opts = opts || {};
-    if (!slide.shapes) return;
+    if (!slide || !slide.shapes) return;
     slide.shapes.forEach(sh => {
       const el = document.createElement('div');
-      el.className = 'slide-shape';
-      el.style.cssText = 'position:absolute;left:' + (sh.xf * 100) + '%;top:' + (sh.yf * 100) + '%;width:' + (sh.wf * 100) + '%;height:' + (sh.hf * 100) + '%;cursor:move;z-index:' + (sh.z || 10) + ';';
+      el.className = 'slide-shape' + (opts.isMaster ? ' master-shape' : '');
+      const cursor = opts.isMaster ? 'default' : 'move';
+      const pointerEvents = opts.isMaster ? 'none' : 'auto';
+      const zIndex = opts.isMaster ? 1 : (sh.z || 10);
+      el.style.cssText = 'position:absolute;left:' + (sh.xf * 100) + '%;top:' + (sh.yf * 100) + '%;width:' + (sh.wf * 100) + '%;height:' + (sh.hf * 100) + '%;cursor:' + cursor + ';pointer-events:' + pointerEvents + ';z-index:' + zIndex + ';';
       el.innerHTML = shapeSVG(sh.type, sh.fill);
       if (opts.play && sh.anim && sh.anim !== 'none') {
         el.style.animation = 'shp-' + sh.anim + ' .7s ease both';
       }
-      if (opts.editable) {
+      if (opts.editable && !opts.isMaster) {
         if (sh.id === state.selectedShapeId) el.classList.add('selected');
         el.addEventListener('mousedown', e => startShapeDrag(e, sh, host));
         el.addEventListener('touchstart', e => startShapeDrag(e, sh, host), { passive: false });
@@ -2241,6 +2303,109 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     const t = e.touches && e.touches[0] ? e.touches[0] : e;
     return { x: t.clientX, y: t.clientY };
   }
+  // ── Impress: Smart Alignment Guides & Snapping Engine (Task 2.2) ──────────
+  function clearSmartGuides(host) {
+    if (!host) return;
+    host.querySelectorAll('.smart-guide-line').forEach(el => el.remove());
+  }
+
+  function showSmartGuide(host, type, posPct) {
+    if (!host) return;
+    const guide = document.createElement('div');
+    guide.className = 'smart-guide-line ' + type;
+    if (type === 'vertical') {
+      guide.style.left = posPct + '%';
+    } else {
+      guide.style.top = posPct + '%';
+    }
+    host.appendChild(guide);
+  }
+
+  function computeSnapCoordinates(currentObj, host, isResize) {
+    const s = getActiveSlide();
+    if (!s || !host) return { snapX: null, snapY: null, guideX: null, guideY: null };
+
+    // Snap threshold in normalized coordinates (~8px threshold)
+    const thresholdX = 8 / (state.slideW || 1280);
+    const thresholdY = 8 / (state.slideH || 720);
+
+    // Reference targets: slide center & edges
+    const targetsX = [0, 0.5, 1.0];
+    const targetsY = [0, 0.5, 1.0];
+
+    // Targets from other texts
+    (s.texts || []).forEach(t => {
+      if (t.id === currentObj.id) return;
+      targetsX.push(t.xf, t.xf + (t.wf || 0) / 2, t.xf + (t.wf || 0));
+      targetsY.push(t.yf, t.yf + (t.hf || 0) / 2, t.yf + (t.hf || 0));
+    });
+
+    // Targets from other shapes
+    (s.shapes || []).forEach(sh => {
+      if (sh.id === currentObj.id) return;
+      targetsX.push(sh.xf, sh.xf + (sh.wf || 0) / 2, sh.xf + (sh.wf || 0));
+      targetsY.push(sh.yf, sh.yf + (sh.hf || 0) / 2, sh.yf + (sh.hf || 0));
+    });
+
+    // Targets from images
+    (s.images || []).forEach(im => {
+      targetsX.push(im.xf, im.xf + (im.wf || 0) / 2, im.xf + (im.wf || 0));
+      targetsY.push(im.yf, im.yf + (im.hf || 0) / 2, im.yf + (im.hf || 0));
+    });
+
+    let snapX = null, guideX = null;
+    let snapY = null, guideY = null;
+
+    if (!isResize) {
+      // Test left, center, right edges
+      const curLeft = currentObj.xf;
+      const curCenter = currentObj.xf + (currentObj.wf || 0) / 2;
+      const curRight = currentObj.xf + (currentObj.wf || 0);
+
+      for (const tx of targetsX) {
+        if (Math.abs(curLeft - tx) < thresholdX) {
+          snapX = tx; guideX = tx; break;
+        } else if (Math.abs(curCenter - tx) < thresholdX) {
+          snapX = tx - (currentObj.wf || 0) / 2; guideX = tx; break;
+        } else if (Math.abs(curRight - tx) < thresholdX) {
+          snapX = tx - (currentObj.wf || 0); guideX = tx; break;
+        }
+      }
+
+      // Test top, center, bottom edges
+      const curTop = currentObj.yf;
+      const curMid = currentObj.yf + (currentObj.hf || 0) / 2;
+      const curBottom = currentObj.yf + (currentObj.hf || 0);
+
+      for (const ty of targetsY) {
+        if (Math.abs(curTop - ty) < thresholdY) {
+          snapY = ty; guideY = ty; break;
+        } else if (Math.abs(curMid - ty) < thresholdY) {
+          snapY = ty - (currentObj.hf || 0) / 2; guideY = ty; break;
+        } else if (Math.abs(curBottom - ty) < thresholdY) {
+          snapY = ty - (currentObj.hf || 0); guideY = ty; break;
+        }
+      }
+    } else {
+      // Test width / right edge and height / bottom edge
+      const curRight = currentObj.xf + (currentObj.wf || 0);
+      for (const tx of targetsX) {
+        if (Math.abs(curRight - tx) < thresholdX) {
+          snapX = Math.max(0.05, tx - currentObj.xf); guideX = tx; break;
+        }
+      }
+
+      const curBottom = currentObj.yf + (currentObj.hf || 0);
+      for (const ty of targetsY) {
+        if (Math.abs(curBottom - ty) < thresholdY) {
+          snapY = Math.max(0.05, ty - currentObj.yf); guideY = ty; break;
+        }
+      }
+    }
+
+    return { snapX, snapY, guideX, guideY };
+  }
+
   function startShapeDrag(e, sh, host) {
     e.preventDefault();
     state.selectedShapeId = sh.id;
@@ -2251,15 +2416,25 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       const p = evtPoint(ev);
       sh.xf = Math.max(0, Math.min(1 - sh.wf, x0 + (p.x - p0.x) / r.width));
       sh.yf = Math.max(0, Math.min(1 - sh.hf, y0 + (p.y - p0.y) / r.height));
+
+      const snap = computeSnapCoordinates(sh, host, false);
+      if (snap.snapX !== null) sh.xf = snap.snapX;
+      if (snap.snapY !== null) sh.yf = snap.snapY;
+
       renderActiveSlide();
+      if (snap.snapX !== null) showSmartGuide(host, 'vertical', snap.guideX * 100);
+      if (snap.snapY !== null) showSmartGuide(host, 'horizontal', snap.guideY * 100);
     };
     const up = () => {
+      clearSmartGuides(host);
       document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
       document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+      renderActiveSlide();
     };
     document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
     document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
   }
+
   function startShapeResize(e, sh, host) {
     e.preventDefault();
     const r = host.getBoundingClientRect();
@@ -2269,11 +2444,20 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       const p = evtPoint(ev);
       sh.wf = Math.max(0.05, Math.min(1 - sh.xf, w0 + (p.x - p0.x) / r.width));
       sh.hf = Math.max(0.05, Math.min(1 - sh.yf, h0 + (p.y - p0.y) / r.height));
+
+      const snap = computeSnapCoordinates(sh, host, true);
+      if (snap.snapX !== null) sh.wf = snap.snapX;
+      if (snap.snapY !== null) sh.hf = snap.snapY;
+
       renderActiveSlide();
+      if (snap.snapX !== null) showSmartGuide(host, 'vertical', snap.guideX * 100);
+      if (snap.snapY !== null) showSmartGuide(host, 'horizontal', snap.guideY * 100);
     };
     const up = () => {
+      clearSmartGuides(host);
       document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
       document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+      renderActiveSlide();
     };
     document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
     document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
@@ -2481,30 +2665,135 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     sb.appendChild(add);
     renderActiveSlide();
   }
-  // Build PowerPoint-style text boxes from a slide's legacy title/subtitle/layout
+  // ── Impress: Master Slides & Inheritance Architecture (Task 2.1) ──────────
+  function getSlideMaster(s) {
+    if (!s) return state.slideMasters['content'];
+    let mId = s.masterId;
+    if (!mId) {
+      if (s.layout === 'Title') mId = 'title';
+      else if (s.layout === 'TwoColumns') mId = 'two-column';
+      else if (s.layout === 'Blank') mId = 'blank';
+      else mId = 'content';
+      s.masterId = mId;
+    }
+    return (state.slideMasters && state.slideMasters[mId]) || (state.slideMasters && state.slideMasters['content']) || defaultSlideMasters[mId] || defaultSlideMasters['content'];
+  }
+
+  function getEffectiveTextStyle(s, tx) {
+    if (!tx) return { size: 24, weight: 400, color: '#1e293b', align: 'left', font: 'system-ui', italic: false };
+    const master = getSlideMaster(s);
+    const roleStyle = (master && master.styles && tx.masterRole && master.styles[tx.masterRole]) || {};
+    return {
+      size: tx.customSize ? tx.size : (roleStyle.size || tx.size || 24),
+      weight: tx.customWeight ? tx.weight : (roleStyle.weight || tx.weight || 400),
+      color: tx.customColor ? tx.color : (roleStyle.color || tx.color || '#1e293b'),
+      align: tx.customAlign ? tx.align : (roleStyle.align || tx.align || 'left'),
+      font: tx.customFont ? tx.font : (roleStyle.font || tx.font || 'system-ui'),
+      italic: tx.customItalic !== undefined ? tx.italic : (roleStyle.italic || !!tx.italic)
+    };
+  }
+
+  function applyMasterToSlide(s, masterId) {
+    if (!s) return;
+    const master = (state.slideMasters && state.slideMasters[masterId]) || state.slideMasters['content'];
+    s.masterId = master.id;
+    s.layout = master.id === 'title' ? 'Title' : (master.id === 'two-column' ? 'TwoColumns' : (master.id === 'blank' ? 'Blank' : 'Content'));
+    
+    // Extract existing user content text
+    let existingTexts = [];
+    if (s.texts && s.texts.length > 0) {
+      existingTexts = s.texts.map(t => {
+        if (typeof document !== 'undefined' && document.createElement) {
+          try {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = t.html || '';
+            const txt = (tmp.innerText || tmp.textContent || '').trim();
+            if (txt) return txt;
+          } catch (e) {}
+        }
+        return (t.html || '').replace(/<[^>]+>/g, '').trim();
+      }).filter(Boolean);
+    } else {
+      if (s.title) existingTexts.push(s.title);
+      if (s.subtitle) existingTexts.push(s.subtitle);
+    }
+
+    // Generate new texts based on master placeholders
+    s.texts = (master.placeholders || []).map((ph, idx) => {
+      const id = Date.now() + idx + Math.floor(Math.random() * 100000);
+      const userContent = existingTexts[idx] || ph.defaultText;
+      return {
+        id,
+        masterRole: ph.role,
+        xf: ph.xf,
+        yf: ph.yf,
+        wf: ph.wf,
+        hf: ph.hf,
+        html: userContent
+      };
+    });
+
+    state.selectedTextId = null;
+    state.selectedShapeId = null;
+    renderActiveSlide();
+    renderSlideList();
+  }
+
+  function updateSlideMaster(masterId, updates) {
+    if (!state.slideMasters || !state.slideMasters[masterId]) return;
+    const m = state.slideMasters[masterId];
+    if (updates.bg !== undefined) m.bg = updates.bg;
+    if (updates.name !== undefined) m.name = updates.name;
+    if (updates.styles) {
+      m.styles = m.styles || {};
+      for (const [role, st] of Object.entries(updates.styles)) {
+        m.styles[role] = { ...(m.styles[role] || {}), ...st };
+      }
+    }
+    if (updates.shapes) m.shapes = updates.shapes;
+    if (updates.placeholders) m.placeholders = updates.placeholders;
+
+    // Immediately update active slide & slide thumbnails
+    renderActiveSlide();
+    renderSlideList();
+  }
+
+  // Build PowerPoint-style text boxes from slide master placeholders or legacy layout
   function ensureSlideTexts(s) {
     if (s.texts) return;
-    s.texts = [];
-    const mk = (xf, yf, wf, hf, html, size, weight, color, align) =>
-      ({ id: Date.now() + Math.floor(Math.random() * 100000), xf, yf, wf, hf, html, size, weight, color, align });
-    if (s.layout === 'Title') {
-      s.texts.push(mk(0.10, 0.34, 0.80, 0.20, s.title || 'Click to add title', 54, 800, '#1e293b', 'center'));
-      s.texts.push(mk(0.18, 0.58, 0.64, 0.12, (s.subtitle || 'Subtitle').replace(/\n/g, '<br>'), 26, 400, '#64748b', 'center'));
-    } else if (s.layout === 'TwoColumns') {
-      s.texts.push(mk(0.06, 0.06, 0.88, 0.14, s.title || 'Title', 36, 700, '#1e293b', 'left'));
-      s.texts.push(mk(0.06, 0.26, 0.42, 0.66, (s.subtitle || 'Column 1').replace(/\n/g, '<br>'), 22, 400, '#334155', 'left'));
-      s.texts.push(mk(0.52, 0.26, 0.42, 0.66, 'Column 2', 22, 400, '#334155', 'left'));
-    } else {
-      s.texts.push(mk(0.06, 0.06, 0.88, 0.16, s.title || 'Title', 38, 700, '#1e293b', 'left'));
-      s.texts.push(mk(0.06, 0.28, 0.88, 0.62, (s.subtitle || 'Click to add text').replace(/\n/g, '<br>'), 24, 400, '#334155', 'left'));
+    const master = getSlideMaster(s);
+    if (!master || !master.placeholders || master.placeholders.length === 0) {
+      s.texts = [];
+      return;
     }
+    s.texts = master.placeholders.map((ph, idx) => {
+      const id = Date.now() + idx + Math.floor(Math.random() * 100000);
+      let content = ph.defaultText;
+      if (ph.role === 'title' && s.title) content = s.title;
+      else if ((ph.role === 'subtitle' || ph.role === 'body' || ph.role === 'col1') && s.subtitle) {
+        content = s.subtitle.replace(/\n/g, '<br>');
+      }
+      return {
+        id,
+        masterRole: ph.role,
+        xf: ph.xf,
+        yf: ph.yf,
+        wf: ph.wf,
+        hf: ph.hf,
+        html: content
+      };
+    });
   }
 
   function renderSlideMiniature(host, s) {
     if (!host || !s) return;
+    const master = getSlideMaster(s);
     host.innerHTML = '';
     host.style.containerType = 'inline-size';
-    host.style.background = s.bg || '#fff';
+    host.style.background = s.bg || (master && master.bg) || '#fff';
+    if (master && master.shapes && master.shapes.length > 0) {
+      renderSlideShapes(host, master, { thumbnail: true, isMaster: true });
+    }
     renderSlideShapes(host, s, { thumbnail: true });
     (s.images || []).forEach(im => {
       const img = document.createElement('img');
@@ -2513,8 +2802,9 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       host.appendChild(img);
     });
     (s.texts || []).forEach(tx => {
+      const eff = getEffectiveTextStyle(s, tx);
       const box = document.createElement('div');
-      box.style.cssText = 'position:absolute;box-sizing:border-box;overflow:hidden;padding:1%;left:' + ((tx.xf || 0) * 100) + '%;top:' + ((tx.yf || 0) * 100) + '%;width:' + ((tx.wf || 0) * 100) + '%;height:' + ((tx.hf || 0.1) * 100) + '%;font-size:' + ((tx.size || 24) / state.slideW * 100) + 'cqw;font-weight:' + (tx.weight || 400) + ';color:' + (tx.color || '#1e293b') + ';text-align:' + (tx.align || 'left') + ';z-index:' + (tx.z || 2) + ';line-height:1.15;';
+      box.style.cssText = 'position:absolute;box-sizing:border-box;overflow:hidden;padding:1%;left:' + ((tx.xf || 0) * 100) + '%;top:' + ((tx.yf || 0) * 100) + '%;width:' + ((tx.wf || 0) * 100) + '%;height:' + ((tx.hf || 0.1) * 100) + '%;font-size:' + ((eff.size || 24) / state.slideW * 100) + 'cqw;font-weight:' + (eff.weight || 400) + ';color:' + (eff.color || '#1e293b') + ';text-align:' + (eff.align || 'left') + ';z-index:' + (tx.z || 2) + ';line-height:1.15;';
       box.innerHTML = tx.html || '';
       host.appendChild(box);
     });
@@ -2540,9 +2830,14 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     if (!vp) return;
     const s = state.slides.find(x => x.id === state.activeSlideId) || state.slides[0];
     if (!s) return;
+    const master = getSlideMaster(s);
     ensureSlideTexts(s);
-    vp.style.background = s.bg || '#fff';
+    vp.style.background = s.bg || (master && master.bg) || '#fff';
     vp.innerHTML = '';
+    // Master shapes (rendered behind user content, non-editable)
+    if (master && master.shapes && master.shapes.length > 0) {
+      renderSlideShapes(vp, master, { editable: false, isMaster: true });
+    }
     // Shapes (movable)
     renderSlideShapes(vp, s, { editable: true });
     // Imported images (from PPTX) — positioned absolutely, non-editable
@@ -2560,25 +2855,30 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     });
     // Text boxes (movable, editable)
     s.texts.forEach(tx => {
+      const eff = getEffectiveTextStyle(s, tx);
       const box = document.createElement('div');
       box.className = 'slide-textbox' + (tx.id === state.selectedTextId ? ' selected' : '');
       box.style.left = (tx.xf * 100) + '%';
       box.style.top = (tx.yf * 100) + '%';
       box.style.width = (tx.wf * 100) + '%';
       box.style.height = (tx.hf * 100) + '%';
-      box.style.fontSize = (tx.size || 24) + 'px';
-      box.style.fontWeight = tx.weight || 400;
-      box.style.color = tx.color || '#1e293b';
-      box.style.textAlign = tx.align || 'left';
+      box.style.fontSize = (eff.size || 24) + 'px';
+      box.style.fontWeight = eff.weight || 400;
+      box.style.color = eff.color || '#1e293b';
+      box.style.textAlign = eff.align || 'left';
       box.style.zIndex = tx.z || 2;
-      if (tx.italic) box.style.fontStyle = 'italic';
-      if (tx.font) box.style.fontFamily = tx.font;
+      if (eff.italic) box.style.fontStyle = 'italic';
+      if (eff.font) box.style.fontFamily = eff.font;
       const content = document.createElement('div');
       content.contentEditable = 'true';
       content.style.outline = 'none';
       content.style.minHeight = '1em';
       content.innerHTML = tx.html || '';
-      content.addEventListener('input', () => { tx.html = content.innerHTML; });
+      content.addEventListener('input', () => {
+        tx.html = content.innerHTML;
+        if (tx.masterRole === 'title') s.title = content.innerText;
+        else if (tx.masterRole === 'subtitle' || tx.masterRole === 'body') s.subtitle = content.innerText;
+      });
       content.addEventListener('focus', () => {
         if (state.selectedTextId === tx.id && !state.selectedShapeId) return;
         state.selectedTextId = tx.id; state.selectedShapeId = null;
@@ -2617,11 +2917,20 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       const p = evtPoint(ev);
       tx.xf = Math.max(0, Math.min(1 - tx.wf, x0 + (p.x - p0.x) / r.width));
       tx.yf = Math.max(0, Math.min(0.98, y0 + (p.y - p0.y) / r.height));
+
+      const snap = computeSnapCoordinates(tx, host, false);
+      if (snap.snapX !== null) tx.xf = snap.snapX;
+      if (snap.snapY !== null) tx.yf = snap.snapY;
+
       renderActiveSlide();
+      if (snap.snapX !== null) showSmartGuide(host, 'vertical', snap.guideX * 100);
+      if (snap.snapY !== null) showSmartGuide(host, 'horizontal', snap.guideY * 100);
     };
     const up = () => {
+      clearSmartGuides(host);
       document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
       document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+      renderActiveSlide();
     };
     document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
     document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
@@ -2635,11 +2944,20 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
       const p = evtPoint(ev);
       tx.wf = Math.max(0.08, Math.min(1 - tx.xf, w0 + (p.x - p0.x) / r.width));
       tx.hf = Math.max(0.05, Math.min(1 - tx.yf, h0 + (p.y - p0.y) / r.height));
+
+      const snap = computeSnapCoordinates(tx, host, true);
+      if (snap.snapX !== null) tx.wf = snap.snapX;
+      if (snap.snapY !== null) tx.hf = snap.snapY;
+
       renderActiveSlide();
+      if (snap.snapX !== null) showSmartGuide(host, 'vertical', snap.guideX * 100);
+      if (snap.snapY !== null) showSmartGuide(host, 'horizontal', snap.guideY * 100);
     };
     const up = () => {
+      clearSmartGuides(host);
       document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
       document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up);
+      renderActiveSlide();
     };
     document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
     document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', up);
@@ -2672,11 +2990,26 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   function styleSelectedText(prop, val) {
     const t = getSelectedText();
     if (!t) { showToast('Select a text box first'); return; }
-    if (prop === 'bold') t.weight = (t.weight >= 700 ? 400 : 700);
-    else if (prop === 'italic') t.italic = !t.italic;
-    else if (prop === 'grow') t.size = (t.size || 24) + 4;
-    else if (prop === 'shrink') t.size = Math.max(8, (t.size || 24) - 4);
-    else t[prop] = val;
+    const s = getActiveSlide();
+    const eff = getEffectiveTextStyle(s, t);
+    if (prop === 'bold') {
+      t.weight = ((eff.weight || 400) >= 700 ? 400 : 700);
+      t.customWeight = true;
+    } else if (prop === 'italic') {
+      t.italic = !eff.italic;
+      t.customItalic = true;
+    } else if (prop === 'grow') {
+      t.size = (eff.size || 24) + 4;
+      t.customSize = true;
+    } else if (prop === 'shrink') {
+      t.size = Math.max(8, (eff.size || 24) - 4);
+      t.customSize = true;
+    } else {
+      t[prop] = val;
+      if (prop === 'color') t.customColor = true;
+      if (prop === 'font') t.customFont = true;
+      if (prop === 'align') t.customAlign = true;
+    }
     renderActiveSlide();
   }
   function setSlideSize(aspect) {
@@ -2691,10 +3024,20 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
 
   function addNewSlide() {
     const id = state.slides.length ? Math.max(...state.slides.map(s => s.id)) + 1 : 1;
-    state.slides.push({ id, title: 'Click to add title', subtitle: 'Click to add text', layout: 'Content', bg: '#ffffff', shapes: [] });
+    const current = getActiveSlide();
+    const defaultMasterId = (current && current.masterId === 'title') ? 'content' : ((current && current.masterId) || 'content');
+    const newSlide = {
+      id,
+      masterId: defaultMasterId,
+      layout: defaultMasterId === 'title' ? 'Title' : (defaultMasterId === 'two-column' ? 'TwoColumns' : (defaultMasterId === 'blank' ? 'Blank' : 'Content')),
+      bg: null,
+      shapes: []
+    };
+    ensureSlideTexts(newSlide);
+    state.slides.push(newSlide);
     state.activeSlideId = id;
     renderSlideList();
-    showToast('Slide added');
+    showToast('Slide added (Master: ' + (state.slideMasters[defaultMasterId] ? state.slideMasters[defaultMasterId].name : defaultMasterId) + ')');
   }
   function deleteActiveSlide() {
     if (state.slides.length <= 1) { showToast('Cannot delete only slide'); return; }
@@ -2717,7 +3060,16 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
   }
   function changeSlideLayout(layout) {
     const s = state.slides.find(x => x.id === state.activeSlideId);
-    if (s) { s.layout = layout; s.texts = null; state.selectedTextId = null; renderActiveSlide(); showToast('Layout: ' + layout); }
+    if (!s) return;
+    const layoutMap = {
+      'Title': 'title',
+      'Content': 'content',
+      'TwoColumns': 'two-column',
+      'Blank': 'blank'
+    };
+    const masterId = layoutMap[layout] || layout.toLowerCase();
+    applyMasterToSlide(s, masterId);
+    showToast('Layout: ' + (state.slideMasters[masterId] ? state.slideMasters[masterId].name : layout));
   }
   function setSlideBackground(bg) {
     const s = state.slides.find(x => x.id === state.activeSlideId);
@@ -2745,16 +3097,21 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     const vp = document.getElementById('slideshow-viewport');
     const s = state.slides[state.slideshowActiveIndex];
     if (!vp || !s) return;
+    const master = getSlideMaster(s);
     ensureSlideTexts(s);
-    vp.style.background = s.bg || '#fff';
+    vp.style.background = s.bg || (master && master.bg) || '#fff';
     vp.style.position = 'relative';
     vp.style.aspectRatio = (state.slideW) + ' / ' + (state.slideH);
     vp.innerHTML = '';
+    if (master && master.shapes && master.shapes.length > 0) {
+      renderSlideShapes(vp, master, { play: true, isMaster: true });
+    }
     renderSlideShapes(vp, s, { play: true });
     s.texts.forEach(tx => {
+      const eff = getEffectiveTextStyle(s, tx);
       const box = document.createElement('div');
       box.style.cssText = 'position:absolute;box-sizing:border-box;padding:1.2%;left:' + (tx.xf * 100) + '%;top:' + (tx.yf * 100) + '%;width:' + (tx.wf * 100) + '%;'
-        + 'font-size:' + ((tx.size || 24) / state.slideW * 100) + 'cqw;font-weight:' + (tx.weight || 400) + ';color:' + (tx.color || '#1e293b') + ';text-align:' + (tx.align || 'left') + ';' + (tx.italic ? 'font-style:italic;' : '');
+        + 'font-size:' + ((eff.size || 24) / state.slideW * 100) + 'cqw;font-weight:' + (eff.weight || 400) + ';color:' + (eff.color || '#1e293b') + ';text-align:' + (eff.align || 'left') + ';' + (eff.italic ? 'font-style:italic;' : '');
       box.innerHTML = tx.html || '';
       vp.appendChild(box);
     });
@@ -2938,6 +3295,7 @@ h1{font-size:28px;}h2{font-size:22px;}@page{size:A4;margin:25mm;}</style></head>
     renderSheetTabs, applyCellFormat, insertFormula, freezePanes, generateDynamicSheetChart,
     renderSlideList, renderActiveSlide, addNewSlide, deleteActiveSlide, duplicateActiveSlide,
     changeSlideLayout, setSlideBackground, navigateSlide, startSlideshow, closeSlideshow,
+    applyMasterToSlide, updateSlideMaster, getSlideMaster,
     addTextBox, insertTextBoxSmart, deleteSelectedText, styleSelectedText, setSlideSize,
     addSlideShape, deleteSelectedShape, setShapeFill, setShapeAnimation, setSlideTransition,
     openInPdfViewer,

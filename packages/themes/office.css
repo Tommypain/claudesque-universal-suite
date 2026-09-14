@@ -1308,6 +1308,27 @@
       cursor: move; font-size: 12px;
     }
 
+    /* Smart Alignment Guides for Impress (Task 2.2) */
+    .smart-guide-line {
+      position: absolute;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .smart-guide-line.vertical {
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #ec4899;
+      box-shadow: 0 0 2px rgba(236, 72, 153, 0.7);
+    }
+    .smart-guide-line.horizontal {
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #ec4899;
+      box-shadow: 0 0 2px rgba(236, 72, 153, 0.7);
+    }
+
     /* 3. هيكل جداول البيانات (Sheet) */
     .sheet-canvas {
       width: 100%;
